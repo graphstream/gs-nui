@@ -26,8 +26,8 @@ public class BufferNodeData extends NodeData {
 	public float labelSize;
 	public Font labelFont;
 
-	protected BufferNodeData(String id) {
-		super(id);
+	protected BufferNodeData(BufferUIDataset dataset, String id) {
+		super(dataset, id);
 
 		shape = Shape.CIRCLE;
 

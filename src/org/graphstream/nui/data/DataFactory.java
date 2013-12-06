@@ -1,5 +1,7 @@
 package org.graphstream.nui.data;
 
+import org.graphstream.nui.UIDataset;
+
 /**
  * This factory is used to create data for each elements (node, edge, sprite).
  * Developers can implement their own factory to customize the behavior of the
@@ -16,7 +18,7 @@ public interface DataFactory {
 	 *            id of the node
 	 * @return a new data for the node
 	 */
-	NodeData createNodeData(String nodeId);
+	NodeData createNodeData(UIDataset dataset, String nodeId);
 
 	/**
 	 * Create a new data associated to an edge.
@@ -31,8 +33,8 @@ public interface DataFactory {
 	 *            is the edge directed
 	 * @return a new data for the edge
 	 */
-	EdgeData createEdgeData(String edgeId, NodeData source, NodeData target,
-			boolean directed);
+	EdgeData createEdgeData(UIDataset dataset, String edgeId, NodeData source,
+			NodeData target, boolean directed);
 
 	/**
 	 * Create a new data associated to a sprite.
@@ -41,5 +43,5 @@ public interface DataFactory {
 	 *            id of the sprite
 	 * @return a new data for the sprite
 	 */
-	SpriteData createSpriteData(String spriteId);
+	SpriteData createSpriteData(UIDataset dataset, String spriteId);
 }

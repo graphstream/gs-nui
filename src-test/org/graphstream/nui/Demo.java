@@ -30,26 +30,66 @@
  */
 package org.graphstream.nui;
 
-import org.graphstream.nui.data.EdgeData;
+import org.graphstream.graph.Graph;
+import org.graphstream.graph.implementations.AdjacencyListGraph;
+import org.graphstream.nui.Viewer.ThreadingModel;
 import org.graphstream.nui.data.NodeData;
-import org.graphstream.nui.data.SpriteData;
 
-public interface UIDatasetListener {
-	void dataNodeAdded(NodeData data);
+public class Demo {
+	Graph g = new AdjacencyListGraph("g");
+	Viewer v = new Viewer();
 
-	void dataNodeUpdated(NodeData data);
+	public Demo() {
 
-	void dataNodeRemoved(NodeData data);
+		v.register(g, ThreadingModel.SOURCE_IN_ANOTHER_THREAD);
+	}
 
-	void dataEdgeAdded(EdgeData data);
+	public void run() {
+		g.addNode("A");
+		g.addNode("B");
+		g.addNode("C");
 
-	void dataEdgeUpdated(EdgeData data);
+		g.addEdge("AB", "A", "B");
+		g.addEdge("AC", "A", "C");
+		g.addEdge("BC", "B", "C");
 
-	void dataEdgeRemoved(EdgeData data);
+		g.getNode(0).addAttribute("xyz", new double[] { 1, 0, 0 });
+		g.getNode(1).addAttribute("xyz", new double[] { -0.5, 0.5, 0 });
+		g.getNode(2).addAttribute("xyz", new double[] { -0.5, -0.5, 0 });
 
-	void dataSpriteAdded(SpriteData data);
+		output();
 
-	void dataSpriteUpdated(SpriteData data);
+		g.removeNode("A");
+		g.getNode(1).addAttribute("ui.class", "classA classB");
+		g.getNode(1).addAttribute("ui.class", "+classC");
+		g.getNode(1).addAttribute("ui.class", "-classA");
 
-	void dataSpriteRemoved(SpriteData data);
+		output();
+	}
+
+	public void output() {
+		UIDataset dataset = v.dataset;
+		for (int idx = 0; idx < dataset.getNodeCount(); idx++) {
+			NodeData data = dataset.getNodeData(idx);
+
+			System.out.printf("Node#%d \"%s\"\n", idx,
+					dataset.getNodeData(idx).id);
+
+			System.out.printf("   xyz: %.2f;%.2f;%.2f\n",
+					dataset.getNodeX(idx), dataset.getNodeY(idx),
+					dataset.getNodeZ(idx));
+			System.out.printf("  argb: 0x%X\n", dataset.getNodeARGB(idx));
+			
+			System.out.printf(" class:");
+			for (int c = 0; c < data.getUIClassCount(); c++)
+				System.out.printf(" \"%s\"", data.getUIClass(c));
+			System.out.printf("\n");
+		}
+	}
+
+	public static void main(String[] args) {
+		Demo d = new Demo();
+		d.run();
+	}
+
 }

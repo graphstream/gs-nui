@@ -28,18 +28,29 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.data;
+package org.graphstream.nui.style;
 
-import org.graphstream.nui.UIDataset;
+import java.util.Arrays;
+import java.util.HashMap;
 
-public class NodeData extends ElementData {
-	public NodeData(UIDataset dataset, String nodeId) {
-		super(dataset, nodeId);
-		uiColor = 0;
+public class MulticlassMap extends HashMap<String, ElementStyle> {
+	private static final long serialVersionUID = 5753781254835278555L;
+
+	protected String buildKey(String[] classes) {
+		Arrays.sort(classes);
+
+		StringBuilder buffer = new StringBuilder();
+		for (int i = 0; i < classes.length; i++)
+			buffer.append('.').append(classes[i]);
+
+		return buffer.toString();
 	}
 
-	@Override
-	public String toString() {
-		return String.format("NodeData<%s>", id);
+	public void put(String[] classes, ElementStyle style) {
+		put(buildKey(classes), style);
+	}
+
+	public ElementStyle get(String[] classes) {
+		return get(buildKey(classes));
 	}
 }

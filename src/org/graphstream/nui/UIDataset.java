@@ -1,11 +1,41 @@
+/*
+ * Copyright 2006 - 2014
+ *     Stefan Balev     <stefan.balev@graphstream-project.org>
+ *     Antoine Dutot    <antoine.dutot@graphstream-project.org>
+ *     Yoann Pigné      <yoann.pigne@graphstream-project.org>
+ *     Guilhelm Savin   <guilhelm.savin@graphstream-project.org>
+ * 
+ * This file is part of GraphStream <http://graphstream-project.org>.
+ * 
+ * GraphStream is a library whose purpose is to handle static or dynamic
+ * graph, create them from scratch, file or any source and display them.
+ * 
+ * This program is free software distributed under the terms of two licenses, the
+ * CeCILL-C license that fits European law, and the GNU Lesser General Public
+ * License. You can  use, modify and/ or redistribute the software under the terms
+ * of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
+ * URL <http://www.cecill.info> or under the terms of the GNU LGPL as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
+ */
 package org.graphstream.nui;
 
 import org.graphstream.nui.data.DataFactory;
 import org.graphstream.nui.data.EdgeData;
+import org.graphstream.nui.data.ElementData;
 import org.graphstream.nui.data.NodeData;
 import org.graphstream.nui.data.SpriteData;
 import org.graphstream.nui.style.ElementStyle;
-import org.graphstream.stream.Source;
 
 /**
  * Define a container of data needed to draw the graph.
@@ -15,10 +45,10 @@ public interface UIDataset {
 	/**
 	 * Init this dataset.
 	 * 
-	 * @param source
-	 *            the source which will provide data
+	 * @param viewer
+	 *            the viewer which will provide data
 	 */
-	void init(Source source);
+	void init(Viewer viewer);
 
 	/**
 	 * Call when this dataset is released by its owner. Can be used to release
@@ -146,6 +176,49 @@ public interface UIDataset {
 	 * @return
 	 */
 	double[] getNodesXYZ(double[] buffer, boolean direct);
+
+	/**
+	 * Set the abscissa of the node with index idx.
+	 * 
+	 * @param idx
+	 *            index of the node
+	 * @param x
+	 *            abscissa of the node
+	 */
+	void setNodeX(int idx, double x);
+
+	/**
+	 * Set the ordinate of the node with index idx.
+	 * 
+	 * @param idx
+	 *            index of the node
+	 * @param y
+	 *            ordinate of the node
+	 */
+	void setNodeY(int idx, double y);
+
+	/**
+	 * Set the depth of the node with index idx.
+	 * 
+	 * @param idx
+	 *            index of the node
+	 * @param z
+	 *            depth of the node
+	 */
+	void setNodeZ(int idx, double z);
+
+	/**
+	 * Set the three coordinates of the node idx in one call. If the size of the
+	 * array is less than 3, then the method start by filling the x-coordinate,
+	 * then the y-coordinate, and the z-coordinate, until no more value is
+	 * available.
+	 * 
+	 * @param idx
+	 *            index of the node
+	 * @param xyz
+	 *            array of coordinate
+	 */
+	void setNodeXYZ(int idx, double... xyz);
 
 	/**
 	 * Get the red component of the color of a node.
@@ -295,6 +368,8 @@ public interface UIDataset {
 	 * @return attached data
 	 */
 	SpriteData getSpriteData(int idx);
+
+	void elementDataUpdated(ElementData data);
 
 	void applyNodeStyle(int idx, ElementStyle style);
 

@@ -1,11 +1,12 @@
 /*
- * Copyright 2006 - 2012
- *      Stefan Balev    <stefan.balev@graphstream-project.org>
- *      Julien Baudry	<julien.baudry@graphstream-project.org>
- *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *      Yoann Pigné	    <yoann.pigne@graphstream-project.org>
- *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- *  
+ * Copyright 2006 - 2014
+ *     Stefan Balev     <stefan.balev@graphstream-project.org>
+ *     Antoine Dutot    <antoine.dutot@graphstream-project.org>
+ *     Yoann Pigné      <yoann.pigne@graphstream-project.org>
+ *     Guilhelm Savin   <guilhelm.savin@graphstream-project.org>
+ * 
+ * This file is part of GraphStream <http://graphstream-project.org>.
+ * 
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -33,19 +34,16 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import org.graphstream.stream.AttributeSink;
 import org.graphstream.stream.ElementSink;
-import org.graphstream.stream.Source;
-
 import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.UIDatasetListener;
+import org.graphstream.nui.Viewer;
 import org.graphstream.nui.data.AbstractUIDataset;
 import org.graphstream.nui.data.DataFactory;
 import org.graphstream.nui.data.EdgeData;
 import org.graphstream.nui.data.ElementData;
 import org.graphstream.nui.data.SpriteData;
 import org.graphstream.nui.style.ElementStyle;
-import org.graphstream.nui.style.StyleUpdater;
 
 public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 		ElementSink {
@@ -62,6 +60,8 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 	public static final int B_MASK = 0x000000FF;
 	public static final int B_SHIFT = 0;
 
+	Viewer viewer;
+
 	HashMap<String, Integer> nMapping;
 	BufferNodeData[] nodes;
 	double[] coordinates;
@@ -75,42 +75,23 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 
 	LinkedList<UIDatasetListener> listeners;
 
-	XYZUpdater xyzUpdater;
-	StyleUpdater styleUpdater;
-
 	DataFactory dataFactory;
 
 	public BufferUIDataset() {
 		nMapping = new HashMap<String, Integer>();
 		nodes = new BufferNodeData[INITIAL_SIZE];
+		coordinates = new double[3 * INITIAL_SIZE];
+		nodeColors = new int[INITIAL_SIZE];
 		nIndex = 0;
 
 		eMapping = new HashMap<String, Integer>();
 		edges = new BufferEdgeData[INITIAL_SIZE];
+		edgeColors = new int[INITIAL_SIZE];
 		eIndex = 0;
 
 		listeners = new LinkedList<UIDatasetListener>();
 
-		xyzUpdater = new XYZUpdater(this);
-		styleUpdater = new StyleUpdater(this);
-
 		dataFactory = new BufferDataFactory();
-	}
-
-	public void register(Source source) {
-		source.addElementSink(this);
-		source.addAttributeSink(xyzUpdater);
-		source.addAttributeSink(styleUpdater);
-	}
-
-	public void unregister(Source source) {
-		source.removeElementSink(this);
-		source.removeAttributeSink(xyzUpdater);
-		source.removeAttributeSink(styleUpdater);
-	}
-
-	public AttributeSink getXYZUpdater() {
-		return xyzUpdater;
 	}
 
 	public BufferNodeData getNodeData(String nodeId) {
@@ -129,10 +110,6 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 			return null;
 
 		return edges[idx];
-	}
-
-	public void dataUpdated(ElementData data) {
-
 	}
 
 	/*
@@ -155,7 +132,7 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 
 		nMapping.put(nodeId, idx);
 
-		nodes[idx] = (BufferNodeData) dataFactory.createNodeData(nodeId);
+		nodes[idx] = (BufferNodeData) dataFactory.createNodeData(this, nodeId);
 		nodes[idx].updateIndex(idx);
 
 		coordinates[3 * idx + 0] = Double.NaN;
@@ -183,8 +160,8 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 
 				nodeColors[nodeIndex] = nodeColors[nIndex];
 
-				System.arraycopy(coordinates, 3 * nodeIndex, coordinates,
-						3 * nIndex, 3);
+				System.arraycopy(coordinates, 3 * nIndex, coordinates,
+						3 * nodeIndex, 3);
 
 				nMapping.put(nodes[nodeIndex].id, nodeIndex);
 			}
@@ -213,13 +190,18 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 		int idx = eIndex++;
 
 		eMapping.put(edgeId, idx);
-		edges[idx] = (BufferEdgeData) dataFactory.createEdgeData(edgeId, src,
-				trg, directed);
+		edges[idx] = (BufferEdgeData) dataFactory.createEdgeData(this, edgeId,
+				src, trg, directed);
 		edges[idx].updateIndex(idx);
 		edgeColors[idx] = 0xFF000000;
 	}
 
-	@Override
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.stream.ElementSink#edgeRemoved(java.lang.String,
+	 * long, java.lang.String)
+	 */
 	public void edgeRemoved(String sourceId, long timeId, String edgeId) {
 		int edgeIndex = getEdgeIndex(edgeId);
 
@@ -235,7 +217,12 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 		}
 	}
 
-	@Override
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.stream.ElementSink#graphCleared(java.lang.String,
+	 * long)
+	 */
 	public void graphCleared(String sourceId, long timeId) {
 		Arrays.fill(nodes, null);
 		nIndex = 0;
@@ -246,7 +233,12 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 		eMapping.clear();
 	}
 
-	@Override
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.stream.ElementSink#stepBegins(java.lang.String,
+	 * long, double)
+	 */
 	public void stepBegins(String sourceId, long timeId, double step) {
 	}
 
@@ -255,9 +247,11 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 	 * 
 	 * @see org.graphstream.nui.UIDataset#init(org.graphstream.stream.Source)
 	 */
-	public void init(Source source) {
-		// TODO Auto-generated method stub
+	public void init(Viewer viewer) {
+		assert this.viewer == null;
 
+		this.viewer = viewer;
+		viewer.getSourceFunnel().addElementSink(this);
 	}
 
 	/*
@@ -266,8 +260,8 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 	 * @see org.graphstream.nui.UIDataset#release()
 	 */
 	public void release() {
-		// TODO Auto-generated method stub
-
+		viewer.getSourceFunnel().removeElementSink(this);
+		viewer = null;
 	}
 
 	/*
@@ -361,6 +355,7 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 	 * @see org.graphstream.nui.UIDataset#getNodeX(int)
 	 */
 	public double getNodeX(int idx) {
+		assert idx >= 0 && idx < nIndex;
 		return this.coordinates[3 * idx];
 	}
 
@@ -370,6 +365,7 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 	 * @see org.graphstream.nui.UIDataset#getNodeY(int)
 	 */
 	public double getNodeY(int idx) {
+		assert idx >= 0 && idx < nIndex;
 		return this.coordinates[3 * idx + 1];
 	}
 
@@ -379,6 +375,7 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 	 * @see org.graphstream.nui.UIDataset#getNodeZ(int)
 	 */
 	public double getNodeZ(int idx) {
+		assert idx >= 0 && idx < nIndex;
 		return this.coordinates[3 * idx + 2];
 	}
 
@@ -411,6 +408,59 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 		System.arraycopy(coordinates, 0, buffer, 0, 3 * nIndex);
 
 		return buffer;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIDataset#setNodeX(int, double)
+	 */
+	public void setNodeX(int idx, double x) {
+		assert idx >= 0 && idx < nIndex;
+		this.coordinates[3 * idx] = x;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIDataset#setNodeY(int, double)
+	 */
+	public void setNodeY(int idx, double y) {
+		assert idx >= 0 && idx < nIndex;
+		this.coordinates[3 * idx + 1] = y;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIDataset#setNodeZ(int, double)
+	 */
+	public void setNodeZ(int idx, double z) {
+		assert idx >= 0 && idx < nIndex;
+		this.coordinates[3 * idx + 2] = z;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIDataset#setNodeXYZ(int, double[])
+	 */
+	public void setNodeXYZ(int idx, double... xyz) {
+		if (xyz == null)
+			return;
+
+		assert idx >= 0 && idx < nIndex;
+
+		switch (xyz.length) {
+		default:
+			this.coordinates[3 * idx + 2] = xyz[2];
+		case 2:
+			this.coordinates[3 * idx + 1] = xyz[1];
+		case 1:
+			this.coordinates[3 * idx] = xyz[0];
+		case 0:
+			break;
+		}
 	}
 
 	/*
@@ -604,5 +654,10 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 	public SpriteData getSpriteData(int idx) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public void elementDataUpdated(ElementData data) {
+		// TODO Auto-generated method stub
+		
 	}
 }

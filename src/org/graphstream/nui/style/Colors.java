@@ -1,6 +1,7 @@
 /*
- * Copyright 2006 - 2014
+ * Copyright 2006 - 2013
  *     Stefan Balev     <stefan.balev@graphstream-project.org>
+ *     Julien Baudry    <julien.baudry@graphstream-project.org>
  *     Antoine Dutot    <antoine.dutot@graphstream-project.org>
  *     Yoann Pigné      <yoann.pigne@graphstream-project.org>
  *     Guilhelm Savin   <guilhelm.savin@graphstream-project.org>
@@ -28,18 +29,31 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.data;
+package org.graphstream.nui.style;
 
-import org.graphstream.nui.UIDataset;
+import java.awt.Color;
+import java.util.ArrayList;
 
-public class NodeData extends ElementData {
-	public NodeData(UIDataset dataset, String nodeId) {
-		super(dataset, nodeId);
-		uiColor = 0;
+/**
+ * Ordered set of colours.
+ */
+public class Colors extends ArrayList<Color> {
+	private static final long serialVersionUID = - 7218092114483593610L;
+
+	/**
+	 * New empty colour set.
+	 */
+	public Colors() {
 	}
 
-	@Override
-	public String toString() {
-		return String.format("NodeData<%s>", id);
+	/**
+	 * New copy of the other colour set.
+	 * 
+	 * @param others
+	 *            The other colour set to copy.
+	 */
+	public Colors(Colors others) {
+		for (Color color : others)
+			add(color);
 	}
 }

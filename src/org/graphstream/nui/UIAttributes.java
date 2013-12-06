@@ -1,6 +1,36 @@
+/*
+ * Copyright 2006 - 2014
+ *     Stefan Balev     <stefan.balev@graphstream-project.org>
+ *     Antoine Dutot    <antoine.dutot@graphstream-project.org>
+ *     Yoann Pigné      <yoann.pigne@graphstream-project.org>
+ *     Guilhelm Savin   <guilhelm.savin@graphstream-project.org>
+ * 
+ * This file is part of GraphStream <http://graphstream-project.org>.
+ * 
+ * GraphStream is a library whose purpose is to handle static or dynamic
+ * graph, create them from scratch, file or any source and display them.
+ * 
+ * This program is free software distributed under the terms of two licenses, the
+ * CeCILL-C license that fits European law, and the GNU Lesser General Public
+ * License. You can  use, modify and/ or redistribute the software under the terms
+ * of the CeCILL-C license as circulated by CEA, CNRS and INRIA at the following
+ * URL <http://www.cecill.info> or under the terms of the GNU LGPL as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
+ */
 package org.graphstream.nui;
 
-import org.graphstream.nui.data.NodeData;
+import org.graphstream.nui.data.ElementData;
 import org.graphstream.stream.AttributeSink;
 
 public class UIAttributes implements AttributeSink {
@@ -11,62 +41,106 @@ public class UIAttributes implements AttributeSink {
 
 		for (int i = 0; i < what.length(); i++)
 			if (chain.charAt(offset + i) != what.charAt(i))
-				return ends ? offset + what.length() == chain.length() : true;
+				return false;
 
-		return true;
+		return ends ? offset + what.length() == chain.length() : true;
+	}
+
+	/**
+	 * Check is the attribute name is a valid name for coordinates attribute. It
+	 * can be "xyz", "x", "y" or "z" and can be prefixed by "ui.".
+	 * 
+	 * @param attribute
+	 *            the name of the attribute
+	 * @return true if attribute is a valid attribute name
+	 */
+	public static boolean isCoordinatesAttribute(String attribute) {
+		int offset = 0;
+
+		if (match(attribute, 0, "ui.", false))
+			offset = 3;
+
+		/*
+		 * Sort by likely frequency.
+		 */
+		if (match(attribute, offset, "xyz", true)
+				| match(attribute, offset, "x", true)
+				| match(attribute, offset, "y", true)
+				| match(attribute, offset, "z", true)
+				| match(attribute, offset, "XYZ", true)
+				| match(attribute, offset, "X", true)
+				| match(attribute, offset, "Y", true)
+				| match(attribute, offset, "Z", true))
+			return true;
+
+		return false;
 	}
 
 	protected Viewer viewer;
-	protected UIDataset set;
+	protected UIDataset dataset;
+	private double[] xyzBuffer;
 
-	private void update(String nodeId, String xyzKey, Object value) {
-		int idx = set.getNodeIndex(nodeId);
-		
-		NodeData data = set.getNodeData(idx);
+	public UIAttributes() {
+		xyzBuffer = new double[3];
+	}
+
+	public void init(Viewer viewer) {
+		this.viewer = viewer;
+		this.dataset = viewer.dataset;
+
+		viewer.sources.addAttributeSink(this);
+	}
+
+	/*
+	 * This is not thread-safe because of the use of xyzBuffer.
+	 */
+	private void updateCoordinates(String nodeId, String xyzKey, Object value) {
+		int idx = dataset.getNodeIndex(nodeId);
 		double tmp;
 		boolean changed = false;
 
-		if (data == null)
+		if (idx < 0)
 			return;
 
-		xyzKey = xyzKey.toLowerCase();
+		dataset.getNodeXYZ(idx, xyzBuffer);
 
-		switch (xyzKey.length()) {
-		case 1:
+		if (xyzKey.length() == 1) {
 			switch (xyzKey.charAt(0)) {
+			case 'X':
 			case 'x':
 				tmp = checkAndGetDouble(value);
-				changed = changed || (data.x != tmp);
-				data.x = tmp;
+				changed = changed || (xyzBuffer[0] != tmp);
+				xyzBuffer[0] = tmp;
 				break;
+			case 'Y':
 			case 'y':
 				tmp = checkAndGetDouble(value);
-				changed = changed || (data.y != tmp);
-				data.y = tmp;
+				changed = changed || (xyzBuffer[1] != tmp);
+				xyzBuffer[1] = tmp;
 				break;
+			case 'Z':
 			case 'z':
 				tmp = checkAndGetDouble(value);
-				changed = changed || (data.z != tmp);
-				data.z = tmp;
+				changed = changed || (xyzBuffer[2] != tmp);
+				xyzBuffer[2] = tmp;
 				break;
 			}
-			break;
-		default:
+		} else {
 			double[] xyz = checkAndGetDoubleArray(value);
-			changed = changed || (data.x != xyz[0]) || (data.y != xyz[1]);
-			data.x = xyz[0];
-			data.y = xyz[1];
+			changed = changed || (xyzBuffer[0] != xyz[0])
+					|| (xyzBuffer[1] != xyz[1]);
+
+			xyzBuffer[0] = xyz[0];
+			xyzBuffer[1] = xyz[1];
 
 			if (xyz.length > 2) {
-				changed = changed || (data.z != xyz[2]);
-				data.z = xyz[2];
+				changed = changed || (xyzBuffer[2] != xyz[2]);
+				xyzBuffer[2] = xyz[2];
 			}
-
-			break;
 		}
 
 		if (changed)
-			set.dataUpdated(data);
+			dataset.setNodeXYZ(idx, xyzBuffer);
 	}
 
 	private double checkAndGetDouble(Object value) {
@@ -110,6 +184,40 @@ public class UIAttributes implements AttributeSink {
 		return r;
 	}
 
+	protected void updateUIClass(ElementData data, Object value) {
+		if (value == null) {
+			data.removeUIClass();
+		} else {
+			if (value.getClass().isArray()) {
+				String[] classes;
+
+				if (value instanceof String[])
+					classes = (String[]) value;
+				else {
+					Object[] classesObj = (Object[]) value;
+					classes = new String[classesObj.length];
+
+					for (int i = 0; i < classesObj.length; i++)
+						classes[i] = (String) classesObj[i];
+				}
+
+				data.setUIClass(classes);
+			} else {
+				if (!(value instanceof String))
+					return;
+
+				String uiClass = (String) value;
+
+				if (uiClass.charAt(0) == '+')
+					data.addUIClass(uiClass.substring(1));
+				else if (uiClass.charAt(0) == '-')
+					data.removeUIClass(uiClass.substring(1));
+				else
+					data.setUIClass(uiClass);
+			}
+		}
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -121,8 +229,9 @@ public class UIAttributes implements AttributeSink {
 			String attribute, Object value) {
 		if (match(attribute, 0, "ui.", false)) {
 			if (match(attribute, 3, "stylesheet", true)) {
-				if (value instanceof String)
-					viewer.stylesheet.addStylesheet((String) value);
+				viewer.stylesheet.setStyleSheet(value);
+			} else if (match(attribute, 3, "space", true)) {
+				viewer.camera.set(attribute, value);
 			}
 		}
 	}
@@ -138,8 +247,9 @@ public class UIAttributes implements AttributeSink {
 			String attribute, Object oldValue, Object newValue) {
 		if (match(attribute, 0, "ui.", false)) {
 			if (match(attribute, 3, "stylesheet", true)) {
-				if (newValue instanceof String)
-					viewer.stylesheet.setStylesheet((String) newValue);
+				viewer.stylesheet.setStyleSheet(newValue);
+			} else if (match(attribute, 3, "space", true)) {
+				viewer.camera.set(attribute, newValue);
 			}
 		}
 	}
@@ -156,6 +266,8 @@ public class UIAttributes implements AttributeSink {
 		if (match(attribute, 0, "ui.", false)) {
 			if (match(attribute, 3, "stylesheet", true))
 				viewer.stylesheet.clear();
+		} else if (match(attribute, 3, "space", true)) {
+			viewer.camera.set(attribute, null);
 		}
 	}
 
@@ -168,8 +280,16 @@ public class UIAttributes implements AttributeSink {
 	 */
 	public void nodeAttributeAdded(String sourceId, long timeId, String nodeId,
 			String attribute, Object value) {
-		// TODO Auto-generated method stub
+		if (isCoordinatesAttribute(attribute)) {
+			updateCoordinates(nodeId, attribute, value);
+		} else if (match(attribute, 0, "ui.", false)) {
+			if (match(attribute, 3, "class", true)) {
+				int idx = dataset.getNodeIndex(nodeId);
 
+				if (idx >= 0)
+					updateUIClass(dataset.getNodeData(idx), value);
+			}
+		}
 	}
 
 	/*
@@ -182,8 +302,16 @@ public class UIAttributes implements AttributeSink {
 	 */
 	public void nodeAttributeChanged(String sourceId, long timeId,
 			String nodeId, String attribute, Object oldValue, Object newValue) {
-		// TODO Auto-generated method stub
+		if (isCoordinatesAttribute(attribute)) {
+			updateCoordinates(nodeId, attribute, newValue);
+		} else if (match(attribute, 0, "ui.", false)) {
+			if (match(attribute, 3, "class", true)) {
+				int idx = dataset.getNodeIndex(nodeId);
 
+				if (idx >= 0)
+					updateUIClass(dataset.getNodeData(idx), newValue);
+			}
+		}
 	}
 
 	/*
@@ -195,8 +323,14 @@ public class UIAttributes implements AttributeSink {
 	 */
 	public void nodeAttributeRemoved(String sourceId, long timeId,
 			String nodeId, String attribute) {
-		// TODO Auto-generated method stub
+		if (match(attribute, 0, "ui.", false)) {
+			if (match(attribute, 3, "class", true)) {
+				int idx = dataset.getNodeIndex(nodeId);
 
+				if (idx >= 0)
+					updateUIClass(dataset.getNodeData(idx), null);
+			}
+		}
 	}
 
 	/*

@@ -1,11 +1,12 @@
 /*
- * Copyright 2006 - 2012
- *      Stefan Balev    <stefan.balev@graphstream-project.org>
- *      Julien Baudry	<julien.baudry@graphstream-project.org>
- *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *      Yoann Pigné	    <yoann.pigne@graphstream-project.org>
- *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- *  
+ * Copyright 2006 - 2014
+ *     Stefan Balev     <stefan.balev@graphstream-project.org>
+ *     Antoine Dutot    <antoine.dutot@graphstream-project.org>
+ *     Yoann Pigné      <yoann.pigne@graphstream-project.org>
+ *     Guilhelm Savin   <guilhelm.savin@graphstream-project.org>
+ * 
+ * This file is part of GraphStream <http://graphstream-project.org>.
+ * 
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -29,14 +30,19 @@
  */
 package org.graphstream.nui.data;
 
+import java.util.ArrayList;
+
+import org.graphstream.nui.UIDataset;
+import org.graphstream.nui.style.ElementStyle;
 import org.graphstream.ui.graphicGraph.stylesheet.StyleConstants.VisibilityMode;
 
 public abstract class ElementData {
 	public final String id;
+	final UIDataset dataset;
 
 	VisibilityMode visibility;
 
-	public String[] uiClass;
+	public ArrayList<String> uiClasses;
 	public String state;
 
 	public double uiColor;
@@ -45,13 +51,15 @@ public abstract class ElementData {
 	public boolean showLabel;
 
 	protected int currentIndex;
+	
+	protected ElementStyle style;
 
-	public ElementData(String id) {
+	public ElementData(UIDataset dataset, String id) {
 		this.id = id;
+		this.dataset = dataset;
 
-		visibility = VisibilityMode.NORMAL;
-
-		showLabel = true;
+		this.visibility = VisibilityMode.NORMAL;
+		this.showLabel = true;
 	}
 
 	public int index() {
@@ -67,31 +75,92 @@ public abstract class ElementData {
 	}
 
 	public void hide() {
-		visibility = VisibilityMode.HIDDEN;
+		if (visibility != VisibilityMode.HIDDEN) {
+			visibility = VisibilityMode.HIDDEN;
+			dataset.elementDataUpdated(this);
+		}
 	}
 
 	public void show() {
-		visibility = VisibilityMode.NORMAL;
+		if (visibility != VisibilityMode.NORMAL) {
+			visibility = VisibilityMode.NORMAL;
+			dataset.elementDataUpdated(this);
+		}
 	}
 
 	public int getUIClassCount() {
-		return uiClass == null ? 0 : uiClass.length;
+		return uiClasses == null ? 0 : uiClasses.size();
 	}
 
 	public String getUIClass(int idx) {
-		return uiClass[idx];
+		return uiClasses == null ? null : uiClasses.get(idx);
 	}
 
 	public boolean hasUIClass(String c) {
-		for (int i = 0; i < getUIClassCount(); i++)
-			if (uiClass[i].equals(c))
-				return true;
+		return uiClasses == null ? false : uiClasses.contains(c);
+	}
 
-		return false;
+	public void addUIClass(String uiClass) {
+		if (uiClasses == null)
+			uiClasses = new ArrayList<String>();
+
+		uiClasses.add(uiClass);
+		dataset.elementDataUpdated(this);
 	}
 
 	public void setUIClass(String uiClass) {
-		String[] classes = uiClass.trim().split("\\s+");
-		this.uiClass = classes;
+		if (uiClass == null) {
+			if (uiClasses != null) {
+				uiClasses.clear();
+				uiClasses = null;
+				dataset.elementDataUpdated(this);
+			}
+		} else {
+			String[] classes = uiClass.trim().split("\\s+");
+
+			if (classes != null)
+				setUIClass(classes);
+		}
+	}
+
+	public void setUIClass(String[] classes) {
+		if (classes == null) {
+			if (uiClasses != null) {
+				uiClasses.clear();
+				uiClasses = null;
+				dataset.elementDataUpdated(this);
+			}
+		} else {
+			if (uiClasses == null)
+				uiClasses = new ArrayList<String>();
+
+			uiClasses.clear();
+			uiClasses.ensureCapacity(classes.length);
+
+			for (int i = 0; i < classes.length; i++)
+				uiClasses.add(classes[i]);
+
+			dataset.elementDataUpdated(this);
+		}
+	}
+
+	public void removeUIClass(String uiClass) {
+		if (uiClasses == null)
+			return;
+
+		if (uiClasses.remove(uiClass))
+			dataset.elementDataUpdated(this);
+
+		if (uiClasses.size() == 0)
+			uiClasses = null;
+	}
+
+	public void removeUIClass() {
+		if (uiClasses == null)
+			return;
+
+		uiClasses.clear();
+		uiClasses = null;
+		dataset.elementDataUpdated(this);
 	}
 }

@@ -29,6 +29,8 @@
  */
 package org.graphstream.nui.data;
 
+import org.graphstream.nui.UIDataset;
+
 public class EdgeData extends ElementData {
 	public static enum PointsType {
 		RELATIVE, ABSOLUTE, ABSOLUTE_SCREEN
@@ -42,8 +44,9 @@ public class EdgeData extends ElementData {
 
 	float[] points;
 
-	public EdgeData(String edgeId, NodeData src, NodeData trg, boolean directed) {
-		super(edgeId);
+	public EdgeData(UIDataset dataset, String edgeId, NodeData src,
+			NodeData trg, boolean directed) {
+		super(dataset, edgeId);
 
 		this.src = src;
 		this.trg = trg;

@@ -1,6 +1,7 @@
 /*
- * Copyright 2006 - 2014
+ * Copyright 2006 - 2013
  *     Stefan Balev     <stefan.balev@graphstream-project.org>
+ *     Julien Baudry    <julien.baudry@graphstream-project.org>
  *     Antoine Dutot    <antoine.dutot@graphstream-project.org>
  *     Yoann Pigné      <yoann.pigne@graphstream-project.org>
  *     Guilhelm Savin   <guilhelm.savin@graphstream-project.org>
@@ -28,18 +29,26 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.data;
+package org.graphstream.nui.style;
 
-import org.graphstream.nui.UIDataset;
+import java.util.ArrayList;
 
-public class NodeData extends ElementData {
-	public NodeData(UIDataset dataset, String nodeId) {
-		super(dataset, nodeId);
-		uiColor = 0;
-	}
+/**
+ * Several values and the units of these values.
+ * 
+ * <p>
+ * As a style sheet may express values in several different units. This class
+ * purpose is to pack the value and the units it is expressed in into a single
+ * object.
+ * </p>
+ */
+public class Values extends ArrayList<Value> {
+	private static final long serialVersionUID = -4063246263079231438L;
 
-	@Override
-	public String toString() {
-		return String.format("NodeData<%s>", id);
+	public Values(Value... values) {
+		if (values != null) {
+			for (int i = 0; i < values.length; i++)
+				add(values[i]);
+		}
 	}
 }

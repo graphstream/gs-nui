@@ -28,18 +28,29 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.data;
+package org.graphstream.nui.camera;
 
-import org.graphstream.nui.UIDataset;
+import org.graphstream.nui.UICamera;
+import org.graphstream.nui.Viewer;
 
-public class NodeData extends ElementData {
-	public NodeData(UIDataset dataset, String nodeId) {
-		super(dataset, nodeId);
-		uiColor = 0;
+public class DefaultUICamera implements UICamera {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UICamera#init(org.graphstream.nui.Viewer)
+	 */
+	public void init(Viewer viewer) {
+		// TODO Auto-generated method stub
+
 	}
 
-	@Override
-	public String toString() {
-		return String.format("NodeData<%s>", id);
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UICamera#set(java.lang.String, java.lang.Object)
+	 */
+	public void set(String attribute, Object value) {
+		// TODO Auto-generated method stub
+
 	}
 }

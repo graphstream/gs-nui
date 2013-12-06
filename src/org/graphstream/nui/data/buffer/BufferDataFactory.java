@@ -1,5 +1,6 @@
 package org.graphstream.nui.data.buffer;
 
+import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.data.DataFactory;
 import org.graphstream.nui.data.EdgeData;
 import org.graphstream.nui.data.NodeData;
@@ -12,8 +13,8 @@ public class BufferDataFactory implements DataFactory {
 	 * @see
 	 * org.graphstream.nui.data.DataFactory#createNodeData(java.lang.String)
 	 */
-	public NodeData createNodeData(String nodeId) {
-		return new BufferNodeData(nodeId);
+	public NodeData createNodeData(UIDataset dataset, String nodeId) {
+		return new BufferNodeData((BufferUIDataset) dataset, nodeId);
 	}
 
 	/*
@@ -24,10 +25,10 @@ public class BufferDataFactory implements DataFactory {
 	 * org.graphstream.nui.data.NodeData, org.graphstream.nui.data.NodeData,
 	 * boolean)
 	 */
-	public EdgeData createEdgeData(String edgeId, NodeData source,
-			NodeData target, boolean directed) {
-		return new BufferEdgeData(edgeId, (BufferNodeData) source,
-				(BufferNodeData) target, directed);
+	public EdgeData createEdgeData(UIDataset dataset, String edgeId,
+			NodeData source, NodeData target, boolean directed) {
+		return new BufferEdgeData((BufferUIDataset) dataset, edgeId,
+				(BufferNodeData) source, (BufferNodeData) target, directed);
 	}
 
 	/*
@@ -36,7 +37,7 @@ public class BufferDataFactory implements DataFactory {
 	 * @see
 	 * org.graphstream.nui.data.DataFactory#createSpriteData(java.lang.String)
 	 */
-	public SpriteData createSpriteData(String spriteId) {
+	public SpriteData createSpriteData(UIDataset dataset, String spriteId) {
 		// TODO Auto-generated method stub
 		return null;
 	}

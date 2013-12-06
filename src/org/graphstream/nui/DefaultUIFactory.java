@@ -28,18 +28,52 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.data;
+package org.graphstream.nui;
 
-import org.graphstream.nui.UIDataset;
+import org.graphstream.nui.camera.DefaultUICamera;
+import org.graphstream.nui.data.buffer.BufferUIDataset;
 
-public class NodeData extends ElementData {
-	public NodeData(UIDataset dataset, String nodeId) {
-		super(dataset, nodeId);
-		uiColor = 0;
+public class DefaultUIFactory implements UIFactory {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.UIFactory#createDataset(org.graphstream.nui.Viewer)
+	 */
+	public UIDataset createDataset(Viewer viewer) {
+		return new BufferUIDataset();
 	}
 
-	@Override
-	public String toString() {
-		return String.format("NodeData<%s>", id);
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.UIFactory#createCamera(org.graphstream.nui.Viewer)
+	 */
+	public UICamera createCamera(Viewer viewer) {
+		return new DefaultUICamera();
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.UIFactory#createAttributesHandler(org.graphstream
+	 * .nui.Viewer)
+	 */
+	public UIAttributes createAttributesHandler(Viewer viewer) {
+		return new UIAttributes();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.UIFactory#createStylesheetHandler(org.graphstream
+	 * .nui.Viewer)
+	 */
+	public UIStyleSheet createStylesheetHandler(Viewer viewer) {
+		return new UIStyleSheet();
+	}
+
 }

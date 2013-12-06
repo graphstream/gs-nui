@@ -28,18 +28,50 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.data;
+package org.graphstream.nui;
 
-import org.graphstream.nui.UIDataset;
+/**
+ * A factory to create objects related to the viewer. It will defined the
+ * implementation of these objects, like {@link org.graphstream.nui.UIDataset}
+ * for example.
+ * 
+ */
+public interface UIFactory {
+	/**
+	 * Create a new dataset.
+	 * 
+	 * @param viewer
+	 *            the viewer which will use this dataset
+	 * @return a new dataset object
+	 */
+	UIDataset createDataset(Viewer viewer);
 
-public class NodeData extends ElementData {
-	public NodeData(UIDataset dataset, String nodeId) {
-		super(dataset, nodeId);
-		uiColor = 0;
-	}
+	/**
+	 * Create a new camera.
+	 * 
+	 * @param viewer
+	 *            the viewer which will use this dataset
+	 * @return a new camera object
+	 */
+	UICamera createCamera(Viewer viewer);
 
-	@Override
-	public String toString() {
-		return String.format("NodeData<%s>", id);
-	}
+	/**
+	 * Create a new attributes handler. This allows developper to extends the
+	 * default class and add their own code.
+	 * 
+	 * @param viewer
+	 *            the viewer which will use this dataset
+	 * @return a new UIAttributes object
+	 */
+	UIAttributes createAttributesHandler(Viewer viewer);
+
+	/**
+	 * Create a new camera. This allows developper to extends the
+	 * default class and add their own code.
+	 * 
+	 * @param viewer
+	 *            the viewer which will use this dataset
+	 * @return a new UIStylesheet object
+	 */
+	UIStyleSheet createStylesheetHandler(Viewer viewer);
 }

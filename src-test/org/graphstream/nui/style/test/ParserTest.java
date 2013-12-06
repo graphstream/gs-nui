@@ -1,11 +1,12 @@
 /*
- * Copyright 2006 - 2012
- *      Stefan Balev    <stefan.balev@graphstream-project.org>
- *      Julien Baudry	<julien.baudry@graphstream-project.org>
- *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
- *      Yoann Pigné	    <yoann.pigne@graphstream-project.org>
- *      Guilhelm Savin	<guilhelm.savin@graphstream-project.org>
- *  
+ * Copyright 2006 - 2014
+ *     Stefan Balev     <stefan.balev@graphstream-project.org>
+ *     Antoine Dutot    <antoine.dutot@graphstream-project.org>
+ *     Yoann Pigné      <yoann.pigne@graphstream-project.org>
+ *     Guilhelm Savin   <guilhelm.savin@graphstream-project.org>
+ * 
+ * This file is part of GraphStream <http://graphstream-project.org>.
+ * 
  * GraphStream is a library whose purpose is to handle static or dynamic
  * graph, create them from scratch, file or any source and display them.
  * 
@@ -27,9 +28,28 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui;
+package org.graphstream.nui.style.test;
 
-public interface XYConverter {
-	float xToScreenX(float x);
-	float yToScreenY(float y);
+import org.graphstream.nui.UIStyleSheet;
+import org.graphstream.nui.style.ElementStyle;
+import org.graphstream.util.parser.ParseException;
+import org.junit.Test;
+
+public class ParserTest {
+	@Test
+	public void parse() {
+		String css = "node.classA { fill-mode: dyn-plain; } node.classA.classB { size:15px; } node:hover {fill-color:red;}";
+		UIStyleSheet ss = new UIStyleSheet();
+
+		try {
+			ss.parseText(css);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
+		
+		System.out.println("Element styles :\n---------------");
+		for (ElementStyle es : ss)
+			System.out.println(es);
+	}
 }

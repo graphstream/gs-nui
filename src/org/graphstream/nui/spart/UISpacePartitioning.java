@@ -28,18 +28,8 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.data;
+package org.graphstream.nui.spart;
 
-import org.graphstream.nui.UIDataset;
+public interface UISpacePartitioning {
 
-public class NodeData extends ElementData {
-	public NodeData(UIDataset dataset, String nodeId) {
-		super(dataset, nodeId);
-		uiColor = 0;
-	}
-
-	@Override
-	public String toString() {
-		return String.format("NodeData<%s>", id);
-	}
 }
