@@ -3,6 +3,7 @@ package org.graphstream.nui.data.buffer;
 import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.data.DataFactory;
 import org.graphstream.nui.data.EdgeData;
+import org.graphstream.nui.data.GraphData;
 import org.graphstream.nui.data.NodeData;
 import org.graphstream.nui.data.SpriteData;
 
@@ -42,4 +43,14 @@ public class BufferDataFactory implements DataFactory {
 		return null;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.data.DataFactory#createGraphData(org.graphstream.
+	 * nui.UIDataset, java.lang.String)
+	 */
+	public GraphData createGraphData(UIDataset dataset, String graphId) {
+		return new GraphData(dataset, graphId);
+	}
 }

@@ -137,9 +137,14 @@ public class ElementStyle implements StyleConstants {
 	public void merge(ElementStyle style) {
 		styles.putAll(style.styles);
 
-		for (String state : style.states.keySet()) {
-			if (states.containsKey(state)) {
-				states.get(state).merge(style.states.get(state));
+		if (style.states != null) {
+			for (String state : style.states.keySet()) {
+				if (states == null)
+					states = new HashMap<String, ElementStyle>();
+
+				if (states.containsKey(state)) {
+					states.get(state).merge(style.states.get(state));
+				}
 			}
 		}
 	}

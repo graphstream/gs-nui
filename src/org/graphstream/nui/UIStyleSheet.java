@@ -56,17 +56,19 @@ import org.graphstream.util.parser.ParseException;
 
 public class UIStyleSheet implements StyleConstants, Iterable<ElementStyle> {
 	HashMap<Selector, ElementStyle> styles;
-	TreeSet<ElementStyle> sortedStyles;
+	StyleTree sortedStyles;
+	Viewer viewer;
 
 	public UIStyleSheet() {
 		styles = new HashMap<Selector, ElementStyle>();
-		sortedStyles = new TreeSet<ElementStyle>(new ScoreComparator());
+		sortedStyles = new StyleTree();
 
 		setDefaultStyle();
 	}
 
 	public void init(Viewer viewer) {
-
+		assert viewer != null;
+		this.viewer = viewer;
 	}
 
 	public ElementStyle getElementStyle(ElementData data) {
@@ -155,35 +157,190 @@ public class UIStyleSheet implements StyleConstants, Iterable<ElementStyle> {
 		}
 	}
 
+	/**
+	 * 
+	 * @param style
+	 */
 	protected void fireStyleUpdated(ElementStyle style) {
-		// TODO
+		//
+		// If there is no viewer, we have nothing to do.
+		//
+		if (viewer == null)
+			return;
+		//
+		// Here we try to detect elements which are concerned by the style
+		// update.
+		//
+		// First we separate by type. Then, if selector contains an id, we try
+		// to apply the style only to the target element. If there is no id, we
+		// try to update all elements.
+		//
 		switch (style.selector.target) {
 		case UNDEFINED:
+			if (style.selector.id != null) {
+				fireNodeStyleUpdatedById(style);
+				fireEdgeStyleUpdatedById(style);
+				fireSpriteStyleUpdatedById(style);
+			} else {
+				fireNodeStyleUpdated(style);
+				fireEdgeStyleUpdated(style);
+				fireSpriteStyleUpdated(style);
+			}
+
 			break;
 		case NODE:
-			if (style.selector.id != null) {
+			if (style.selector.id != null)
+				fireNodeStyleUpdatedById(style);
+			else
+				fireNodeStyleUpdated(style);
 
-			}
 			break;
 		case EDGE:
+			if (style.selector.id != null)
+				fireEdgeStyleUpdatedById(style);
+			else
+				fireEdgeStyleUpdated(style);
+
 			break;
 		case SPRITE:
+			if (style.selector.id != null)
+				fireSpriteStyleUpdatedById(style);
+			else
+				fireSpriteStyleUpdated(style);
+
 			break;
 		case GRAPH:
+			viewer.dataset.getGraphData().checkStyleChanged();
 			break;
 		default:
+			//
+			// Some auto-procreation phenomena lead to the creation of a new
+			// target type that we did not know.
+			//
 			break;
 		}
 	}
 
+	protected void fireNodeStyleUpdatedById(ElementStyle style) {
+		int idx = viewer.dataset.getNodeIndex(style.selector.id);
+
+		if (idx >= 0) {
+			ElementData data = viewer.dataset.getNodeData(idx);
+			data.checkStyleChanged();
+		}
+	}
+
+	protected void fireNodeStyleUpdated(ElementStyle style) {
+		UIDataset dataset = viewer.dataset;
+
+		for (int idx = 0; idx < dataset.getNodeCount(); idx++) {
+			ElementData data = dataset.getNodeData(idx);
+
+			if (style == null || style.selector.match(data))
+				data.checkStyleChanged();
+		}
+	}
+
+	protected void fireEdgeStyleUpdatedById(ElementStyle style) {
+		int idx = viewer.dataset.getEdgeIndex(style.selector.id);
+
+		if (idx >= 0) {
+			ElementData data = viewer.dataset.getEdgeData(idx);
+			data.checkStyleChanged();
+		}
+	}
+
+	protected void fireEdgeStyleUpdated(ElementStyle style) {
+		UIDataset dataset = viewer.dataset;
+
+		for (int idx = 0; idx < dataset.getEdgeCount(); idx++) {
+			ElementData data = dataset.getEdgeData(idx);
+
+			if (style == null || style.selector.match(data))
+				data.checkStyleChanged();
+		}
+	}
+
+	protected void fireSpriteStyleUpdatedById(ElementStyle style) {
+
+	}
+
+	protected void fireSpriteStyleUpdated(ElementStyle style) {
+
+	}
+
 	protected void fireStyleCleared() {
+		fireNodeStyleUpdated(null);
+		fireEdgeStyleUpdated(null);
+		fireSpriteStyleUpdated(null);
 
+		viewer.dataset.getGraphData().checkStyleChanged();
 	}
 
-	public void setStyleSheet(Object content) {
-		
+	public void setStyleSheet(Object content) throws IOException,
+			ParseException {
+		if (content == null)
+			return;
+
+		if (content instanceof String) {
+			String styleSheetValue = (String) content;
+
+			if (styleSheetValue.startsWith("url")) {
+				//
+				// Extract the part between '(' and ')'.
+				//
+				int beg = styleSheetValue.indexOf('(');
+				int end = styleSheetValue.lastIndexOf(')');
+
+				if (beg >= 0 && end > beg)
+					styleSheetValue = styleSheetValue.substring(beg + 1, end);
+
+				styleSheetValue = styleSheetValue.trim();
+
+				//
+				// Remove the quotes (') or (").
+				//
+				if (styleSheetValue.startsWith("'")) {
+					beg = 0;
+					end = styleSheetValue.lastIndexOf('\'');
+
+					if (beg >= 0 && end > beg)
+						styleSheetValue = styleSheetValue.substring(beg + 1,
+								end);
+				}
+
+				styleSheetValue = styleSheetValue.trim();
+
+				if (styleSheetValue.startsWith("\"")) {
+					beg = 0;
+					end = styleSheetValue.lastIndexOf('"');
+
+					if (beg >= 0 && end > beg)
+						styleSheetValue = styleSheetValue.substring(beg + 1,
+								end);
+				}
+
+				//
+				// That's it.
+				//
+				parse(new URL(styleSheetValue));
+			} else {
+				//
+				// Parse from string, the value is considered to be the
+				// stylesheet contents.
+				//
+				parseText(styleSheetValue);
+			}
+		} else if (content instanceof File)
+			parse((File) content);
+		else if (content instanceof URL)
+			parse((URL) content);
+		else if (content instanceof InputStream)
+			parse((InputStream) content);
+		else if (content instanceof Reader)
+			parse((Reader) content);
 	}
-	
+
 	public void parseText(String content) throws ParseException {
 		StringReader sr = new StringReader(content);
 		StyleSheetParser parser = new StyleSheetParser(this, sr);
@@ -380,6 +537,14 @@ public class UIStyleSheet implements StyleConstants, Iterable<ElementStyle> {
 			//
 
 			return -1;
+		}
+	}
+
+	protected static class StyleTree extends TreeSet<ElementStyle> {
+		private static final long serialVersionUID = -5875910062336795000L;
+
+		public StyleTree() {
+			super(new ScoreComparator());
 		}
 	}
 }

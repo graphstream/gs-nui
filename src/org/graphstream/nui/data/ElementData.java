@@ -30,19 +30,24 @@
  */
 package org.graphstream.nui.data;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.style.ElementStyle;
 import org.graphstream.ui.graphicGraph.stylesheet.StyleConstants.VisibilityMode;
 
 public abstract class ElementData {
+	private final static Set<String> EMPTY_UI_CLASS = Collections
+			.unmodifiableSet(new HashSet<String>());
+
 	public final String id;
 	final UIDataset dataset;
 
 	VisibilityMode visibility;
 
-	public ArrayList<String> uiClasses;
+	public HashSet<String> uiClasses;
 	public String state;
 
 	public double uiColor;
@@ -51,7 +56,7 @@ public abstract class ElementData {
 	public boolean showLabel;
 
 	protected int currentIndex;
-	
+
 	protected ElementStyle style;
 
 	public ElementData(UIDataset dataset, String id) {
@@ -60,6 +65,8 @@ public abstract class ElementData {
 
 		this.visibility = VisibilityMode.NORMAL;
 		this.showLabel = true;
+
+		checkStyleChanged();
 	}
 
 	public int index() {
@@ -88,12 +95,23 @@ public abstract class ElementData {
 		}
 	}
 
+	public String getState() {
+		return state;
+	}
+
+	public void setState(String state) {
+		this.state = state;
+
+		ElementStyle style = this.style.getForState(this);
+		setStyle(style);
+	}
+
 	public int getUIClassCount() {
 		return uiClasses == null ? 0 : uiClasses.size();
 	}
 
-	public String getUIClass(int idx) {
-		return uiClasses == null ? null : uiClasses.get(idx);
+	public Iterable<String> getEachUIClass() {
+		return uiClasses == null ? EMPTY_UI_CLASS : uiClasses;
 	}
 
 	public boolean hasUIClass(String c) {
@@ -102,20 +120,16 @@ public abstract class ElementData {
 
 	public void addUIClass(String uiClass) {
 		if (uiClasses == null)
-			uiClasses = new ArrayList<String>();
+			uiClasses = new HashSet<String>();
 
 		uiClasses.add(uiClass);
-		dataset.elementDataUpdated(this);
+		checkStyleChanged();
 	}
 
 	public void setUIClass(String uiClass) {
-		if (uiClass == null) {
-			if (uiClasses != null) {
-				uiClasses.clear();
-				uiClasses = null;
-				dataset.elementDataUpdated(this);
-			}
-		} else {
+		if (uiClass == null)
+			removeUIClass();
+		else {
 			String[] classes = uiClass.trim().split("\\s+");
 
 			if (classes != null)
@@ -128,19 +142,19 @@ public abstract class ElementData {
 			if (uiClasses != null) {
 				uiClasses.clear();
 				uiClasses = null;
-				dataset.elementDataUpdated(this);
+
+				checkStyleChanged();
 			}
 		} else {
 			if (uiClasses == null)
-				uiClasses = new ArrayList<String>();
+				uiClasses = new HashSet<String>();
 
 			uiClasses.clear();
-			uiClasses.ensureCapacity(classes.length);
 
 			for (int i = 0; i < classes.length; i++)
 				uiClasses.add(classes[i]);
 
-			dataset.elementDataUpdated(this);
+			checkStyleChanged();
 		}
 	}
 
@@ -149,7 +163,7 @@ public abstract class ElementData {
 			return;
 
 		if (uiClasses.remove(uiClass))
-			dataset.elementDataUpdated(this);
+			checkStyleChanged();
 
 		if (uiClasses.size() == 0)
 			uiClasses = null;
@@ -161,6 +175,31 @@ public abstract class ElementData {
 
 		uiClasses.clear();
 		uiClasses = null;
-		dataset.elementDataUpdated(this);
+
+		checkStyleChanged();
+	}
+
+	public void setStyle(ElementStyle style) {
+		if (style != this.style) {
+			System.out.printf("set style of %s#%s to %s\n", getClass()
+					.getSimpleName(), id, style.selector);
+
+			this.style = style;
+			dataset.elementDataUpdated(this);
+		}
+	}
+
+	public void checkStyleChanged() {
+		if (dataset == null)
+			System.err.printf("dataset is null\n");
+		if (dataset.getViewer() == null)
+			System.err.printf("viewer is null\n");
+		if (dataset.getViewer().getStyleSheet() == null)
+			System.err.printf("stylesheet is null\n");
+
+		ElementStyle style = dataset.getViewer().getStyleSheet()
+				.getElementStyle(this);
+
+		setStyle(style);
 	}
 }

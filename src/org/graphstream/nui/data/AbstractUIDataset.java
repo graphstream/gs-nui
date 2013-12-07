@@ -30,8 +30,99 @@
  */
 package org.graphstream.nui.data;
 
+import java.util.LinkedList;
+
 import org.graphstream.nui.UIDataset;
+import org.graphstream.nui.UIDatasetListener;
+import org.graphstream.nui.Viewer;
+import org.graphstream.stream.ElementSink;
 
-public abstract class AbstractUIDataset implements UIDataset {
+public abstract class AbstractUIDataset implements UIDataset, ElementSink {
 
+	protected Viewer viewer;
+	protected GraphData graphData;
+
+	protected LinkedList<UIDatasetListener> listeners;
+
+	protected DataFactory dataFactory;
+
+	protected AbstractUIDataset(DataFactory factory) {
+		this.dataFactory = factory;
+		this.listeners = new LinkedList<UIDatasetListener>();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIDataset#init(org.graphstream.stream.Source)
+	 */
+	public void init(Viewer viewer) {
+		assert this.viewer == null;
+
+		this.viewer = viewer;
+		this.graphData = dataFactory.createGraphData(this, "graph");
+
+		viewer.getSourceFunnel().addElementSink(this);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIDataset#release()
+	 */
+	public void release() {
+		viewer.getSourceFunnel().removeElementSink(this);
+		viewer = null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIDataset#getViewer()
+	 */
+	public Viewer getViewer() {
+		return viewer;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.UIDataset#setDataFactory(org.graphstream.nui.data
+	 * .DataFactory)
+	 */
+	public void setDataFactory(DataFactory factory) {
+		this.dataFactory = factory;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.UIDataset#addUIDatasetListener(org.graphstream.nui
+	 * .UIDatasetListener)
+	 */
+	public void addUIDatasetListener(UIDatasetListener l) {
+		listeners.add(l);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.UIDataset#removeUIDatasetListener(org.graphstream
+	 * .nui.UIDatasetListener)
+	 */
+	public void removeUIDatasetListener(UIDatasetListener l) {
+		listeners.remove(l);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIDataset#getGraphData()
+	 */
+	public GraphData getGraphData() {
+		return graphData;
+	}
 }

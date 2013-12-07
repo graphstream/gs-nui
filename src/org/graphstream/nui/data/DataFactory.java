@@ -44,4 +44,13 @@ public interface DataFactory {
 	 * @return a new data for the sprite
 	 */
 	SpriteData createSpriteData(UIDataset dataset, String spriteId);
+
+	/**
+	 * Create a new data associated to the graph.
+	 * 
+	 * @param graphId
+	 *            id of the graph
+	 * @return a new data for the graph
+	 */
+	GraphData createGraphData(UIDataset dataset, String graphId);
 }

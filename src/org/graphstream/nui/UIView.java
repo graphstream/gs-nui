@@ -30,58 +30,6 @@
  */
 package org.graphstream.nui;
 
-import org.graphstream.stream.PipeBase;
-import org.graphstream.stream.Source;
+public interface UIView {
 
-public class Viewer {
-	public static enum ThreadingModel {
-		SOURCE_IN_VIEWER_THREAD, SOURCE_IN_ANOTHER_THREAD
-	}
-
-	PipeBase sources;
-
-	UIFactory factory;
-	UIDataset dataset;
-	UIAttributes attributes;
-	UICamera camera;
-	UIStyleSheet stylesheet;
-
-	public Viewer() {
-		this(new DefaultUIFactory());
-	}
-
-	public Viewer(UIFactory factory) {
-		this.sources = new PipeBase();
-		this.factory = factory;
-
-		this.dataset = factory.createDataset(this);
-		this.attributes = factory.createAttributesHandler(this);
-		this.stylesheet = factory.createStylesheetHandler(this);
-		this.camera = factory.createCamera(this);
-
-		this.dataset.init(this);
-		this.attributes.init(this);
-		this.stylesheet.init(this);
-		this.camera.init(this);
-	}
-
-	public Source getSourceFunnel() {
-		return sources;
-	}
-
-	public UICamera getCamera() {
-		return camera;
-	}
-
-	public UIStyleSheet getStyleSheet() {
-		return stylesheet;
-	}
-
-	public void register(Source source, ThreadingModel model) {
-		source.addSink(sources);
-	}
-
-	public void unregister(Source source) {
-
-	}
 }

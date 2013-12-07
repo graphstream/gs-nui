@@ -4,8 +4,19 @@ import java.util.Arrays;
 
 import org.graphstream.nui.data.EdgeData;
 import org.graphstream.nui.data.ElementData;
+import org.graphstream.nui.data.GraphData;
 import org.graphstream.nui.data.NodeData;
 
+/**
+ * One of the key element for style. Selector defines the target of a style. It
+ * is composed of a target type, which can be a node, an edge, a sprite, the
+ * whole graph, or any element. Then, it can have an id to be dedicated to a
+ * particular element. Then some "class", and a state. The representation of a
+ * selector is <code>type#id.class1.class2:state</code>. Classes are ordered to
+ * produce a unique representation. HashCode and equals are overridden to allow
+ * selectors to be used in hash collection.
+ * 
+ */
 public class Selector {
 	public static enum Target {
 		GRAPH, NODE, EDGE, SPRITE, UNDEFINED
@@ -61,6 +72,10 @@ public class Selector {
 
 	public boolean hasState() {
 		return state != null;
+	}
+
+	public boolean hasUIClass() {
+		return uiClass != null && uiClass.length > 0;
 	}
 
 	public Selector getNoStateSelector() {
@@ -137,6 +152,9 @@ public class Selector {
 					return false;
 			} else if (data instanceof EdgeData) {
 				if (target != Target.EDGE)
+					return false;
+			} else if (data instanceof GraphData) {
+				if (target != Target.GRAPH)
 					return false;
 			} else {
 				if (target != Target.SPRITE)

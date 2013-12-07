@@ -33,6 +33,7 @@ package org.graphstream.nui;
 import org.graphstream.nui.data.DataFactory;
 import org.graphstream.nui.data.EdgeData;
 import org.graphstream.nui.data.ElementData;
+import org.graphstream.nui.data.GraphData;
 import org.graphstream.nui.data.NodeData;
 import org.graphstream.nui.data.SpriteData;
 import org.graphstream.nui.style.ElementStyle;
@@ -55,6 +56,20 @@ public interface UIDataset {
 	 * any resources associated with the dataset.
 	 */
 	void release();
+
+	/**
+	 * Get the current viewer.
+	 * 
+	 * @return the viewer
+	 */
+	Viewer getViewer();
+
+	/**
+	 * Get the object modeling the data directly associated to the graph.
+	 * 
+	 * @return the graph data
+	 */
+	GraphData getGraphData();
 
 	/**
 	 * Get the current node count in this dataset.

@@ -28,60 +28,12 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui;
+package org.graphstream.nui.data;
 
-import org.graphstream.stream.PipeBase;
-import org.graphstream.stream.Source;
+import org.graphstream.nui.UIDataset;
 
-public class Viewer {
-	public static enum ThreadingModel {
-		SOURCE_IN_VIEWER_THREAD, SOURCE_IN_ANOTHER_THREAD
-	}
-
-	PipeBase sources;
-
-	UIFactory factory;
-	UIDataset dataset;
-	UIAttributes attributes;
-	UICamera camera;
-	UIStyleSheet stylesheet;
-
-	public Viewer() {
-		this(new DefaultUIFactory());
-	}
-
-	public Viewer(UIFactory factory) {
-		this.sources = new PipeBase();
-		this.factory = factory;
-
-		this.dataset = factory.createDataset(this);
-		this.attributes = factory.createAttributesHandler(this);
-		this.stylesheet = factory.createStylesheetHandler(this);
-		this.camera = factory.createCamera(this);
-
-		this.dataset.init(this);
-		this.attributes.init(this);
-		this.stylesheet.init(this);
-		this.camera.init(this);
-	}
-
-	public Source getSourceFunnel() {
-		return sources;
-	}
-
-	public UICamera getCamera() {
-		return camera;
-	}
-
-	public UIStyleSheet getStyleSheet() {
-		return stylesheet;
-	}
-
-	public void register(Source source, ThreadingModel model) {
-		source.addSink(sources);
-	}
-
-	public void unregister(Source source) {
-
+public class GraphData extends ElementData {
+	public GraphData(UIDataset dataset, String id) {
+		super(dataset, id);
 	}
 }

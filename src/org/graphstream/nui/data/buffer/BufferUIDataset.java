@@ -32,21 +32,15 @@ package org.graphstream.nui.data.buffer;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 
-import org.graphstream.stream.ElementSink;
 import org.graphstream.nui.UIDataset;
-import org.graphstream.nui.UIDatasetListener;
-import org.graphstream.nui.Viewer;
 import org.graphstream.nui.data.AbstractUIDataset;
-import org.graphstream.nui.data.DataFactory;
 import org.graphstream.nui.data.EdgeData;
 import org.graphstream.nui.data.ElementData;
 import org.graphstream.nui.data.SpriteData;
 import org.graphstream.nui.style.ElementStyle;
 
-public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
-		ElementSink {
+public class BufferUIDataset extends AbstractUIDataset implements UIDataset {
 
 	public static final int INITIAL_SIZE = 100;
 	public static final int GROW_STEP = 100;
@@ -60,8 +54,6 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 	public static final int B_MASK = 0x000000FF;
 	public static final int B_SHIFT = 0;
 
-	Viewer viewer;
-
 	HashMap<String, Integer> nMapping;
 	BufferNodeData[] nodes;
 	double[] coordinates;
@@ -73,11 +65,9 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 	int[] edgeColors;
 	int eIndex;
 
-	LinkedList<UIDatasetListener> listeners;
-
-	DataFactory dataFactory;
-
 	public BufferUIDataset() {
+		super(new BufferDataFactory());
+		
 		nMapping = new HashMap<String, Integer>();
 		nodes = new BufferNodeData[INITIAL_SIZE];
 		coordinates = new double[3 * INITIAL_SIZE];
@@ -88,10 +78,6 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 		edges = new BufferEdgeData[INITIAL_SIZE];
 		edgeColors = new int[INITIAL_SIZE];
 		eIndex = 0;
-
-		listeners = new LinkedList<UIDatasetListener>();
-
-		dataFactory = new BufferDataFactory();
 	}
 
 	public BufferNodeData getNodeData(String nodeId) {
@@ -245,28 +231,6 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.UIDataset#init(org.graphstream.stream.Source)
-	 */
-	public void init(Viewer viewer) {
-		assert this.viewer == null;
-
-		this.viewer = viewer;
-		viewer.getSourceFunnel().addElementSink(this);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIDataset#release()
-	 */
-	public void release() {
-		viewer.getSourceFunnel().removeElementSink(this);
-		viewer = null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see org.graphstream.nui.UIDataset#getNodeCount()
 	 */
 	public int getNodeCount() {
@@ -300,17 +264,6 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 	public int getEdgeIndex(String id) {
 		Integer idx = eMapping.get(id);
 		return idx == null ? -1 : idx;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.graphstream.nui.UIDataset#setDataFactory(org.graphstream.nui.data
-	 * .DataFactory)
-	 */
-	public void setDataFactory(DataFactory factory) {
-		this.dataFactory = factory;
 	}
 
 	/*
@@ -619,28 +572,6 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.graphstream.nui.UIDataset#addUIDatasetListener(org.graphstream.nui
-	 * .UIDatasetListener)
-	 */
-	public void addUIDatasetListener(UIDatasetListener l) {
-		listeners.add(l);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.graphstream.nui.UIDataset#removeUIDatasetListener(org.graphstream
-	 * .nui.UIDatasetListener)
-	 */
-	public void removeUIDatasetListener(UIDatasetListener l) {
-		listeners.remove(l);
-	}
-
 	public int getSpriteCount() {
 		// TODO Auto-generated method stub
 		return 0;
@@ -658,6 +589,6 @@ public class BufferUIDataset extends AbstractUIDataset implements UIDataset,
 
 	public void elementDataUpdated(ElementData data) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

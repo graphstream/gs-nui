@@ -40,7 +40,6 @@ public class Demo {
 	Viewer v = new Viewer();
 
 	public Demo() {
-
 		v.register(g, ThreadingModel.SOURCE_IN_ANOTHER_THREAD);
 	}
 
@@ -60,11 +59,21 @@ public class Demo {
 		output();
 
 		g.removeNode("A");
+		g.getNode(0).addAttribute("ui.class", "classA classB");
 		g.getNode(1).addAttribute("ui.class", "classA classB");
 		g.getNode(1).addAttribute("ui.class", "+classC");
 		g.getNode(1).addAttribute("ui.class", "-classA");
 
 		output();
+
+		g.getEdge(0).addAttribute("ui.class", "classE");
+		
+		g.addAttribute("ui.stylesheet", "graph {fill-color: black;} "
+				+ "node{fill-color:white; } " + "node.classA{fill-color:red;} "
+				+ "node.classB{fill-color:green;} "
+				+ "node.classA.classB{fill-color:blue;} "
+				+ "node#C {stroke-color:red;} " + "edge#AB {size:3px;} "
+				+ "edge.classE {size:10px;}");
 	}
 
 	public void output() {
@@ -72,18 +81,18 @@ public class Demo {
 		for (int idx = 0; idx < dataset.getNodeCount(); idx++) {
 			NodeData data = dataset.getNodeData(idx);
 
-			System.out.printf("Node#%d \"%s\"\n", idx,
+			System.out.printf("Node#%d \"%s\":: ", idx,
 					dataset.getNodeData(idx).id);
 
-			System.out.printf("   xyz: %.2f;%.2f;%.2f\n",
+			System.out.printf("   xyz:[%.2f;%.2f;%.2f]\t",
 					dataset.getNodeX(idx), dataset.getNodeY(idx),
 					dataset.getNodeZ(idx));
-			System.out.printf("  argb: 0x%X\n", dataset.getNodeARGB(idx));
-			
-			System.out.printf(" class:");
-			for (int c = 0; c < data.getUIClassCount(); c++)
-				System.out.printf(" \"%s\"", data.getUIClass(c));
-			System.out.printf("\n");
+			System.out.printf("  argb:[0x%X]\t", dataset.getNodeARGB(idx));
+
+			System.out.printf(" class:[");
+			for (String uiClass : data.getEachUIClass())
+				System.out.printf(" \"%s\"", uiClass);
+			System.out.printf("]\n");
 		}
 	}
 
@@ -91,5 +100,4 @@ public class Demo {
 		Demo d = new Demo();
 		d.run();
 	}
-
 }

@@ -30,8 +30,11 @@
  */
 package org.graphstream.nui;
 
+import java.io.IOException;
+
 import org.graphstream.nui.data.ElementData;
 import org.graphstream.stream.AttributeSink;
+import org.graphstream.util.parser.ParseException;
 
 public class UIAttributes implements AttributeSink {
 	protected static boolean match(String chain, int offset, String what,
@@ -218,6 +221,19 @@ public class UIAttributes implements AttributeSink {
 		}
 	}
 
+	protected void updateStyleSheet(Object value) {
+		try {
+			viewer.stylesheet.setStyleSheet(value);
+		} catch (IOException e) {
+			System.err.printf("[warning] failed to read stylesheet : %s\n",
+					e.getMessage());
+		} catch (ParseException e) {
+			System.err.printf(
+					"[warning] there is an error in the stylesheet : %s\n",
+					e.getMessage());
+		}
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -229,9 +245,11 @@ public class UIAttributes implements AttributeSink {
 			String attribute, Object value) {
 		if (match(attribute, 0, "ui.", false)) {
 			if (match(attribute, 3, "stylesheet", true)) {
-				viewer.stylesheet.setStyleSheet(value);
+				updateStyleSheet(value);
 			} else if (match(attribute, 3, "space", true)) {
 				viewer.camera.set(attribute, value);
+			} else if (match(attribute, 3, "class", true)) {
+				updateUIClass(dataset.getGraphData(), value);
 			}
 		}
 	}
@@ -247,9 +265,11 @@ public class UIAttributes implements AttributeSink {
 			String attribute, Object oldValue, Object newValue) {
 		if (match(attribute, 0, "ui.", false)) {
 			if (match(attribute, 3, "stylesheet", true)) {
-				viewer.stylesheet.setStyleSheet(newValue);
+				updateStyleSheet(newValue);
 			} else if (match(attribute, 3, "space", true)) {
 				viewer.camera.set(attribute, newValue);
+			} else if (match(attribute, 3, "class", true)) {
+				updateUIClass(dataset.getGraphData(), newValue);
 			}
 		}
 	}
@@ -268,6 +288,8 @@ public class UIAttributes implements AttributeSink {
 				viewer.stylesheet.clear();
 		} else if (match(attribute, 3, "space", true)) {
 			viewer.camera.set(attribute, null);
+		} else if (match(attribute, 3, "class", true)) {
+			updateUIClass(dataset.getGraphData(), null);
 		}
 	}
 
@@ -342,8 +364,14 @@ public class UIAttributes implements AttributeSink {
 	 */
 	public void edgeAttributeAdded(String sourceId, long timeId, String edgeId,
 			String attribute, Object value) {
-		// TODO Auto-generated method stub
+		if (match(attribute, 0, "ui.", false)) {
+			if (match(attribute, 3, "class", true)) {
+				int idx = dataset.getEdgeIndex(edgeId);
 
+				if (idx >= 0)
+					updateUIClass(dataset.getEdgeData(idx), value);
+			}
+		}
 	}
 
 	/*
@@ -356,8 +384,14 @@ public class UIAttributes implements AttributeSink {
 	 */
 	public void edgeAttributeChanged(String sourceId, long timeId,
 			String edgeId, String attribute, Object oldValue, Object newValue) {
-		// TODO Auto-generated method stub
+		if (match(attribute, 0, "ui.", false)) {
+			if (match(attribute, 3, "class", true)) {
+				int idx = dataset.getEdgeIndex(edgeId);
 
+				if (idx >= 0)
+					updateUIClass(dataset.getEdgeData(idx), newValue);
+			}
+		}
 	}
 
 	/*
@@ -369,7 +403,13 @@ public class UIAttributes implements AttributeSink {
 	 */
 	public void edgeAttributeRemoved(String sourceId, long timeId,
 			String edgeId, String attribute) {
-		// TODO Auto-generated method stub
+		if (match(attribute, 0, "ui.", false)) {
+			if (match(attribute, 3, "class", true)) {
+				int idx = dataset.getEdgeIndex(edgeId);
 
+				if (idx >= 0)
+					updateUIClass(dataset.getEdgeData(idx), null);
+			}
+		}
 	}
 }
