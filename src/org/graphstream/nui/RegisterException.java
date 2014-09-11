@@ -31,10 +31,18 @@
  */
 package org.graphstream.nui;
 
-public interface UIView {
-	String getViewId();
+public class RegisterException extends Exception {
+	private static final long serialVersionUID = -9078147395401944180L;
+
+	public RegisterException(String message) {
+		super(message);
+	}
+
+	public RegisterException(Throwable cause) {
+		super(cause);
+	}
 	
-	void init(UIContext ctx);
-	
-	void close();
+	public RegisterException(String message, Throwable cause) {
+		super(message, cause);
+	}
 }

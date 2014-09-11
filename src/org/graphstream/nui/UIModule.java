@@ -31,10 +31,36 @@
  */
 package org.graphstream.nui;
 
-public interface UIView {
-	String getViewId();
-	
+public interface UIModule {
+	/**
+	 * Get the unique identifier linked to this module.
+	 * 
+	 * @return the module id
+	 */
+	String getModuleID();
+
+	/**
+	 * Get the id of modules which this module is depending.
+	 * 
+	 * @return
+	 */
+	Iterable<String> getModuleDeps();
+
+	/**
+	 * 
+	 * @param ctx
+	 */
 	void init(UIContext ctx);
-	
-	void close();
+
+	/**
+	 * 
+	 */
+	void release();
+
+	/**
+	 * 
+	 * @param key
+	 * @param value
+	 */
+	void setAttribute(String key, Object value);
 }

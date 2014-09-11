@@ -1,6 +1,7 @@
 /*
  * Copyright 2006 - 2014
  *     Stefan Balev     <stefan.balev@graphstream-project.org>
+ *     Julien Baudry    <julien.baudry@graphstream-project.org>
  *     Antoine Dutot    <antoine.dutot@graphstream-project.org>
  *     Yoann Pigné      <yoann.pigne@graphstream-project.org>
  *     Guilhelm Savin   <guilhelm.savin@graphstream-project.org>
@@ -30,48 +31,61 @@
  */
 package org.graphstream.nui;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.graphstream.nui.context.DefaultContext;
+
 /**
- * A factory to create objects related to the viewer. It will defined the
- * implementation of these objects, like {@link org.graphstream.nui.UIDataset}
- * for example.
  * 
  */
-public interface UIFactory {
+public abstract class UIFactory {
 	/**
-	 * Create a new dataset.
 	 * 
-	 * @param viewer
-	 *            the viewer which will use this dataset
-	 * @return a new dataset object
 	 */
-	UIDataset createDataset(Viewer viewer);
+	public static final String UI_FACTORY_PROPERTY = "org.graphstream.ui.factory";
 
 	/**
-	 * Create a new camera.
 	 * 
-	 * @param viewer
-	 *            the viewer which will use this dataset
-	 * @return a new camera object
+	 * @return
 	 */
-	UICamera createCamera(Viewer viewer);
+	public static UIFactory getDefaultFactory() {
+		Logger log = Logger.getLogger(UIFactory.class.getName());
+
+		try {
+			String factoryClass = System.getProperty(UI_FACTORY_PROPERTY);
+
+			if (factoryClass != null) {
+				log.info("Found UIFactory class defined in system properties : "
+						+ factoryClass);
+
+				Class<?> c = Class.forName(factoryClass);
+				UIFactory factory = (UIFactory) c.newInstance();
+
+				return factory;
+			}
+		} catch (Exception e) {
+			log.log(Level.WARNING, "failed to load custom UIFactory", e);
+		}
+
+		return new DefaultUIFactory();
+	}
 
 	/**
-	 * Create a new attributes handler. This allows developper to extends the
-	 * default class and add their own code.
 	 * 
-	 * @param viewer
-	 *            the viewer which will use this dataset
-	 * @return a new UIAttributes object
+	 * @return
 	 */
-	UIAttributes createAttributesHandler(Viewer viewer);
+	public abstract UIContext createContext();
 
-	/**
-	 * Create a new camera. This allows developper to extends the
-	 * default class and add their own code.
-	 * 
-	 * @param viewer
-	 *            the viewer which will use this dataset
-	 * @return a new UIStylesheet object
-	 */
-	UIStyleSheet createStylesheetHandler(Viewer viewer);
+	static class DefaultUIFactory extends UIFactory {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.UIFactory#createContext()
+		 */
+		@Override
+		public UIContext createContext() {
+			return new DefaultContext();
+		}
+	}
 }

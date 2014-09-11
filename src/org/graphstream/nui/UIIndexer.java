@@ -31,10 +31,87 @@
  */
 package org.graphstream.nui;
 
-public interface UIView {
-	String getViewId();
-	
-	void init(UIContext ctx);
-	
-	void close();
+import org.graphstream.nui.indexer.UIElementIndex;
+import org.graphstream.nui.indexer.IndexerListener;
+
+/**
+ * 
+ */
+public interface UIIndexer extends UIModule {
+	public static final String MODULE_ID = "indexer";
+
+	/**
+	 * Get the count of nodes indexed in this indexer.
+	 * 
+	 * @return node count
+	 */
+	int getNodeCount();
+
+	/**
+	 * 
+	 * @param nodeId
+	 * @return
+	 */
+	UIElementIndex getNodeIndex(String nodeId);
+
+	/**
+	 * 
+	 * @param nodeIndex
+	 * @return null if index is out of bounds
+	 */
+	UIElementIndex getNodeIndex(int nodeIndex);
+
+	/**
+	 * Get the count of edges indexed in this indexer.
+	 * 
+	 * @return edge count
+	 */
+	int getEdgeCount();
+
+	/**
+	 * 
+	 * @param edgeId
+	 * @return
+	 */
+	UIElementIndex getEdgeIndex(String edgeId);
+
+	/**
+	 * 
+	 * @param edgeIndex
+	 * @return
+	 */
+	UIElementIndex getEdgeIndex(int edgeIndex);
+
+	/**
+	 * Get the count of sprites indexed in this indexer.
+	 * 
+	 * @return sprite count
+	 */
+	int getSpriteCount();
+
+	/**
+	 * 
+	 * @param spriteId
+	 * @return
+	 */
+	UIElementIndex getSpriteIndex(String spriteId);
+
+	/**
+	 * 
+	 * @param spriteIndex
+	 * @return
+	 */
+	UIElementIndex getSpriteIndex(int spriteIndex);
+
+	/**
+	 * 
+	 * @param l
+	 */
+	void addIndexerListener(IndexerListener l);
+
+	/**
+	 * 
+	 * @param l
+	 */
+	void removeIndexerListener(IndexerListener l);
 }

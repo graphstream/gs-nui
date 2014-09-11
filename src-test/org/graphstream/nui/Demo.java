@@ -1,6 +1,7 @@
 /*
  * Copyright 2006 - 2014
  *     Stefan Balev     <stefan.balev@graphstream-project.org>
+ *     Julien Baudry    <julien.baudry@graphstream-project.org>
  *     Antoine Dutot    <antoine.dutot@graphstream-project.org>
  *     Yoann Pigné      <yoann.pigne@graphstream-project.org>
  *     Guilhelm Savin   <guilhelm.savin@graphstream-project.org>
@@ -30,74 +31,99 @@
  */
 package org.graphstream.nui;
 
-import org.graphstream.graph.Graph;
-import org.graphstream.graph.implementations.AdjacencyListGraph;
-import org.graphstream.nui.Viewer.ThreadingModel;
-import org.graphstream.nui.data.NodeData;
+import java.util.logging.Logger;
+
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.DefaultGraph;
+import org.graphstream.nui.UIContext.ThreadingModel;
+import org.graphstream.nui.indexer.UIElementIndex;
+import org.graphstream.nui.indexer.IndexerListener;
 
 public class Demo {
-	Graph g = new AdjacencyListGraph("g");
-	Viewer v = new Viewer();
-
-	public Demo() {
-		v.register(g, ThreadingModel.SOURCE_IN_ANOTHER_THREAD);
-	}
-
-	public void run() {
-		g.addNode("A");
-		g.addNode("B");
-		g.addNode("C");
-
-		g.addEdge("AB", "A", "B");
-		g.addEdge("AC", "A", "C");
-		g.addEdge("BC", "B", "C");
-
-		g.getNode(0).addAttribute("xyz", new double[] { 1, 0, 0 });
-		g.getNode(1).addAttribute("xyz", new double[] { -0.5, 0.5, 0 });
-		g.getNode(2).addAttribute("xyz", new double[] { -0.5, -0.5, 0 });
-
-		output();
-
-		g.removeNode("A");
-		g.getNode(0).addAttribute("ui.class", "classA classB");
-		g.getNode(1).addAttribute("ui.class", "classA classB");
-		g.getNode(1).addAttribute("ui.class", "+classC");
-		g.getNode(1).addAttribute("ui.class", "-classA");
-
-		output();
-
-		g.getEdge(0).addAttribute("ui.class", "classE");
-		
-		g.addAttribute("ui.stylesheet", "graph {fill-color: black;} "
-				+ "node{fill-color:white; } " + "node.classA{fill-color:red;} "
-				+ "node.classB{fill-color:green;} "
-				+ "node.classA.classB{fill-color:blue;} "
-				+ "node#C {stroke-color:red;} " + "edge#AB {size:3px;} "
-				+ "edge.classE {size:10px;}");
-	}
-
-	public void output() {
-		UIDataset dataset = v.dataset;
-		for (int idx = 0; idx < dataset.getNodeCount(); idx++) {
-			NodeData data = dataset.getNodeData(idx);
-
-			System.out.printf("Node#%d \"%s\":: ", idx,
-					dataset.getNodeData(idx).id);
-
-			System.out.printf("   xyz:[%.2f;%.2f;%.2f]\t",
-					dataset.getNodeX(idx), dataset.getNodeY(idx),
-					dataset.getNodeZ(idx));
-			System.out.printf("  argb:[0x%X]\t", dataset.getNodeARGB(idx));
-
-			System.out.printf(" class:[");
-			for (String uiClass : data.getEachUIClass())
-				System.out.printf(" \"%s\"", uiClass);
-			System.out.printf("]\n");
-		}
-	}
 
 	public static void main(String[] args) {
-		Demo d = new Demo();
-		d.run();
+		Logger log = Logger.getAnonymousLogger();
+
+		DefaultGraph g = new DefaultGraph("g");
+		UIContext ctx = UIFactory.getDefaultFactory().createContext();
+
+		ctx.init(ThreadingModel.SOURCE_IN_UI_THREAD);
+		ctx.loadModule(UIDataset.MODULE_ID);
+		ctx.loadModule(UISpace.MODULE_ID);
+		ctx.loadModule(UIStyle.MODULE_ID);
+
+		UIIndexer indexer = (UIIndexer) ctx.getModule(UIIndexer.MODULE_ID);
+		indexer.addIndexerListener(new IListener());
+
+		ctx.connect(g);
+
+		g.addAttribute(
+				"ui.stylesheet",
+				"graph { fill-color: red; } node { fill-color: green; } node#W { fill-color: blue; }");
+
+		g.addNode("Z");
+		g.addNode("W");
+		Node y = g.addNode("Y");
+
+		y.setAttribute("xyz", 10, 15, 20);
+
+		UIStyle style = (UIStyle) ctx.getModule(UIStyle.MODULE_ID);
+		log.info("graph color is " + style.getGraphStyle().getFillColor());
+		log.info("node color is "
+				+ style.getElementStyle(indexer.getNodeIndex(0)).getFillColor());
+		log.info("node#W color is "
+				+ style.getElementStyle(indexer.getNodeIndex("W"))
+						.getFillColor());
+	}
+
+	static class IListener implements IndexerListener {
+		Logger log = Logger.getAnonymousLogger();
+
+		@Override
+		public void nodeAdded(UIElementIndex nodeIndex) {
+			log.info("node \"" + nodeIndex.id() + "\" added @ "
+					+ nodeIndex.index());
+		}
+
+		@Override
+		public void nodeRemoved(UIElementIndex nodeIndex) {
+			log.info("node \"" + nodeIndex.id() + "\" removed @ "
+					+ nodeIndex.index());
+		}
+
+		@Override
+		public void nodesSwapped(UIElementIndex nodeIndex1,
+				UIElementIndex nodeIndex2) {
+			log.info("node \"" + nodeIndex1.id() + "\" @ " + nodeIndex1.index()
+					+ " and \"" + nodeIndex2.id() + "\" @ "
+					+ nodeIndex2.index() + " swapped @ ");
+		}
+
+		@Override
+		public void edgeAdded(UIElementIndex edgeIndex, UIElementIndex sourceIndex,
+				UIElementIndex targetIndex, boolean directed) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void edgeRemoved(UIElementIndex edgeIndex) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void edgesSwapped(UIElementIndex edgeIndex1,
+				UIElementIndex edgeIndex2) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void elementsClear() {
+			// TODO Auto-generated method stub
+
+		}
+
 	}
 }

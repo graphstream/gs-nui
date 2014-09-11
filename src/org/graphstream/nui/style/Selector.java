@@ -2,11 +2,6 @@ package org.graphstream.nui.style;
 
 import java.util.Arrays;
 
-import org.graphstream.nui.data.EdgeData;
-import org.graphstream.nui.data.ElementData;
-import org.graphstream.nui.data.GraphData;
-import org.graphstream.nui.data.NodeData;
-
 /**
  * One of the key element for style. Selector defines the target of a style. It
  * is composed of a target type, which can be a node, an edge, a sprite, the
@@ -147,22 +142,25 @@ public class Selector {
 
 	public boolean match(ElementData data) {
 		if (target != Target.UNDEFINED) {
-			if (data instanceof NodeData) {
+			switch (data.index.getType()) {
+			case NODE:
 				if (target != Target.NODE)
 					return false;
-			} else if (data instanceof EdgeData) {
+				break;
+			case EDGE:
 				if (target != Target.EDGE)
 					return false;
-			} else if (data instanceof GraphData) {
+				break;
+			case GRAPH:
 				if (target != Target.GRAPH)
 					return false;
-			} else {
-				if (target != Target.SPRITE)
-					return false;
+				break;
+			case SPRITE:
+				return false;
 			}
 		}
 
-		if (id != null && !id.equals(data.id))
+		if (id != null && !id.equals(data.index.id()))
 			return false;
 
 		if (uiClass != null) {

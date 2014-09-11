@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 - 2012
+ * Copyright 2006 - 2014
  *      Stefan Balev    <stefan.balev@graphstream-project.org>
  *      Julien Baudry	<julien.baudry@graphstream-project.org>
  *      Antoine Dutot	<antoine.dutot@graphstream-project.org>
@@ -32,19 +32,15 @@ package org.graphstream.nui.style;
 import java.awt.Color;
 import java.util.EnumMap;
 import java.util.HashMap;
-
-import org.graphstream.nui.data.ElementData;
-import org.graphstream.ui.graphicGraph.stylesheet.Colors;
-import org.graphstream.ui.graphicGraph.stylesheet.Value;
-import org.graphstream.ui.graphicGraph.stylesheet.Values;
+import java.util.Map;
 
 public class ElementStyle implements StyleConstants {
 	protected static final String DEFAULT_STATE = "<default>";
 
 	protected ElementStyle parent;
 	public final Selector selector;
-	protected final EnumMap<StyleKey, Object> styles;
-	protected HashMap<String, ElementStyle> states;
+	protected final Map<StyleKey, Object> styles;
+	protected Map<String, ElementStyle> states;
 
 	public ElementStyle(Selector selector) {
 		this.selector = selector;

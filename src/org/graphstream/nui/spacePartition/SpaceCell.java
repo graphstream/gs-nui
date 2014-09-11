@@ -29,12 +29,10 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui;
+package org.graphstream.nui.spacePartition;
 
-public interface UIView {
-	String getViewId();
-	
-	void init(UIContext ctx);
-	
-	void close();
+import org.graphstream.nui.indexer.UIElementIndex;
+
+public interface SpaceCell extends Iterable<UIElementIndex> {
+
 }

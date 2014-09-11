@@ -55,18 +55,18 @@ public class StyleSheetParser implements StyleConstants {
 	/**
 	 * The style sheet.
 	 */
-	protected StyleSheet stylesheet;
+	protected StyleSheetParserListener listener;
 	
-	public StyleSheetParser( StyleSheet stylesheet, InputStream stream )
+	public StyleSheetParser( StyleSheetParserListener listener, InputStream stream )
 	{
 		this( stream );
-		this.stylesheet = stylesheet;
+		this.listener = listener;
 	}
 	
-	public StyleSheetParser( StyleSheet stylesheet, Reader stream )
+	public StyleSheetParser( StyleSheetParserListener listener, Reader stream )
 	{
 		this( stream );
-		this.stylesheet = stylesheet;
+		this.listener = listener;
 	}
 	
 	public static class Number
@@ -308,7 +308,7 @@ void rule():
 		rule  = new ElementStyle( select );
 	}
 	<LBRACE> ( styles(rule) ) <RBRACE>
-	{ stylesheet.addStyle(rule); }
+	{ listener.elementStyleAdded(rule); }
 }
 
 void styles( ElementStyle rule ):

@@ -31,10 +31,6 @@
  */
 package org.graphstream.nui;
 
-public interface UIView {
-	String getViewId();
-	
-	void init(UIContext ctx);
-	
-	void close();
+public interface UILayout extends UIModule {
+	public static final String MODULE_ID = "layout";
 }

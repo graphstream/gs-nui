@@ -31,10 +31,10 @@
  */
 package org.graphstream.nui;
 
-public interface UIView {
-	String getViewId();
-	
-	void init(UIContext ctx);
-	
-	void close();
+public class ModuleNotFoundException extends Exception {
+	private static final long serialVersionUID = -8320861804567279168L;
+
+	public ModuleNotFoundException(String moduleId) {
+		super(moduleId);
+	}
 }

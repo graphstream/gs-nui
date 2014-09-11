@@ -29,12 +29,51 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui;
+package org.graphstream.nui.util;
 
-public interface UIView {
-	String getViewId();
-	
-	void init(UIContext ctx);
-	
-	void close();
+import org.graphstream.ui.geom.Point3;
+
+public class Tools {
+	public static double checkAndGetDouble(Object value)
+			throws IllegalArgumentException {
+		if (value instanceof Double)
+			return (Double) value;
+
+		if (value instanceof Number)
+			return ((Number) value).doubleValue();
+
+		throw new IllegalArgumentException(String.format(
+				"invalid double value \"%s\"", value.getClass().getName()));
+	}
+
+	public static double[] checkAndGetDoubleArray(Object value)
+			throws IllegalArgumentException {
+		double[] r = null;
+
+		if (value instanceof double[])
+			r = (double[]) value;
+		else if (value instanceof Double[]) {
+			Double[] rO = (Double[]) value;
+			r = new double[rO.length];
+
+			for (int i = 0; i < r.length; i++)
+				r[i] = rO[i];
+		} else if (value instanceof Point3) {
+			Point3 p3 = (Point3) value;
+			r = new double[] { p3.x, p3.y, p3.z };
+		} else if (value instanceof Object[]) {
+			Object[] rO = (Object[]) value;
+			r = new double[rO.length];
+
+			for (int i = 0; i < r.length; i++)
+				r[i] = checkAndGetDouble(rO[i]);
+		}
+
+		if (r == null)
+			throw new IllegalArgumentException(String.format(
+					"invalid double array value \"%s\"", value.getClass()
+							.getName()));
+
+		return r;
+	}
 }

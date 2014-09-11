@@ -31,10 +31,78 @@
  */
 package org.graphstream.nui;
 
-public interface UIView {
-	String getViewId();
-	
-	void init(UIContext ctx);
-	
-	void close();
+import java.util.logging.Logger;
+
+/**
+ * This is the base class for ui modules. It manages the id and the deps of this
+ * module.
+ *
+ */
+public abstract class AbstractModule implements UIModule {
+
+	private final String id;
+	private final Iterable<String> deps;
+
+	protected UIContext ctx;
+
+	protected AbstractModule(String id, String... deps) {
+		this.id = id;
+		this.deps = UIModules.createDeps(deps);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIModule#getModuleID()
+	 */
+	@Override
+	public String getModuleID() {
+		return id;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIModule#getModuleDeps()
+	 */
+	@Override
+	public Iterable<String> getModuleDeps() {
+		return deps;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIModule#init(org.graphstream.nui.UIContext)
+	 */
+	@Override
+	public void init(UIContext ctx) {
+		this.ctx = ctx;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIModule#release()
+	 */
+	@Override
+	public void release() {
+		this.ctx = null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIModule#setAttribute(java.lang.String,
+	 * java.lang.Object)
+	 */
+	@Override
+	public void setAttribute(String key, Object value) {
+		//
+		// Classes have to override this method.
+		//
+		
+		Logger.getLogger(getClass().getName()).info(
+				"set attribute \"" + key + "\" to " + value);
+	}
 }

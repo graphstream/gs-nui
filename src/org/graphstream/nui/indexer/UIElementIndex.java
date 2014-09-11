@@ -29,12 +29,25 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui;
+package org.graphstream.nui.indexer;
 
-public interface UIView {
-	String getViewId();
+public interface UIElementIndex {
+	public static enum Type {
+		NODE, EDGE, GRAPH, SPRITE
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	String id();
+
+	/**
+	 * -1 means that the element has been removed.
+	 * 
+	 * @return
+	 */
+	int index();
 	
-	void init(UIContext ctx);
-	
-	void close();
+	Type getType();
 }

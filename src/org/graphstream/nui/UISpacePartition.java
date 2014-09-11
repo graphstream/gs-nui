@@ -31,10 +31,8 @@
  */
 package org.graphstream.nui;
 
-public interface UIView {
-	String getViewId();
-	
-	void init(UIContext ctx);
-	
-	void close();
+import org.graphstream.nui.spacePartition.SpaceCell;
+
+public interface UISpacePartition extends UIModule, Iterable<SpaceCell> {
+	public static final String MODULE_ID = "spacePartition";
 }

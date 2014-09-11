@@ -31,10 +31,18 @@
  */
 package org.graphstream.nui;
 
-public interface UIView {
-	String getViewId();
-	
-	void init(UIContext ctx);
-	
-	void close();
+import org.graphstream.nui.indexer.UIElementIndex;
+import org.graphstream.nui.style.ElementStyle;
+import org.graphstream.nui.style.StyleListener;
+
+public interface UIStyle extends UIModule {
+	public static final String MODULE_ID = "style";
+
+	ElementStyle getGraphStyle();
+
+	ElementStyle getElementStyle(UIElementIndex index);
+
+	void addStyleListener(StyleListener l);
+
+	void removeStyleListener(StyleListener l);
 }
