@@ -39,7 +39,11 @@ import java.io.Reader;
 import java.util.LinkedList;
 
 import org.graphstream.nui.style.*;
+import org.graphstream.nui.style.base.BaseGroupStyle;
 import org.graphstream.nui.style.util.ColorConverter;
+import org.graphstream.nui.style.util.Colors;
+import org.graphstream.nui.style.util.Value;
+import org.graphstream.nui.style.util.Values;
 import org.graphstream.util.parser.ParseException;
 import org.graphstream.util.parser.SimpleCharStream;
 import org.graphstream.util.parser.Token;
@@ -119,16 +123,16 @@ public class StyleSheetParser implements StyleConstants,
 
 	final public void rule() throws ParseException {
 		Selector select;
-		ElementStyle rule;
+		BaseGroupStyle rule;
 		select = select();
-		rule = new ElementStyle(select);
+		rule = new BaseGroupStyle(select);
 		jj_consume_token(LBRACE);
 		styles(rule);
 		jj_consume_token(RBRACE);
 		listener.elementStyleAdded(rule);
 	}
 
-	final public void styles(ElementStyle rule) throws ParseException {
+	final public void styles(GroupStyle rule) throws ParseException {
 		label_2: while (true) {
 			switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
 			case FILLMODE:
@@ -302,7 +306,7 @@ public class StyleSheetParser implements StyleConstants,
 		throw new Error("Missing return statement in function");
 	}
 
-	final public void style(ElementStyle style) throws ParseException {
+	final public void style(GroupStyle style) throws ParseException {
 		Color color;
 		Colors colors;
 		String url;

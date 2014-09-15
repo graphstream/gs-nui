@@ -31,35 +31,55 @@
  */
 package org.graphstream.nui.views.swing;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.util.Iterator;
 
 import javax.swing.JPanel;
 
 import org.graphstream.nui.UIDataset;
+import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.UIStyle;
-import org.graphstream.nui.style.ElementStyle;
+import org.graphstream.nui.indexer.ElementIndex;
+import org.graphstream.nui.style.base.BaseGroupStyle;
 import org.graphstream.nui.views.UICamera;
+import org.graphstream.nui.views.swing.renderer.BackgroundRenderer;
 
 public class SwingGraphCanvas extends JPanel {
 	private static final long serialVersionUID = 2570462198303271151L;
 
 	protected UICamera camera;
+
 	protected UIDataset dataset;
+	protected UIStyle style;
+	protected UIIndexer indexer;
 
 	protected boolean antialiasing;
 	protected boolean quality;
 
-	protected UIStyle style;
+	protected SwingElementRenderer backgroundRenderer;
+	protected SwingElementRenderer nodeRenderer;
+	protected SwingElementRenderer edgeRenderer;
+	protected SwingElementRenderer spriteRenderer;
 
-	public SwingGraphCanvas(UICamera camera, UIDataset dataset, UIStyle style) {
+	public SwingGraphCanvas(UICamera camera, UIIndexer indexer,
+			UIDataset dataset, UIStyle style) {
 		this.camera = camera;
+
+		this.indexer = indexer;
 		this.dataset = dataset;
 		this.style = style;
+
+		backgroundRenderer = getDefaultBackgroundRenderer();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
+	 */
+	@Override
 	protected void paintComponent(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g;
 
@@ -67,6 +87,10 @@ public class SwingGraphCanvas extends JPanel {
 
 		renderBackground(g2d, style.getGraphStyle());
 		renderElements(g2d);
+	}
+
+	protected SwingElementRenderer getDefaultBackgroundRenderer() {
+		return new BackgroundRenderer();
 	}
 
 	protected void setupGraphics(Graphics2D g) {
@@ -107,24 +131,35 @@ public class SwingGraphCanvas extends JPanel {
 		}
 	}
 
-	protected void renderBackground(Graphics2D g, ElementStyle graphStyle) {
-		g.setColor(Color.LIGHT_GRAY);
-		g.drawRect(0, 0, getWidth(), getHeight());
+	protected void renderBackground(Graphics2D g, BaseGroupStyle graphStyle) {
+		backgroundRenderer.render(g, camera, graphStyle, null);
 	}
 
 	protected void renderElements(Graphics2D g) {
+		Iterator<ElementIndex> rOrder = style.getRenderingOrder();
 
-	}
+		while (rOrder.hasNext()) {
+			ElementIndex eIndex = rOrder.next();
+			SwingElementRenderer renderer = null;
 
-	protected void renderNode(Graphics2D g, int nodeIndex) {
+			switch (eIndex.getType()) {
+			case NODE:
+				renderer = nodeRenderer;
+				break;
+			case EDGE:
+				renderer = edgeRenderer;
+				break;
+			case SPRITE:
+				renderer = spriteRenderer;
+				break;
+			default:
+				// Nothing to do !
+			}
 
-	}
-
-	protected void renderEdge(Graphics2D g, int edgeIndex) {
-
-	}
-
-	protected void renderSprite(Graphics2D g, int spriteIndex) {
-
+			if (renderer != null) {
+				BaseGroupStyle eStyle = style.getElementStyle(eIndex);
+				renderer.render(g, camera, eStyle, eIndex);
+			}
+		}
 	}
 }

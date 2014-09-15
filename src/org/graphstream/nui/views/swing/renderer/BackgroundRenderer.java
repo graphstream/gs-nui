@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 - 2013
+ * Copyright 2006 - 2014
  *     Stefan Balev     <stefan.balev@graphstream-project.org>
  *     Julien Baudry    <julien.baudry@graphstream-project.org>
  *     Antoine Dutot    <antoine.dutot@graphstream-project.org>
@@ -29,31 +29,32 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.style;
+package org.graphstream.nui.views.swing.renderer;
 
 import java.awt.Color;
-import java.util.ArrayList;
+import java.awt.Graphics2D;
 
-/**
- * Ordered set of colours.
- */
-public class Colors extends ArrayList<Color> {
-	private static final long serialVersionUID = - 7218092114483593610L;
+import org.graphstream.nui.indexer.ElementIndex;
+import org.graphstream.nui.style.GroupStyle;
+import org.graphstream.nui.views.UICamera;
+import org.graphstream.nui.views.swing.SwingElementRenderer;
 
-	/**
-	 * New empty colour set.
-	 */
-	public Colors() {
-	}
-
-	/**
-	 * New copy of the other colour set.
+public class BackgroundRenderer implements
+		SwingElementRenderer {
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @param others
-	 *            The other colour set to copy.
+	 * @see
+	 * org.graphstream.nui.views.swing.renderer.SwingBackgroundRenderer#
+	 * renderBackground(java.awt.Graphics2D,
+	 * org.graphstream.nui.style.ElementStyle)
 	 */
-	public Colors(Colors others) {
-		for (Color color : others)
-			add(color);
+	@Override
+	public void render(Graphics2D g, UICamera camera,
+			GroupStyle graphStyle, ElementIndex index) {
+		g.setColor(Color.LIGHT_GRAY);
+
+		g.drawRect(0, 0, camera.getDisplayWidth(),
+				camera.getDisplayHeight());
 	}
 }

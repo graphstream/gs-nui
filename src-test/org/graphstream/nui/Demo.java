@@ -31,16 +31,22 @@
  */
 package org.graphstream.nui;
 
+import java.nio.DoubleBuffer;
+import java.util.Iterator;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.DefaultGraph;
 import org.graphstream.nui.UIContext.ThreadingModel;
-import org.graphstream.nui.indexer.UIElementIndex;
+import org.graphstream.nui.buffers.UIBufferReference;
+import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.IndexerListener;
+import org.graphstream.nui.indexer.ElementIndex.Type;
 
 public class Demo {
 
+	@SuppressWarnings("unused")
 	public static void main(String[] args) {
 		Logger log = Logger.getAnonymousLogger();
 
@@ -48,82 +54,74 @@ public class Demo {
 		UIContext ctx = UIFactory.getDefaultFactory().createContext();
 
 		ctx.init(ThreadingModel.SOURCE_IN_UI_THREAD);
-		ctx.loadModule(UIDataset.MODULE_ID);
-		ctx.loadModule(UISpace.MODULE_ID);
-		ctx.loadModule(UIStyle.MODULE_ID);
+
+		try {
+			ctx.loadModule(UIBuffers.MODULE_ID);
+			ctx.loadModule(UIDataset.MODULE_ID);
+			ctx.loadModule(UISpace.MODULE_ID);
+			ctx.loadModule(UIStyle.MODULE_ID);
+		} catch (InstantiationException | ModuleNotFoundException e) {
+			log.log(Level.SEVERE, "Can not load modules", e);
+		}
 
 		UIIndexer indexer = (UIIndexer) ctx.getModule(UIIndexer.MODULE_ID);
-		indexer.addIndexerListener(new IListener());
+
+		UIBuffers buffers = (UIBuffers) ctx.getModule(UIBuffers.MODULE_ID);
+		UIBufferReference ref = buffers.createBuffer(Type.NODE, 1, 10, 3,
+				Double.SIZE / 8, true, null);
+
+		print(ref.buffer().asDoubleBuffer());
 
 		ctx.connect(g);
 
 		g.addAttribute(
 				"ui.stylesheet",
-				"graph { fill-color: red; } node { fill-color: green; } node#W { fill-color: blue; }");
+				"graph { fill-color: red; } node { fill-mode: dyn-plain; fill-color: green, blue; z-index:1; } node#W { fill-color: blue; z-index:10; }");
 
-		g.addNode("Z");
-		g.addNode("W");
+		Node z = g.addNode("Z");
+		z.addAttribute("ui.color", 0.5);
+
 		Node y = g.addNode("Y");
+		g.addNode("W");
+		g.addEdge("ZW", "Z", "W");
 
-		y.setAttribute("xyz", 10, 15, 20);
+		// y.setAttribute("xyz", 10, 15, 20);
 
 		UIStyle style = (UIStyle) ctx.getModule(UIStyle.MODULE_ID);
-		log.info("graph color is " + style.getGraphStyle().getFillColor());
-		log.info("node color is "
-				+ style.getElementStyle(indexer.getNodeIndex(0)).getFillColor());
-		log.info("node#W color is "
-				+ style.getElementStyle(indexer.getNodeIndex("W"))
-						.getFillColor());
+		// log.info("graph color is " + style.getGraphStyle().getFillColor());
+		// log.info("node color is "
+		// + style.getElementStyle(indexer.getNodeIndex(0)).getFillColor());
+		// log.info("node#W color is "
+		// + style.getElementStyle(indexer.getNodeIndex("W"))
+		// .getFillColor());
+
+		ElementIndex w = indexer.getNodeIndex("W");
+		ref.setDouble(w, 0, 23.0);
+		ref.setDouble(w, 1, 32.0);
+
+		print(ref.buffer().asDoubleBuffer());
+		
+		g.removeNode("Z");
+
+		print(ref.buffer().asDoubleBuffer());
+
+		Iterator<ElementIndex> it = style.getRenderingOrder();
+
+		while (it.hasNext()) {
+			ElementIndex idx = it.next();
+			//System.err.printf("%s : 0x%X%n", idx, style.getElementStyle(idx)
+			//		.getColor());
+		}
 	}
 
-	static class IListener implements IndexerListener {
-		Logger log = Logger.getAnonymousLogger();
+	static void print(DoubleBuffer buffer) {
+		buffer.rewind();
+		System.err.printf("%d elements {", buffer.remaining());
 
-		@Override
-		public void nodeAdded(UIElementIndex nodeIndex) {
-			log.info("node \"" + nodeIndex.id() + "\" added @ "
-					+ nodeIndex.index());
-		}
+		while (buffer.hasRemaining())
+			System.err.printf("%f%s", buffer.get(),
+					buffer.hasRemaining() ? "; " : "");
 
-		@Override
-		public void nodeRemoved(UIElementIndex nodeIndex) {
-			log.info("node \"" + nodeIndex.id() + "\" removed @ "
-					+ nodeIndex.index());
-		}
-
-		@Override
-		public void nodesSwapped(UIElementIndex nodeIndex1,
-				UIElementIndex nodeIndex2) {
-			log.info("node \"" + nodeIndex1.id() + "\" @ " + nodeIndex1.index()
-					+ " and \"" + nodeIndex2.id() + "\" @ "
-					+ nodeIndex2.index() + " swapped @ ");
-		}
-
-		@Override
-		public void edgeAdded(UIElementIndex edgeIndex, UIElementIndex sourceIndex,
-				UIElementIndex targetIndex, boolean directed) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void edgeRemoved(UIElementIndex edgeIndex) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void edgesSwapped(UIElementIndex edgeIndex1,
-				UIElementIndex edgeIndex2) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void elementsClear() {
-			// TODO Auto-generated method stub
-
-		}
-
+		System.err.printf("}%n");
 	}
 }

@@ -31,94 +31,48 @@
  */
 package org.graphstream.nui;
 
+import java.nio.ByteOrder;
+
+import org.graphstream.nui.buffers.UIBufferReference;
 import org.graphstream.nui.indexer.ElementIndex;
-import org.graphstream.nui.indexer.IndexerListener;
 
 /**
+ * One of the main parts of the ui is to maintain data in buffers that fit the
+ * element indexes. Since there is dynamics, index of an element can change or
+ * new elements can be added. So, one has to adapt the buffer to these changes.
  * 
+ * The buffers module deals with these changes and adapt registered buffers, so
+ * element datas always fit the index of elements.
+ * 
+ * When created, the new buffer can be accessed through a
+ * {@link org.graphstream.nui.buffers.UIBufferReference}. Using the reference
+ * rather than the buffer is an important point since the buffer itself can
+ * change when we have to make it bigger.
  */
-public interface UIIndexer extends UIModule {
-	public static final String MODULE_ID = "indexer";
+public interface UIBuffers extends UIModule {
+	public static final String MODULE_ID = "buffers";
 
 	/**
-	 * Get the index of the graph.
+	 * Create and registered a new buffer.
 	 * 
-	 * @return
+	 * @param type
+	 *            the type of element owning the data
+	 * @param initialSize
+	 *            initial size (ie. number of data elements) of the new buffer
+	 * @param growingSize
+	 *            when buffer has to grow, this defines how the capacity of the
+	 *            buffer will be increased
+	 * @param components
+	 *            how many components per data element
+	 * @param componentSize
+	 *            defines the size of a components (in bytes)
+	 * @param direct
+	 *            set if the buffer should be direct or not
+	 * @param order
+	 *            byte order of the buffer
+	 * @return a reference to the new registered buffer
 	 */
-	ElementIndex getGraphIndex();
-
-	/**
-	 * Get the count of nodes indexed in this indexer.
-	 * 
-	 * @return node count
-	 */
-	int getNodeCount();
-
-	/**
-	 * 
-	 * @param nodeId
-	 * @return
-	 */
-	ElementIndex getNodeIndex(String nodeId);
-
-	/**
-	 * 
-	 * @param nodeIndex
-	 * @return null if index is out of bounds
-	 */
-	ElementIndex getNodeIndex(int nodeIndex);
-
-	/**
-	 * Get the count of edges indexed in this indexer.
-	 * 
-	 * @return edge count
-	 */
-	int getEdgeCount();
-
-	/**
-	 * 
-	 * @param edgeId
-	 * @return
-	 */
-	ElementIndex getEdgeIndex(String edgeId);
-
-	/**
-	 * 
-	 * @param edgeIndex
-	 * @return
-	 */
-	ElementIndex getEdgeIndex(int edgeIndex);
-
-	/**
-	 * Get the count of sprites indexed in this indexer.
-	 * 
-	 * @return sprite count
-	 */
-	int getSpriteCount();
-
-	/**
-	 * 
-	 * @param spriteId
-	 * @return
-	 */
-	ElementIndex getSpriteIndex(String spriteId);
-
-	/**
-	 * 
-	 * @param spriteIndex
-	 * @return
-	 */
-	ElementIndex getSpriteIndex(int spriteIndex);
-
-	/**
-	 * 
-	 * @param l
-	 */
-	void addIndexerListener(IndexerListener l);
-
-	/**
-	 * 
-	 * @param l
-	 */
-	void removeIndexerListener(IndexerListener l);
+	UIBufferReference createBuffer(ElementIndex.Type type, int initialSize,
+			int growingSize, int components, int componentSize, boolean direct,
+			ByteOrder order);
 }

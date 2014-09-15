@@ -31,8 +31,11 @@
  */
 package org.graphstream.nui;
 
-import org.graphstream.nui.indexer.UIElementIndex;
+import java.util.Iterator;
+
+import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.style.ElementStyle;
+import org.graphstream.nui.style.GroupStyle;
 import org.graphstream.nui.style.StyleListener;
 
 public interface UIStyle extends UIModule {
@@ -40,7 +43,11 @@ public interface UIStyle extends UIModule {
 
 	ElementStyle getGraphStyle();
 
-	ElementStyle getElementStyle(UIElementIndex index);
+	ElementStyle getElementStyle(ElementIndex index);
+
+	GroupStyle searchGroupStyle(ElementStyle data);
+	
+	Iterator<ElementIndex> getRenderingOrder();
 
 	void addStyleListener(StyleListener l);
 

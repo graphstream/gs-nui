@@ -29,7 +29,7 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.style;
+package org.graphstream.nui.style.base;
 
 import java.awt.Color;
 import java.io.File;
@@ -51,11 +51,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.graphstream.nui.AbstractModule;
+import org.graphstream.nui.UIAttributes;
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.UIStyle;
-import org.graphstream.nui.indexer.UIElementIndex;
+import org.graphstream.nui.UIAttributes.AttributeType;
+import org.graphstream.nui.attributes.AttributeHandler;
+import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.IndexerListener;
+import org.graphstream.nui.style.ElementStyle;
+import org.graphstream.nui.style.GroupStyle;
+import org.graphstream.nui.style.Selector;
+import org.graphstream.nui.style.StyleListener;
 import org.graphstream.nui.style.Selector.Target;
 import org.graphstream.nui.style.StyleConstants.ArrowShape;
 import org.graphstream.nui.style.StyleConstants.FillMode;
@@ -75,19 +82,28 @@ import org.graphstream.nui.style.StyleConstants.Units;
 import org.graphstream.nui.style.StyleConstants.VisibilityMode;
 import org.graphstream.nui.style.parser.StyleSheetParser;
 import org.graphstream.nui.style.parser.StyleSheetParserListener;
+import org.graphstream.nui.style.util.Colors;
+import org.graphstream.nui.style.util.Value;
+import org.graphstream.nui.style.util.Values;
+import org.graphstream.nui.util.Tools;
+import org.graphstream.stream.SinkAdapter;
 import org.graphstream.util.parser.ParseException;
 
-public class DefaultStyle extends AbstractModule implements UIStyle,
+public class BaseStyle extends AbstractModule implements UIStyle,
 		IndexerListener, StyleSheetParserListener {
 	protected static final int DEFAULT_GROW_STEP = 1000;
 
-	protected Map<Selector, ElementStyle> styles;
+	protected Map<Selector, BaseGroupStyle> styles;
 	protected StyleTree sortedStyles;
+	protected ZIndexTree zIndexTree;
 
-	protected ElementData graphData;
-	protected ElementData[] nodesData;
-	protected ElementData[] edgesData;
-	protected ElementData[] spritesData;
+	protected BaseElementStyle graphData;
+	protected BaseElementStyle[] nodeDatas;
+	protected BaseElementStyle[] edgeDatas;
+	protected BaseElementStyle[] spritesData;
+
+	protected int[] nodeColors;
+	protected int[] edgeColors;
 
 	protected UIIndexer indexer;
 
@@ -96,11 +112,15 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 
 	protected List<StyleListener> listeners;
 
-	public DefaultStyle() {
-		super(MODULE_ID, UIIndexer.MODULE_ID);
+	protected AttributeHandler stylesheetHandler;
+	protected AttributeHandler uiColorHandler;
 
-		styles = new HashMap<Selector, ElementStyle>();
+	public BaseStyle() {
+		super(MODULE_ID, UIIndexer.MODULE_ID, UIAttributes.MODULE_ID);
+
+		styles = new HashMap<Selector, BaseGroupStyle>();
 		sortedStyles = new StyleTree();
+		zIndexTree = new ZIndexTree();
 
 		nodeGrowStep = DEFAULT_GROW_STEP;
 		edgeGrowStep = DEFAULT_GROW_STEP;
@@ -118,30 +138,96 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 	public void init(UIContext ctx) {
 		super.init(ctx);
 
-		ctx.registerUIAttribute("stylesheet", MODULE_ID);
-
 		indexer = (UIIndexer) ctx.getModule(UIIndexer.MODULE_ID);
 		indexer.addIndexerListener(this);
 
-		graphData = new DefaultElementData(new GraphElementIndex());
+		graphData = new DefaultGraphStyle(indexer.getGraphIndex());
 
 		if (indexer.getNodeCount() > 0) {
-			nodesData = new ElementData[indexer.getNodeCount() + nodeGrowStep];
+			nodeDatas = new BaseElementStyle[indexer.getNodeCount()
+					+ nodeGrowStep];
+			nodeColors = new int[indexer.getNodeCount() + nodeGrowStep];
 
 			for (int i = 0; i < indexer.getNodeCount(); i++)
-				nodesData[i] = new DefaultElementData(indexer.getNodeIndex(i));
-		} else
-			nodesData = new ElementData[nodeGrowStep];
+				nodeDatas[i] = new DefaultNodeStyle(indexer.getNodeIndex(i));
+		} else {
+			nodeDatas = new BaseElementStyle[nodeGrowStep];
+			nodeColors = new int[nodeGrowStep];
+		}
 
 		if (indexer.getEdgeCount() > 0) {
-			edgesData = new ElementData[indexer.getEdgeCount() + edgeGrowStep];
+			edgeDatas = new BaseElementStyle[indexer.getEdgeCount()
+					+ edgeGrowStep];
+			edgeColors = new int[indexer.getEdgeCount() + edgeGrowStep];
 
 			for (int i = 0; i < indexer.getEdgeCount(); i++)
-				edgesData[i] = new DefaultElementData(indexer.getEdgeIndex(i));
-		} else
-			edgesData = new ElementData[edgeGrowStep];
+				edgeDatas[i] = new DefaultEdgeStyle(indexer.getEdgeIndex(i));
+		} else {
+			edgeDatas = new BaseElementStyle[edgeGrowStep];
+			edgeColors = new int[edgeGrowStep];
+		}
 
 		setDefaultStyle();
+
+		UIAttributes attributes = (UIAttributes) ctx
+				.getModule(UIAttributes.MODULE_ID);
+
+		stylesheetHandler = new AttributeHandler() {
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.graphstream.nui.attributes.AttributeHandler#
+			 * handleAttribute(org.graphstream.nui.indexer.ElementIndex,
+			 * java.lang.String, java.lang.Object)
+			 */
+			@Override
+			public void handleAttribute(ElementIndex index, String attributeId,
+					Object value) {
+				try {
+					setStyleSheet(value);
+				} catch (IOException | ParseException e) {
+					Logger.getLogger(getClass().getName()).log(Level.WARNING,
+							"cannot load the stylesheet", e);
+				}
+			}
+		};
+
+		uiColorHandler = new AttributeHandler() {
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see
+			 * org.graphstream.nui.attributes.AttributeHandler#handleAttribute
+			 * (org.graphstream.nui.indexer.ElementIndex, java.lang.String,
+			 * java.lang.Object)
+			 */
+			@Override
+			public void handleAttribute(ElementIndex index, String attributeId,
+					Object value) {
+				BaseElementStyle style = null;
+
+				switch (index.getType()) {
+				case NODE:
+					style = nodeDatas[index.index()];
+					break;
+				case EDGE:
+					style = edgeDatas[index.index()];
+					break;
+				default:
+					break;
+				}
+
+				if (style == null)
+					return;
+
+				style.setUIColor(Tools.checkAndGetDouble(value));
+			}
+		};
+
+		attributes.registerUIAttributeHandler(AttributeType.GRAPH,
+				"stylesheet", stylesheetHandler);
+		attributes.registerUIAttributeHandler(AttributeType.ELEMENT, "color",
+				uiColorHandler);
 	}
 
 	/*
@@ -151,6 +237,13 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 	 */
 	@Override
 	public void release() {
+		UIAttributes attributes = (UIAttributes) ctx
+				.getModule(UIAttributes.MODULE_ID);
+		attributes.unregisterUIAttributeHandler(AttributeType.GRAPH,
+				"stylesheet", stylesheetHandler);
+		attributes.unregisterUIAttributeHandler(AttributeType.ELEMENT, "color",
+				uiColorHandler);
+
 		indexer.removeIndexerListener(this);
 		indexer = null;
 
@@ -189,7 +282,7 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 	 */
 	@Override
 	public ElementStyle getGraphStyle() {
-		return graphData.style;
+		return graphData;
 	}
 
 	/*
@@ -200,15 +293,15 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 	 * .ElementIndex)
 	 */
 	@Override
-	public ElementStyle getElementStyle(UIElementIndex index) {
-		ElementData data = null;
+	public ElementStyle getElementStyle(ElementIndex index) {
+		BaseElementStyle data = null;
 
 		switch (index.getType()) {
 		case NODE:
-			data = nodesData[index.index()];
+			data = nodeDatas[index.index()];
 			break;
 		case EDGE:
-			data = edgesData[index.index()];
+			data = edgeDatas[index.index()];
 			break;
 		case SPRITE:
 			data = spritesData[index.index()];
@@ -218,24 +311,56 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 			break;
 		}
 
-		return getElementStyle(data);
+		assert data != null;
+		return data;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIStyle#getRenderingOrder()
+	 */
+	@Override
+	public Iterator<ElementIndex> getRenderingOrder() {
+		return zIndexTree.iterator();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.UIStyle#addStyleListener(org.graphstream.nui.style
+	 * .StyleListener)
+	 */
 	@Override
 	public void addStyleListener(StyleListener l) {
 		listeners.add(l);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.UIStyle#removeStyleListener(org.graphstream.nui.style
+	 * .StyleListener)
+	 */
 	@Override
 	public void removeStyleListener(StyleListener l) {
 		listeners.remove(l);
 	}
 
-	public ElementStyle getElementStyle(ElementData data) {
-		Iterator<ElementStyle> it = sortedStyles.descendingIterator();
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIStyle#getGroupStyle(org.graphstream.nui.style.
+	 * ElementStyle)
+	 */
+	@Override
+	public GroupStyle searchGroupStyle(ElementStyle data) {
+		Iterator<BaseGroupStyle> it = sortedStyles.descendingIterator();
 
 		while (it.hasNext()) {
-			ElementStyle es = it.next();
+			BaseGroupStyle es = it.next();
 
 			if (es.selector.match(data))
 				return es;
@@ -244,9 +369,9 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 		throw new RuntimeException("this should not happen");
 	}
 
-	public void addStyle(ElementStyle style) {
+	public void addStyle(BaseGroupStyle style) {
 		Selector s = style.selector;
-		ElementStyle exists = styles.get(s);
+		BaseGroupStyle exists = styles.get(s);
 
 		if (exists != null) {
 			exists.merge(style);
@@ -257,16 +382,16 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 
 			if (s.hasState()) {
 				Selector noState = s.getNoStateSelector();
-				ElementStyle papa = styles.get(noState);
+				BaseGroupStyle papa = styles.get(noState);
 
 				if (papa == null) {
-					papa = new ElementStyle(noState);
+					papa = new BaseGroupStyle(noState);
 					addStyle(papa);
 				}
 
 				style.setParent(papa);
 			} else {
-				ElementStyle parent = findParent(style);
+				BaseGroupStyle parent = findParent(style);
 
 				if (parent != null)
 					style.setParent(parent);
@@ -287,11 +412,11 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 		fireStyleCleared();
 	}
 
-	protected ElementStyle findParent(ElementStyle style) {
-		ElementStyle parent = null;
+	protected BaseGroupStyle findParent(BaseGroupStyle style) {
+		BaseGroupStyle parent = null;
 		Selector select = style.selector;
 
-		for (ElementStyle s : styles.values()) {
+		for (BaseGroupStyle s : styles.values()) {
 			if (s.selector.isParent(select)) {
 				if (parent == null)
 					parent = s;
@@ -305,12 +430,12 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 		return parent;
 	}
 
-	protected void checkChildren(ElementStyle style) {
+	protected void checkChildren(BaseGroupStyle style) {
 		Selector select = style.selector;
 
-		for (ElementStyle s : styles.values()) {
+		for (BaseGroupStyle s : styles.values()) {
 			if (select.isParent(s.selector)
-					&& (s.parent() == null || s.parent().selector.score < select.score)) {
+					&& (s.parent() == null || s.parent().selector().score < select.score)) {
 				s.setParent(style);
 				fireStyleUpdated(s);
 			}
@@ -321,7 +446,7 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 	 * 
 	 * @param style
 	 */
-	protected void fireStyleUpdated(ElementStyle style) {
+	protected void fireStyleUpdated(BaseGroupStyle style) {
 		//
 		// Here we try to detect elements which are concerned by the style
 		// update.
@@ -376,47 +501,47 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 		}
 	}
 
-	protected void fireNodeStyleUpdatedById(ElementStyle style) {
-		UIElementIndex index = indexer.getNodeIndex(style.selector.id);
+	protected void fireNodeStyleUpdatedById(BaseGroupStyle style) {
+		ElementIndex index = indexer.getNodeIndex(style.selector.id);
 
 		if (index != null) {
-			ElementData data = nodesData[index.index()];
+			ElementStyle data = nodeDatas[index.index()];
 			data.checkStyleChanged();
 		}
 	}
 
-	protected void fireNodeStyleUpdated(ElementStyle style) {
+	protected void fireNodeStyleUpdated(BaseGroupStyle style) {
 		for (int idx = 0; idx < indexer.getNodeCount(); idx++) {
-			ElementData data = nodesData[idx];
+			BaseElementStyle data = nodeDatas[idx];
 
 			if (style == null || style.selector.match(data))
 				data.checkStyleChanged();
 		}
 	}
 
-	protected void fireEdgeStyleUpdatedById(ElementStyle style) {
-		UIElementIndex index = indexer.getEdgeIndex(style.selector.id);
+	protected void fireEdgeStyleUpdatedById(BaseGroupStyle style) {
+		ElementIndex index = indexer.getEdgeIndex(style.selector.id);
 
 		if (index != null) {
-			ElementData data = edgesData[index.index()];
+			ElementStyle data = edgeDatas[index.index()];
 			data.checkStyleChanged();
 		}
 	}
 
-	protected void fireEdgeStyleUpdated(ElementStyle style) {
+	protected void fireEdgeStyleUpdated(BaseGroupStyle style) {
 		for (int idx = 0; idx < indexer.getEdgeCount(); idx++) {
-			ElementData data = edgesData[idx];
+			BaseElementStyle data = edgeDatas[idx];
 
 			if (style == null || style.selector.match(data))
 				data.checkStyleChanged();
 		}
 	}
 
-	protected void fireSpriteStyleUpdatedById(ElementStyle style) {
+	protected void fireSpriteStyleUpdatedById(GroupStyle style) {
 		// TODO
 	}
 
-	protected void fireSpriteStyleUpdated(ElementStyle style) {
+	protected void fireSpriteStyleUpdated(GroupStyle style) {
 		// TODO
 	}
 
@@ -534,13 +659,13 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 	 * 
 	 * @see java.lang.Iterable#iterator()
 	 */
-	public Iterator<ElementStyle> iterator() {
+	public Iterator<BaseGroupStyle> iterator() {
 		return sortedStyles.descendingIterator();
 	}
 
 	protected void setDefaultStyle() {
 		Selector s = new Selector(Target.UNDEFINED, null, null, null);
-		ElementStyle defaultStyle = new ElementStyle(s);
+		BaseGroupStyle defaultStyle = new BaseGroupStyle(s);
 
 		Colors fillColor = new Colors();
 		Colors strokeColor = new Colors();
@@ -625,33 +750,58 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 
 	protected void setDefaultNodeStyle() {
 		Selector s = new Selector(Target.NODE, null, null, null);
-		ElementStyle defaultStyle = new ElementStyle(s);
+		BaseGroupStyle defaultStyle = new BaseGroupStyle(s);
 
 		addStyle(defaultStyle);
 	}
 
 	protected void setDefaultEdgeStyle() {
 		Selector s = new Selector(Target.EDGE, null, null, null);
-		ElementStyle defaultStyle = new ElementStyle(s);
+		BaseGroupStyle defaultStyle = new BaseGroupStyle(s);
 
 		addStyle(defaultStyle);
 	}
 
 	protected void setDefaultGraphStyle() {
 		Selector s = new Selector(Target.GRAPH, null, null, null);
-		ElementStyle defaultStyle = new ElementStyle(s);
+		BaseGroupStyle defaultStyle = new BaseGroupStyle(s);
 
 		addStyle(defaultStyle);
 	}
 
 	protected void setDefaultSpriteStyle() {
 		Selector s = new Selector(Target.SPRITE, null, null, null);
-		ElementStyle defaultStyle = new ElementStyle(s);
+		BaseGroupStyle defaultStyle = new BaseGroupStyle(s);
 
 		addStyle(defaultStyle);
 	}
 
-	protected void elementDataUpdated(ElementData data) {
+	protected void elementStyleUpdated(BaseElementStyle data) {
+		//
+		// Maybe the z-index of this element was updated...
+		//
+		if (data.index.getType() != ElementIndex.Type.GRAPH) {
+			zIndexTree.remove(data.index);
+			zIndexTree.add(data.index);
+		}
+
+		//
+		// Maybe the color changes...
+		//
+		switch (data.index.getType()) {
+		case NODE:
+			nodeColors[data.index.index()] = data.computeColor();
+			break;
+		case EDGE:
+			edgeColors[data.index.index()] = data.computeColor();
+			break;
+		default:
+			break;
+		}
+
+		//
+		// Tell the world that something changed...
+		//
 		for (StyleListener sl : listeners)
 			sl.elementStyleUpdated(data.index, data.style);
 	}
@@ -664,12 +814,12 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 	 * (org.graphstream.nui.style.ElementStyle)
 	 */
 	@Override
-	public void elementStyleAdded(ElementStyle style) {
+	public void elementStyleAdded(BaseGroupStyle style) {
 		addStyle(style);
 	}
 
-	class DefaultElementData extends ElementData {
-		public DefaultElementData(UIElementIndex index) {
+	abstract class DefaultElementStyle extends BaseElementStyle {
+		public DefaultElementStyle(ElementIndex index) {
 			super(index);
 		}
 
@@ -679,8 +829,8 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 		 * @see org.graphstream.nui.style.ElementData#elementDataUpdated()
 		 */
 		@Override
-		protected void elementDataUpdated() {
-			DefaultStyle.this.elementDataUpdated(this);
+		protected void elementStyleUpdated() {
+			BaseStyle.this.elementStyleUpdated(this);
 		}
 
 		/*
@@ -690,18 +840,66 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 		 */
 		@Override
 		protected UIStyle getUIStyle() {
-			return DefaultStyle.this;
+			return BaseStyle.this;
 		}
-
 	}
 
-	protected static class ScoreComparator implements Comparator<ElementStyle> {
+	class DefaultNodeStyle extends DefaultElementStyle {
+		public DefaultNodeStyle(ElementIndex index) {
+			super(index);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.style.ElementStyle#getColor()
+		 */
+		@Override
+		public int getColor() {
+			return nodeColors[index.index()];
+		}
+	}
+
+	class DefaultEdgeStyle extends DefaultElementStyle {
+		public DefaultEdgeStyle(ElementIndex index) {
+			super(index);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.style.ElementStyle#getColor()
+		 */
+		@Override
+		public int getColor() {
+			return edgeColors[index.index()];
+		}
+	}
+
+	class DefaultGraphStyle extends DefaultElementStyle {
+		public DefaultGraphStyle(ElementIndex index) {
+			super(index);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.style.ElementStyle#getColor()
+		 */
+		@Override
+		public int getColor() {
+			return 0;
+		}
+	}
+
+	protected static class ScoreComparator implements
+			Comparator<BaseGroupStyle> {
 		/*
 		 * (non-Javadoc)
 		 * 
 		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
 		 */
-		public int compare(ElementStyle arg0, ElementStyle arg1) {
+		public int compare(BaseGroupStyle arg0, BaseGroupStyle arg1) {
 			int r = Integer.compare(arg0.selector.score, arg1.selector.score);
 
 			if (r != 0)
@@ -735,7 +933,7 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 		}
 	}
 
-	protected static class StyleTree extends TreeSet<ElementStyle> {
+	protected static class StyleTree extends TreeSet<BaseGroupStyle> {
 		private static final long serialVersionUID = -5875910062336795000L;
 
 		public StyleTree() {
@@ -743,35 +941,151 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 		}
 	}
 
-	protected static class GraphElementIndex implements UIElementIndex {
+	protected class ZIndexComparator implements Comparator<ElementIndex> {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see org.graphstream.nui.indexer.ElementIndex#id()
+		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
 		 */
 		@Override
-		public String id() {
-			return "graph";
+		public int compare(ElementIndex o1, ElementIndex o2) {
+			int z1 = 0, z2 = 0, t1 = o1.getType().ordinal(), t2 = o2.getType()
+					.ordinal();
+
+			switch (o1.getType()) {
+			case NODE:
+				z1 = nodeDatas[o1.index()].style.getZIndex();
+				break;
+			case EDGE:
+				z1 = edgeDatas[o1.index()].style.getZIndex();
+				break;
+			case SPRITE:
+				break;
+			default:
+				z1 = 0;
+			}
+
+			switch (o2.getType()) {
+			case NODE:
+				z2 = nodeDatas[o2.index()].style.getZIndex();
+				break;
+			case EDGE:
+				z2 = edgeDatas[o2.index()].style.getZIndex();
+				break;
+			case SPRITE:
+				break;
+			default:
+				z2 = 0;
+			}
+
+			//
+			// TreeSet needs that elements are all different, so we need some
+			// more work.
+			//
+			if (z1 == z2) {
+				//
+				// If types are equals, we can use id comparison.
+				//
+				if (t1 == t2)
+					return o1.id().compareTo(o2.id());
+				//
+				// Else we just use the ordinal of the type as order.
+				//
+				else
+					return Integer.compare(t1, t2);
+			} else
+				return Integer.compare(z1, z2);
+		}
+	}
+
+	@SuppressWarnings("serial")
+	protected class ZIndexTree extends TreeSet<ElementIndex> {
+		public ZIndexTree() {
+			super(new ZIndexComparator());
+		}
+	}
+
+	class ElementAttributeListener extends SinkAdapter {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.graphstream.stream.SinkAdapter#nodeAttributeAdded(java.lang.String
+		 * , long, java.lang.String, java.lang.String, java.lang.Object)
+		 */
+		@Override
+		public void nodeAttributeAdded(String sourceId, long timeId,
+				String nodeId, String attributeId, Object value) {
+
 		}
 
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see org.graphstream.nui.indexer.ElementIndex#index()
+		 * @see
+		 * org.graphstream.stream.SinkAdapter#nodeAttributeChanged(java.lang
+		 * .String, long, java.lang.String, java.lang.String, java.lang.Object,
+		 * java.lang.Object)
 		 */
 		@Override
-		public int index() {
-			return 0;
+		public void nodeAttributeChanged(String sourceId, long timeId,
+				String nodeId, String attributeId, Object oldValue,
+				Object newValue) {
+
 		}
 
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see org.graphstream.nui.indexer.ElementIndex#getType()
+		 * @see
+		 * org.graphstream.stream.SinkAdapter#nodeAttributeRemoved(java.lang
+		 * .String, long, java.lang.String, java.lang.String)
 		 */
 		@Override
-		public Type getType() {
-			return Type.GRAPH;
+		public void nodeAttributeRemoved(String sourceId, long timeId,
+				String nodeId, String attributeId) {
+
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.graphstream.stream.SinkAdapter#edgeAttributeAdded(java.lang.String
+		 * , long, java.lang.String, java.lang.String, java.lang.Object)
+		 */
+		@Override
+		public void edgeAttributeAdded(String sourceId, long timeId,
+				String nodeId, String attributeId, Object value) {
+
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.graphstream.stream.SinkAdapter#edgeAttributeChanged(java.lang
+		 * .String, long, java.lang.String, java.lang.String, java.lang.Object,
+		 * java.lang.Object)
+		 */
+		@Override
+		public void edgeAttributeChanged(String sourceId, long timeId,
+				String edgeId, String attributeId, Object oldValue,
+				Object newValue) {
+
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.graphstream.stream.SinkAdapter#edgeAttributeRemoved(java.lang
+		 * .String, long, java.lang.String, java.lang.String)
+		 */
+		@Override
+		public void edgeAttributeRemoved(String sourceId, long timeId,
+				String edgeId, String attributeId) {
+
 		}
 	}
 
@@ -783,12 +1097,16 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 	 * .nui.indexer.ElementIndex)
 	 */
 	@Override
-	public void nodeAdded(UIElementIndex nodeIndex) {
-		if (indexer.getNodeCount() >= nodesData.length)
-			nodesData = Arrays.copyOf(nodesData, indexer.getNodeCount()
+	public void nodeAdded(ElementIndex nodeIndex) {
+		if (indexer.getNodeCount() >= nodeDatas.length) {
+			nodeDatas = Arrays.copyOf(nodeDatas, indexer.getNodeCount()
 					+ nodeGrowStep);
+			nodeColors = Arrays.copyOf(nodeColors, indexer.getNodeCount()
+					+ nodeGrowStep);
+		}
 
-		nodesData[nodeIndex.index()] = new DefaultElementData(nodeIndex);
+		nodeDatas[nodeIndex.index()] = new DefaultNodeStyle(nodeIndex);
+		nodeDatas[nodeIndex.index()].checkStyleChanged();
 	}
 
 	/*
@@ -799,12 +1117,16 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 	 * .nui.indexer.ElementIndex)
 	 */
 	@Override
-	public void nodeRemoved(UIElementIndex nodeIndex) {
-		nodesData[nodeIndex.index()] = null;
+	public void nodeRemoved(ElementIndex nodeIndex) {
+		zIndexTree.remove(nodeIndex);
+		nodeDatas[nodeIndex.index()] = null;
 
-		if (indexer.getNodeCount() < nodesData.length / 3)
-			nodesData = Arrays.copyOf(nodesData, indexer.getNodeCount()
+		if (indexer.getNodeCount() < nodeDatas.length / 3) {
+			nodeDatas = Arrays.copyOf(nodeDatas, indexer.getNodeCount()
 					+ nodeGrowStep);
+			nodeColors = Arrays.copyOf(nodeColors, indexer.getNodeCount()
+					+ nodeGrowStep);
+		}
 	}
 
 	/*
@@ -815,12 +1137,16 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 	 * .nui.indexer.ElementIndex, org.graphstream.nui.indexer.ElementIndex)
 	 */
 	@Override
-	public void nodesSwapped(UIElementIndex nodeIndex1,
-			UIElementIndex nodeIndex2) {
-		ElementData tmp = nodesData[nodeIndex1.index()];
+	public void nodesSwapped(ElementIndex nodeIndex1, ElementIndex nodeIndex2) {
+		BaseElementStyle tmp = nodeDatas[nodeIndex1.index()];
 
-		nodesData[nodeIndex1.index()] = nodesData[nodeIndex2.index()];
-		nodesData[nodeIndex2.index()] = tmp;
+		nodeDatas[nodeIndex1.index()] = nodeDatas[nodeIndex2.index()];
+		nodeDatas[nodeIndex2.index()] = tmp;
+
+		int itmp = nodeColors[nodeIndex1.index()];
+
+		nodeColors[nodeIndex1.index()] = nodeColors[nodeIndex2.index()];
+		nodeColors[nodeIndex2.index()] = itmp;
 	}
 
 	/*
@@ -832,13 +1158,18 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 	 * org.graphstream.nui.indexer.ElementIndex, boolean)
 	 */
 	@Override
-	public void edgeAdded(UIElementIndex edgeIndex, UIElementIndex sourceIndex,
-			UIElementIndex targetIndex, boolean directed) {
-		if (indexer.getEdgeCount() >= edgesData.length)
-			edgesData = Arrays.copyOf(edgesData, indexer.getEdgeCount()
+	public void edgeAdded(ElementIndex edgeIndex, ElementIndex sourceIndex,
+			ElementIndex targetIndex, boolean directed) {
+		if (indexer.getEdgeCount() >= edgeDatas.length) {
+			edgeDatas = Arrays.copyOf(edgeDatas, indexer.getEdgeCount()
 					+ edgeGrowStep);
+			edgeColors = Arrays.copyOf(edgeColors, indexer.getEdgeCount()
+					+ edgeGrowStep);
+		}
 
-		edgesData[edgeIndex.index()] = new DefaultElementData(edgeIndex);
+		edgeDatas[edgeIndex.index()] = new DefaultEdgeStyle(edgeIndex);
+		edgeDatas[edgeIndex.index()].checkStyleChanged();
+		// zIndexTree.add(edgeIndex);
 	}
 
 	/*
@@ -849,12 +1180,16 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 	 * .nui.indexer.ElementIndex)
 	 */
 	@Override
-	public void edgeRemoved(UIElementIndex edgeIndex) {
-		edgesData[edgeIndex.index()] = null;
+	public void edgeRemoved(ElementIndex edgeIndex) {
+		zIndexTree.remove(edgeIndex);
+		edgeDatas[edgeIndex.index()] = null;
 
-		if (indexer.getEdgeCount() < edgesData.length / 3)
-			edgesData = Arrays.copyOf(edgesData, indexer.getEdgeCount()
+		if (indexer.getEdgeCount() < edgeDatas.length / 3) {
+			edgeDatas = Arrays.copyOf(edgeDatas, indexer.getEdgeCount()
 					+ edgeGrowStep);
+			edgeColors = Arrays.copyOf(edgeColors, indexer.getEdgeCount()
+					+ edgeGrowStep);
+		}
 	}
 
 	/*
@@ -865,12 +1200,16 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 	 * .nui.indexer.ElementIndex, org.graphstream.nui.indexer.ElementIndex)
 	 */
 	@Override
-	public void edgesSwapped(UIElementIndex edgeIndex1,
-			UIElementIndex edgeIndex2) {
-		ElementData tmp = edgesData[edgeIndex1.index()];
+	public void edgesSwapped(ElementIndex edgeIndex1, ElementIndex edgeIndex2) {
+		BaseElementStyle tmp = edgeDatas[edgeIndex1.index()];
 
-		edgesData[edgeIndex1.index()] = edgesData[edgeIndex2.index()];
-		edgesData[edgeIndex2.index()] = tmp;
+		edgeDatas[edgeIndex1.index()] = edgeDatas[edgeIndex2.index()];
+		edgeDatas[edgeIndex2.index()] = tmp;
+
+		int itmp = edgeColors[edgeIndex1.index()];
+
+		edgeColors[edgeIndex1.index()] = edgeColors[edgeIndex2.index()];
+		edgeColors[edgeIndex2.index()] = itmp;
 	}
 
 	/*
@@ -880,7 +1219,8 @@ public class DefaultStyle extends AbstractModule implements UIStyle,
 	 */
 	@Override
 	public void elementsClear() {
-		nodesData = new ElementData[nodeGrowStep];
-		edgesData = new ElementData[edgeGrowStep];
+		nodeDatas = new BaseElementStyle[nodeGrowStep];
+		edgeDatas = new BaseElementStyle[edgeGrowStep];
+		zIndexTree.clear();
 	}
 }

@@ -31,8 +31,10 @@
  */
 package org.graphstream.nui;
 
+import java.nio.DoubleBuffer;
+
 import org.graphstream.nui.dataset.DatasetListener;
-import org.graphstream.nui.indexer.UIElementIndex;
+import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.ui.geom.Point3;
 
 public interface UIDataset extends UIModule {
@@ -54,7 +56,7 @@ public interface UIDataset extends UIModule {
 
 	double[] getNodeXYZ(int nodexIndex, double[] xyz);
 
-	double[] getNodesXYZ(double[] buffer, boolean direct);
+	DoubleBuffer getNodesXYZ();
 
 	void setNodeX(int nodeIndex, double x);
 
@@ -64,9 +66,9 @@ public interface UIDataset extends UIModule {
 
 	void setNodeXYZ(int nodexIndex, double[] xyz);
 
-	UIElementIndex getEdgeSource(int edgeIndex);
+	ElementIndex getEdgeSource(int edgeIndex);
 
-	UIElementIndex getEdgeTarget(int edgeIndex);
+	ElementIndex getEdgeTarget(int edgeIndex);
 
 	boolean isEdgeDirected(int edgeIndex);
 

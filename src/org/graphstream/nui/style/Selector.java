@@ -140,9 +140,9 @@ public class Selector {
 		return true;
 	}
 
-	public boolean match(ElementData data) {
+	public boolean match(ElementStyle data) {
 		if (target != Target.UNDEFINED) {
-			switch (data.index.getType()) {
+			switch (data.index().getType()) {
 			case NODE:
 				if (target != Target.NODE)
 					return false;
@@ -160,7 +160,7 @@ public class Selector {
 			}
 		}
 
-		if (id != null && !id.equals(data.index.id()))
+		if (id != null && !id.equals(data.index().id()))
 			return false;
 
 		if (uiClass != null) {
@@ -170,7 +170,7 @@ public class Selector {
 		}
 
 		if (state != null)
-			return state.equals(data.state);
+			return state.equals(data.getState());
 
 		return true;
 	}

@@ -31,6 +31,10 @@
  */
 package org.graphstream.nui.style;
 
+import org.graphstream.nui.style.util.Colors;
+import org.graphstream.nui.style.util.Value;
+import org.graphstream.nui.style.util.Values;
+
 /**
  * The various constants and static constant conversion methods used for
  * styling.

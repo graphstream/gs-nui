@@ -29,10 +29,10 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.style.parser;
+package org.graphstream.nui.attributes;
 
-import org.graphstream.nui.style.base.BaseGroupStyle;
+import org.graphstream.nui.indexer.ElementIndex;
 
-public interface StyleSheetParserListener {
-	void elementStyleAdded(BaseGroupStyle style);
+public interface AttributeHandler {
+	void handleAttribute(ElementIndex index, String attributeId, Object value);
 }

@@ -31,6 +31,7 @@
  */
 package org.graphstream.nui.dataset;
 
+import java.nio.DoubleBuffer;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,12 +41,15 @@ import org.graphstream.nui.AbstractModule;
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.UIIndexer;
-import org.graphstream.nui.indexer.UIElementIndex;
+import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.IndexerListener;
 import org.graphstream.nui.util.Tools;
 import org.graphstream.stream.SinkAdapter;
 import org.graphstream.ui.geom.Point3;
 
+/**
+ * 
+ */
 public class DefaultDataset extends AbstractModule implements UIDataset {
 	public static final int DEFAULT_NODE_GROW_STEP = 1000;
 	public static final int DEFAULT_EDGE_GROW_STEP = 1000;
@@ -133,7 +137,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 */
 	@Override
 	public int getNodeCount() {
-		return nodeCount;
+		return indexer.getNodeCount();
 	}
 
 	/*
@@ -143,7 +147,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 */
 	@Override
 	public int getEdgeCount() {
-		return edgeCount;
+		return indexer.getEdgeCount();
 	}
 
 	/*
@@ -195,10 +199,10 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.UIDataset#getNodesXYZ(double[], boolean)
+	 * @see org.graphstream.nui.UIDataset#getNodesXYZ()
 	 */
 	@Override
-	public double[] getNodesXYZ(double[] buffer, boolean direct) {
+	public DoubleBuffer getNodesXYZ() {
 		if (direct)
 			return nodesPoints;
 
@@ -265,7 +269,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#getEdgeSource(int)
 	 */
 	@Override
-	public UIElementIndex getEdgeSource(int edgeIndex) {
+	public ElementIndex getEdgeSource(int edgeIndex) {
 		return edgesData[edgeIndex].source;
 	}
 
@@ -275,7 +279,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#getEdgeTarget(int)
 	 */
 	@Override
-	public UIElementIndex getEdgeTarget(int edgeIndex) {
+	public ElementIndex getEdgeTarget(int edgeIndex) {
 		return edgesData[edgeIndex].target;
 	}
 
@@ -319,7 +323,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 			Point3[] points) {
 		edgesData[edgeIndex].points = points;
 		edgesData[edgeIndex].pointsType = type;
-		
+
 		fireEdgePointsChanged(edgeIndex);
 	}
 
@@ -372,7 +376,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	}
 
 	protected void fireNodeMoved(int nodeIndex) {
-		UIElementIndex index = indexer.getNodeIndex(nodeIndex);
+		ElementIndex index = indexer.getNodeIndex(nodeIndex);
 		double x = getNodeX(nodeIndex);
 		double y = getNodeY(nodeIndex);
 		double z = getNodeZ(nodeIndex);
@@ -428,17 +432,17 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 
 				if (c1 == 'x' || c1 == 'X') {
 					double x = Tools.checkAndGetDouble(value);
-					UIElementIndex index = indexer.getNodeIndex(nodeId);
+					ElementIndex index = indexer.getNodeIndex(nodeId);
 
 					setNodeX(index.index(), x);
 				} else if (c1 == 'y' || c1 == 'Z') {
 					double y = Tools.checkAndGetDouble(value);
-					UIElementIndex index = indexer.getNodeIndex(nodeId);
+					ElementIndex index = indexer.getNodeIndex(nodeId);
 
 					setNodeY(index.index(), y);
 				} else if (c1 == 'z' || c1 == 'Z') {
 					double z = Tools.checkAndGetDouble(value);
-					UIElementIndex index = indexer.getNodeIndex(nodeId);
+					ElementIndex index = indexer.getNodeIndex(nodeId);
 
 					setNodeZ(index.index(), z);
 				}
@@ -450,7 +454,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 
 				if ((c1 == 'x' || c1 == 'X') && (c2 == 'y' || c2 == 'Y')) {
 					double[] xy = Tools.checkAndGetDoubleArray(value);
-					UIElementIndex index = indexer.getNodeIndex(nodeId);
+					ElementIndex index = indexer.getNodeIndex(nodeId);
 
 					setNodeXYZ(index.index(), xy);
 				}
@@ -464,7 +468,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 				if ((c1 == 'x' || c1 == 'X') && (c2 == 'y' || c2 == 'Y')
 						&& (c3 == 'z' || c3 == 'Z')) {
 					double[] xyz = Tools.checkAndGetDoubleArray(value);
-					UIElementIndex index = indexer.getNodeIndex(nodeId);
+					ElementIndex index = indexer.getNodeIndex(nodeId);
 
 					setNodeXYZ(index.index(), xyz);
 				}
@@ -485,7 +489,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 		 * .nui.indexer.ElementIndex)
 		 */
 		@Override
-		public void nodeAdded(UIElementIndex nodeIndex) {
+		public void nodeAdded(ElementIndex nodeIndex) {
 			nodeCount++;
 
 			if (nodeCount * dim >= nodesPoints.length)
@@ -501,7 +505,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 		 * .nui.indexer.ElementIndex)
 		 */
 		@Override
-		public void nodeRemoved(UIElementIndex nodeIndex) {
+		public void nodeRemoved(ElementIndex nodeIndex) {
 			nodeCount--;
 
 			//
@@ -521,8 +525,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 		 * .nui.indexer.ElementIndex, org.graphstream.nui.indexer.ElementIndex)
 		 */
 		@Override
-		public void nodesSwapped(UIElementIndex nodeIndex1,
-				UIElementIndex nodeIndex2) {
+		public void nodesSwapped(ElementIndex nodeIndex1,
+				ElementIndex nodeIndex2) {
 			double x, y;
 			int i1 = nodeIndex1.index() * dim;
 			int i2 = nodeIndex2.index() * dim;
@@ -552,8 +556,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 		 * .nui.indexer.ElementIndex)
 		 */
 		@Override
-		public void edgeAdded(UIElementIndex edgeIndex, UIElementIndex sourceIndex,
-				UIElementIndex targetIndex, boolean directed) {
+		public void edgeAdded(ElementIndex edgeIndex, ElementIndex sourceIndex,
+				ElementIndex targetIndex, boolean directed) {
 			edgeCount++;
 
 			if (edgeCount >= edgesData.length)
@@ -572,7 +576,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 		 * .nui.indexer.ElementIndex)
 		 */
 		@Override
-		public void edgeRemoved(UIElementIndex edgeIndex) {
+		public void edgeRemoved(ElementIndex edgeIndex) {
 			edgeCount--;
 
 			edgesData[edgeIndex.index()] = null;
@@ -593,8 +597,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 		 * .nui.indexer.ElementIndex, org.graphstream.nui.indexer.ElementIndex)
 		 */
 		@Override
-		public void edgesSwapped(UIElementIndex edgeIndex1,
-				UIElementIndex edgeIndex2) {
+		public void edgesSwapped(ElementIndex edgeIndex1,
+				ElementIndex edgeIndex2) {
 			EdgeData ed = edgesData[edgeIndex1.index()];
 
 			edgesData[edgeIndex1.index()] = edgesData[edgeIndex2.index()];
@@ -617,13 +621,13 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	}
 
 	class EdgeData {
-		final UIElementIndex source;
-		final UIElementIndex target;
+		final ElementIndex source;
+		final ElementIndex target;
 		final boolean directed;
 		Point3[] points;
 		EdgePointsType pointsType;
 
-		EdgeData(UIElementIndex s, UIElementIndex t, boolean d) {
+		EdgeData(ElementIndex s, ElementIndex t, boolean d) {
 			source = s;
 			target = t;
 			directed = d;

@@ -39,7 +39,7 @@ import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.UISpace;
 import org.graphstream.nui.dataset.DatasetListener;
-import org.graphstream.nui.indexer.UIElementIndex;
+import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.util.Tools;
 import org.graphstream.ui.geom.Point3;
 
@@ -55,12 +55,12 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 
 	protected CoordinatesListener listener;
 
-	protected UIElementIndex lxBounds;
-	protected UIElementIndex hxBounds;
-	protected UIElementIndex lyBounds;
-	protected UIElementIndex hyBounds;
-	protected UIElementIndex lzBounds;
-	protected UIElementIndex hzBounds;
+	protected ElementIndex lxBounds;
+	protected ElementIndex hxBounds;
+	protected ElementIndex lyBounds;
+	protected ElementIndex hyBounds;
+	protected ElementIndex lzBounds;
+	protected ElementIndex hzBounds;
 
 	protected double padding;
 
@@ -355,7 +355,7 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 		 * double, double, double)
 		 */
 		@Override
-		public void nodeMoved(UIElementIndex nodeIndex, double x, double y,
+		public void nodeMoved(ElementIndex nodeIndex, double x, double y,
 				double z) {
 			boolean changed = false;
 

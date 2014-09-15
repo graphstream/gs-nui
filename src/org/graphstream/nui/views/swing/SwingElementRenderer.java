@@ -29,10 +29,24 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.style.parser;
+package org.graphstream.nui.views.swing;
 
-import org.graphstream.nui.style.base.BaseGroupStyle;
+import java.awt.Graphics2D;
 
-public interface StyleSheetParserListener {
-	void elementStyleAdded(BaseGroupStyle style);
+import org.graphstream.nui.UIDataset;
+import org.graphstream.nui.indexer.ElementIndex;
+import org.graphstream.nui.style.GroupStyle;
+import org.graphstream.nui.views.UICamera;
+
+public interface SwingElementRenderer {
+	/**
+	 * 
+	 * @param g
+	 * @param camera
+	 * @param dataset
+	 * @param elementStyle
+	 * @param index
+	 */
+	void render(Graphics2D g, UICamera camera, UIDataset dataset,
+			GroupStyle elementStyle, ElementIndex index);
 }

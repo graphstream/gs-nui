@@ -38,13 +38,14 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.graphstream.nui.attributes.DefaultAttributes;
+import org.graphstream.nui.buffers.DefaultBuffers;
 import org.graphstream.nui.dataset.DefaultDataset;
 import org.graphstream.nui.indexer.DefaultIndexer;
 import org.graphstream.nui.space.DefaultSpace;
-import org.graphstream.nui.style.DefaultStyle;
+import org.graphstream.nui.style.base.BaseStyle;
 
 public class UIModules {
 	private static final Map<String, Class<? extends UIModule>> MODULES_CLASSES;
@@ -100,9 +101,11 @@ public class UIModules {
 		 */
 		try {
 			registerModule(DefaultIndexer.class);
+			registerModule(DefaultBuffers.class);
+			registerModule(DefaultAttributes.class);
 			registerModule(DefaultDataset.class);
 			registerModule(DefaultSpace.class);
-			registerModule(DefaultStyle.class);
+			registerModule(BaseStyle.class);
 		} catch (RegisterException e) {
 			/*
 			 * This should not happens because lovely devs check and test their
@@ -135,38 +138,28 @@ public class UIModules {
 		return module;
 	}
 
-	public static boolean loadModule(UIContext ctx, String moduleId) {
-		Logger log = Logger.getLogger(UIModules.class.getName());
+	public static void loadModule(UIContext ctx, String moduleId)
+			throws InstantiationException, ModuleNotFoundException {
+		UIModule module = getModuleInstance(moduleId);
 
-		try {
-			UIModule module = getModuleInstance(moduleId);
+		HashMap<String, UIModule> deps = new HashMap<String, UIModule>();
+		deps.put(moduleId, module);
 
-			HashMap<String, UIModule> deps = new HashMap<String, UIModule>();
-			deps.put(moduleId, module);
+		LinkedList<UIModule> check = new LinkedList<UIModule>();
+		check.add(module);
 
-			LinkedList<UIModule> check = new LinkedList<UIModule>();
-			check.add(module);
+		while (check.size() > 0) {
+			UIModule m = check.poll();
 
-			while (check.size() > 0) {
-				UIModule m = check.poll();
-
-				for (String dep : m.getModuleDeps()) {
-					if (!ctx.hasModule(dep) && !deps.containsKey(dep)) {
-						UIModule d = getModuleInstance(dep);
-						deps.put(dep, d);
-						check.add(d);
-					}
+			for (String dep : m.getModuleDeps()) {
+				if (!ctx.hasModule(dep) && !deps.containsKey(dep)) {
+					UIModule d = getModuleInstance(dep);
+					deps.put(dep, d);
+					check.add(d);
 				}
 			}
-
-			ctx.insertModules(deps.values().toArray(new UIModule[deps.size()]));
-		} catch (InstantiationException | ModuleNotFoundException e) {
-			log.log(Level.SEVERE, "unable to create instance of module "
-					+ moduleId, e);
-
-			return false;
 		}
 
-		return true;
+		ctx.insertModules(deps.values().toArray(new UIModule[deps.size()]));
 	}
 }

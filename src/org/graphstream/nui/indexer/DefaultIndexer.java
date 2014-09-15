@@ -40,6 +40,7 @@ import java.util.Map;
 import org.graphstream.nui.AbstractModule;
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIIndexer;
+import org.graphstream.nui.indexer.ElementIndex.Type;
 import org.graphstream.stream.ElementSink;
 
 public class DefaultIndexer extends AbstractModule implements UIIndexer,
@@ -47,13 +48,17 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	protected final IndexSet nodes;
 	protected final IndexSet edges;
 
+	protected final ElementIndex graphIndex;
+
 	protected final List<IndexerListener> listeners;
 
 	public DefaultIndexer() {
 		super(MODULE_ID);
 
-		nodes = new IndexSet(UIElementIndex.Type.NODE);
-		edges = new IndexSet(UIElementIndex.Type.EDGE);
+		nodes = new IndexSet(ElementIndex.Type.NODE);
+		edges = new IndexSet(ElementIndex.Type.EDGE);
+
+		graphIndex = new IEIndex(Type.GRAPH, "graph", 0);
 
 		listeners = new LinkedList<IndexerListener>();
 	}
@@ -79,6 +84,16 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	public void release() {
 		ctx.getContextProxy().removeElementSink(this);
 		super.release();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIIndexer#getGraphIndex()
+	 */
+	@Override
+	public ElementIndex getGraphIndex() {
+		return graphIndex;
 	}
 
 	/*
@@ -118,7 +133,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 * @see org.graphstream.nui.UIIndexer#getNodeIndex(java.lang.String)
 	 */
 	@Override
-	public UIElementIndex getNodeIndex(String nodeId) {
+	public ElementIndex getNodeIndex(String nodeId) {
 		return nodes.get(nodeId);
 	}
 
@@ -128,7 +143,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 * @see org.graphstream.nui.UIIndexer#getEdgeIndex(java.lang.String)
 	 */
 	@Override
-	public UIElementIndex getEdgeIndex(String edgeId) {
+	public ElementIndex getEdgeIndex(String edgeId) {
 		return edges.get(edgeId);
 	}
 
@@ -138,7 +153,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 * @see org.graphstream.nui.UIIndexer#getSpriteIndex(java.lang.String)
 	 */
 	@Override
-	public UIElementIndex getSpriteIndex(String spriteId) {
+	public ElementIndex getSpriteIndex(String spriteId) {
 		// TODO
 		throw new UnsupportedOperationException();
 	}
@@ -149,7 +164,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 * @see org.graphstream.nui.UIIndexer#getNodeIndex(int)
 	 */
 	@Override
-	public UIElementIndex getNodeIndex(int nodeIndex) {
+	public ElementIndex getNodeIndex(int nodeIndex) {
 		return nodes.get(nodeIndex);
 	}
 
@@ -159,7 +174,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 * @see org.graphstream.nui.UIIndexer#getEdgeIndex(int)
 	 */
 	@Override
-	public UIElementIndex getEdgeIndex(int edgeIndex) {
+	public ElementIndex getEdgeIndex(int edgeIndex) {
 		return edges.get(edgeIndex);
 	}
 
@@ -169,7 +184,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 * @see org.graphstream.nui.UIIndexer#getSpriteIndex(int)
 	 */
 	@Override
-	public UIElementIndex getSpriteIndex(int spriteIndex) {
+	public ElementIndex getSpriteIndex(int spriteIndex) {
 		// TODO
 		throw new UnsupportedOperationException();
 	}
@@ -207,8 +222,8 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	@Override
 	public void edgeAdded(String sourceId, long timeId, String edgeId,
 			String node1Id, String node2Id, boolean directed) {
-		UIElementIndex source = nodes.get(node1Id);
-		UIElementIndex target = nodes.get(node2Id);
+		ElementIndex source = nodes.get(node1Id);
+		ElementIndex target = nodes.get(node2Id);
 
 		if (source == null)
 			source = nodes.add(node1Id);
@@ -277,7 +292,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	public void stepBegins(String arg0, long arg1, double arg2) {
 	}
 
-	protected void fireElementAdded(UIElementIndex.Type type, UIElementIndex index,
+	protected void fireElementAdded(ElementIndex.Type type, ElementIndex index,
 			Object... args) {
 		switch (type) {
 		case NODE:
@@ -286,8 +301,8 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 			break;
 		case EDGE:
 			for (IndexerListener l : listeners)
-				l.edgeAdded(index, (UIElementIndex) args[0],
-						(UIElementIndex) args[1], (Boolean) args[2]);
+				l.edgeAdded(index, (ElementIndex) args[0],
+						(ElementIndex) args[1], (Boolean) args[2]);
 			break;
 		default:
 			// TODO
@@ -295,8 +310,8 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 		}
 	}
 
-	protected void fireElementsSwap(UIElementIndex.Type type, UIElementIndex e1,
-			UIElementIndex e2) {
+	protected void fireElementsSwap(ElementIndex.Type type, ElementIndex e1,
+			ElementIndex e2) {
 		switch (type) {
 		case NODE:
 			for (IndexerListener l : listeners)
@@ -312,7 +327,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 		}
 	}
 
-	protected void fireElementRemoved(UIElementIndex.Type type, UIElementIndex index) {
+	protected void fireElementRemoved(ElementIndex.Type type, ElementIndex index) {
 		switch (type) {
 		case NODE:
 			for (IndexerListener l : listeners)
@@ -332,11 +347,11 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 * Object who manages a set of element indexes.
 	 */
 	private class IndexSet {
-		final UIElementIndex.Type type;
+		final ElementIndex.Type type;
 		final Map<String, IEIndex> id2index;
 		final List<IEIndex> indexes;
 
-		IndexSet(UIElementIndex.Type indexSetType) {
+		IndexSet(ElementIndex.Type indexSetType) {
 			type = indexSetType;
 			id2index = new HashMap<String, IEIndex>();
 			indexes = new Vector<IEIndex>();
@@ -346,18 +361,18 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 			return indexes.size();
 		}
 
-		UIElementIndex get(String id) {
+		ElementIndex get(String id) {
 			return id2index.get(id);
 		}
 
-		UIElementIndex get(int index) {
+		ElementIndex get(int index) {
 			if (index >= indexes.size())
 				return null;
 
 			return indexes.get(index);
 		}
 
-		UIElementIndex add(String id, Object... args) {
+		ElementIndex add(String id, Object... args) {
 			IEIndex index = new IEIndex(type, id, indexes.size());
 
 			id2index.put(id, index);
@@ -368,7 +383,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 			return index;
 		}
 
-		UIElementIndex remove(String id) {
+		ElementIndex remove(String id) {
 			IEIndex index = id2index.get(id);
 
 			if (index == null)
@@ -402,7 +417,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	/*
 	 * Internal implementation of ElementIndex.
 	 */
-	private class IEIndex implements UIElementIndex {
+	private class IEIndex implements ElementIndex {
 		private final String id;
 		private final Type type;
 		private int index;
@@ -433,9 +448,24 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 			return index;
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.indexer.UIElementIndex#getType()
+		 */
 		@Override
 		public Type getType() {
 			return type;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.lang.Object#toString()
+		 */
+		@Override
+		public String toString() {
+			return String.format("<%s>#%s@%d", type, id, index);
 		}
 	}
 }

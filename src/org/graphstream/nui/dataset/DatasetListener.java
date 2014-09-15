@@ -31,8 +31,8 @@
  */
 package org.graphstream.nui.dataset;
 
-import org.graphstream.nui.indexer.UIElementIndex;
+import org.graphstream.nui.indexer.ElementIndex;
 
 public interface DatasetListener {
-	void nodeMoved(UIElementIndex nodeIndex, double x, double y, double z);
+	void nodeMoved(ElementIndex nodeIndex, double x, double y, double z);
 }

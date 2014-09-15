@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 - 2014
+ * Copyright 2006 - 2013
  *     Stefan Balev     <stefan.balev@graphstream-project.org>
  *     Julien Baudry    <julien.baudry@graphstream-project.org>
  *     Antoine Dutot    <antoine.dutot@graphstream-project.org>
@@ -29,10 +29,31 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.style.parser;
+package org.graphstream.nui.style.util;
 
-import org.graphstream.nui.style.base.BaseGroupStyle;
+import java.awt.Color;
+import java.util.ArrayList;
 
-public interface StyleSheetParserListener {
-	void elementStyleAdded(BaseGroupStyle style);
+/**
+ * Ordered set of colours.
+ */
+public class Colors extends ArrayList<Color> {
+	private static final long serialVersionUID = - 7218092114483593610L;
+
+	/**
+	 * New empty colour set.
+	 */
+	public Colors() {
+	}
+
+	/**
+	 * New copy of the other colour set.
+	 * 
+	 * @param others
+	 *            The other colour set to copy.
+	 */
+	public Colors(Colors others) {
+		for (Color color : others)
+			add(color);
+	}
 }

@@ -90,6 +90,8 @@ public interface UIContext {
 	 */
 	void init(ThreadingModel threadingModel);
 
+	void invokeOnUIThread(Runnable r);
+	
 	/**
 	 * Since the context may have to be initialized in its own thread, the
 	 * thread of the source needs a way to know when this initialization is done
@@ -207,7 +209,10 @@ public interface UIContext {
 	 *            id of the module
 	 * @UIThreadUse
 	 */
-	void loadModule(String moduleId);
+	void loadModule(String moduleId) throws InstantiationException,
+			ModuleNotFoundException;
+
+	boolean tryLoadModule(String moduleId);
 
 	/**
 	 * Insert modules in this context. Unlike the {@link #loadModule(String)}
@@ -245,6 +250,4 @@ public interface UIContext {
 	 * @UIThreadUse
 	 */
 	void removeView(String viewId);
-
-	void registerUIAttribute(String key, String moduleId);
 }

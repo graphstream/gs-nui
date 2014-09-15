@@ -31,8 +31,8 @@
  */
 package org.graphstream.nui.spacePartition;
 
-import org.graphstream.nui.indexer.UIElementIndex;
+import org.graphstream.nui.indexer.ElementIndex;
 
-public interface SpaceCell extends Iterable<UIElementIndex> {
+public interface SpaceCell extends Iterable<ElementIndex> {
 
 }

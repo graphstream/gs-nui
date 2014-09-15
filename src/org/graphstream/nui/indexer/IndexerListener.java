@@ -32,18 +32,18 @@
 package org.graphstream.nui.indexer;
 
 public interface IndexerListener {
-	void nodeAdded(UIElementIndex nodeIndex);
+	void nodeAdded(ElementIndex nodeIndex);
 
-	void nodeRemoved(UIElementIndex nodeIndex);
+	void nodeRemoved(ElementIndex nodeIndex);
 
-	void nodesSwapped(UIElementIndex nodeIndex1, UIElementIndex nodeIndex2);
+	void nodesSwapped(ElementIndex nodeIndex1, ElementIndex nodeIndex2);
 
-	void edgeAdded(UIElementIndex edgeIndex, UIElementIndex sourceIndex,
-			UIElementIndex targetIndex, boolean directed);
+	void edgeAdded(ElementIndex edgeIndex, ElementIndex sourceIndex,
+			ElementIndex targetIndex, boolean directed);
 
-	void edgeRemoved(UIElementIndex edgeIndex);
+	void edgeRemoved(ElementIndex edgeIndex);
 
-	void edgesSwapped(UIElementIndex edgeIndex1, UIElementIndex edgeIndex2);
+	void edgesSwapped(ElementIndex edgeIndex1, ElementIndex edgeIndex2);
 
 	void elementsClear();
 }

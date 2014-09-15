@@ -38,8 +38,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.graphstream.nui.ModuleNotFoundException;
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIModule;
 import org.graphstream.nui.UIModules;
@@ -48,7 +50,6 @@ import org.graphstream.stream.Pipe;
 import org.graphstream.stream.PipeBase;
 import org.graphstream.stream.Replayable;
 import org.graphstream.stream.Replayable.Controller;
-import org.graphstream.stream.SinkAdapter;
 import org.graphstream.stream.Source;
 import org.graphstream.stream.thread.ThreadProxyPipe;
 
@@ -81,8 +82,6 @@ public abstract class AbstractContext implements UIContext {
 	 */
 	protected Pipe proxy;
 
-	protected Map<String, String> registeredAttributes;
-
 	//
 	// Lock used to manage the waitForInitialization method.
 	//
@@ -105,7 +104,6 @@ public abstract class AbstractContext implements UIContext {
 		initLock = new ReentrantLock();
 		initCondition = initLock.newCondition();
 		isInitialized = new AtomicBoolean(false);
-		registeredAttributes = new HashMap<String, String>();
 	}
 
 	/*
@@ -138,8 +136,6 @@ public abstract class AbstractContext implements UIContext {
 				proxy = new ThreadProxyPipe();
 				break;
 			}
-
-			proxy.addAttributeSink(new AttributeDispatcher());
 
 			initCondition.signalAll();
 		} finally {
@@ -296,9 +292,29 @@ public abstract class AbstractContext implements UIContext {
 	 * @see org.graphstream.nui.UIContext#loadModule(java.lang.String)
 	 */
 	@Override
-	public void loadModule(String moduleId) {
+	public void loadModule(String moduleId) throws InstantiationException,
+			ModuleNotFoundException {
 		checkThread();
 		UIModules.loadModule(this, moduleId);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIContext#tryLoadModule(java.lang.String)
+	 */
+	@Override
+	public boolean tryLoadModule(String moduleId) {
+		Logger log = Logger.getLogger(UIModules.class.getName());
+
+		try {
+			loadModule(moduleId);
+			return true;
+		} catch (InstantiationException | ModuleNotFoundException e) {
+			log.log(Level.INFO, "unable to load module " + moduleId);
+		}
+
+		return false;
 	}
 
 	/*
@@ -367,104 +383,11 @@ public abstract class AbstractContext implements UIContext {
 			view.close();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIContext#registerUIAttribute(java.lang.String,
-	 * java.lang.String)
-	 */
-	@Override
-	public void registerUIAttribute(String key, String moduleId) {
-		registeredAttributes.put(key, moduleId);
-	}
-
 	protected void checkThread() {
 		if (Thread.currentThread() != thread) {
 			Logger.getLogger(AbstractContext.class.getName())
 					.warning(
 							"Manipulating modules or views outside of the context thread may cause concurrent exceptions. Don't blame the devs.");
-		}
-	}
-
-	class AttributeDispatcher extends SinkAdapter {
-		private boolean isUIAttribute(String attributeId) {
-			return attributeId.length() > 3 && attributeId.charAt(0) == 'u'
-					&& attributeId.charAt(1) == 'i'
-					&& attributeId.charAt(2) == '.';
-		}
-
-		private void handleAttribute(String attributeId, Object value) {
-			if (isUIAttribute(attributeId)) {
-				attributeId = attributeId.substring(3);
-
-				int i = attributeId.indexOf('.');
-
-				if (i > 0) {
-					String moduleId = attributeId.substring(0, i);
-					attributeId = attributeId.substring(i + 1);
-
-					if (moduleId.equals("views")) {
-
-					} else {
-						if (hasModule(moduleId))
-							getModule(moduleId)
-									.setAttribute(attributeId, value);
-						else
-							Logger.getLogger(AbstractContext.class.getName())
-									.warning("no module \"" + moduleId + "\"");
-					}
-				} else if (registeredAttributes.containsKey(attributeId)) {
-					String moduleId = registeredAttributes.get(attributeId);
-					UIModule module = getModule(moduleId);
-
-					if (module != null)
-						module.setAttribute(attributeId, value);
-				} else {
-					String moduleId = attributeId;
-
-					if (!hasModule(moduleId))
-						loadModule(moduleId);
-				}
-			}
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.stream.SinkAdapter#graphAttributeAdded(java.lang.
-		 * String, long, java.lang.String, java.lang.Object)
-		 */
-		@Override
-		public void graphAttributeAdded(String sourceId, long timeId,
-				String attributeId, Object value) {
-			handleAttribute(attributeId, value);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.stream.SinkAdapter#graphAttributeChanged(java.lang
-		 * .String, long, java.lang.String, java.lang.Object, java.lang.Object)
-		 */
-		@Override
-		public void graphAttributeChanged(String sourceId, long timeId,
-				String attributeId, Object oldValue, Object newValue) {
-			handleAttribute(attributeId, newValue);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.stream.SinkAdapter#graphAttributeRemoved(java.lang
-		 * .String, long, java.lang.String)
-		 */
-		@Override
-		public void graphAttributeRemoved(String sourceId, long timeId,
-				String attributeId) {
-			handleAttribute(attributeId, null);
 		}
 	}
 }

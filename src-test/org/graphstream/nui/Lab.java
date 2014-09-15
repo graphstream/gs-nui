@@ -29,10 +29,35 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.style.parser;
+package org.graphstream.nui;
 
-import org.graphstream.nui.style.base.BaseGroupStyle;
+import java.nio.ByteBuffer;
+import java.nio.DoubleBuffer;
 
-public interface StyleSheetParserListener {
-	void elementStyleAdded(BaseGroupStyle style);
+public class Lab {
+
+	public static void main(String[] args) {
+		ByteBuffer buffer = ByteBuffer.allocate(32);
+		
+		//System.err.printf("position=%d, limit=%d, capacity=%d, remaining=%d%n", buffer.position(), buffer.limit(), buffer.capacity(), buffer.remaining());
+		//buffer.limit(512);
+		//buffer.position(128);
+		//System.err.printf("position=%d, limit=%d, capacity=%d, remaining=%d%n", buffer.position(), buffer.limit(), buffer.capacity(), buffer.remaining());
+
+		print(buffer.asDoubleBuffer());
+		buffer.putDouble(0, 23.0);
+		buffer.putDouble(8, 32.0);
+		print(buffer.asDoubleBuffer());
+	}
+	
+	static void print(DoubleBuffer buffer) {
+		buffer.rewind();
+		System.err.printf("%d elements {", buffer.remaining());
+
+		while (buffer.hasRemaining())
+			System.err.printf("%f%s", buffer.get(),
+					buffer.hasRemaining() ? "; " : "");
+
+		System.err.printf("}%n");
+	}
 }

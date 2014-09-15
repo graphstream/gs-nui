@@ -29,10 +29,25 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.style.parser;
+package org.graphstream.nui.indexer;
 
-import org.graphstream.nui.style.base.BaseGroupStyle;
+public interface ElementIndex {
+	public static enum Type {
+		SPRITE, NODE, EDGE, GRAPH
+	}
 
-public interface StyleSheetParserListener {
-	void elementStyleAdded(BaseGroupStyle style);
+	/**
+	 * 
+	 * @return
+	 */
+	String id();
+
+	/**
+	 * -1 means that the element has been removed.
+	 * 
+	 * @return
+	 */
+	int index();
+	
+	Type getType();
 }

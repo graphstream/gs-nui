@@ -31,8 +31,8 @@
  */
 package org.graphstream.nui.style;
 
-import org.graphstream.nui.indexer.UIElementIndex;
+import org.graphstream.nui.indexer.ElementIndex;
 
 public interface StyleListener {
-	void elementStyleUpdated(UIElementIndex index, ElementStyle style);
+	void elementStyleUpdated(ElementIndex index, GroupStyle style);
 }

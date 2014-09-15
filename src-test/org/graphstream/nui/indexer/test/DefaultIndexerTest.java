@@ -37,6 +37,7 @@ import java.util.logging.Logger;
 import org.junit.Assert;
 import org.junit.Before;
 import org.graphstream.graph.implementations.DefaultGraph;
+import org.graphstream.nui.ModuleNotFoundException;
 import org.graphstream.nui.RegisterException;
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIFactory;
@@ -44,12 +45,12 @@ import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.UIContext.ThreadingModel;
 import org.graphstream.nui.UIModules;
 import org.graphstream.nui.indexer.DefaultIndexer;
-import org.graphstream.nui.indexer.UIElementIndex;
+import org.graphstream.nui.indexer.ElementIndex;
 import org.junit.Test;
 
 public class DefaultIndexerTest {
 	Logger log;
-	
+
 	@Before
 	public void checkModule() {
 		log = Logger.getGlobal();
@@ -64,14 +65,19 @@ public class DefaultIndexerTest {
 			Assert.fail();
 		}
 	}
-	
+
 	@Test
 	public void testNodeIndexes() {
 		DefaultGraph g = new DefaultGraph("g");
 		UIContext ctx = UIFactory.getDefaultFactory().createContext();
 
 		ctx.init(ThreadingModel.SOURCE_IN_UI_THREAD);
-		ctx.loadModule("indexer");
+
+		try {
+			ctx.loadModule("indexer");
+		} catch (InstantiationException | ModuleNotFoundException e) {
+			Assert.fail(e.getMessage());
+		}
 
 		UIIndexer indexer = (UIIndexer) ctx.getModule("indexer");
 		Assert.assertEquals(indexer.getClass(), DefaultIndexer.class);
@@ -82,9 +88,9 @@ public class DefaultIndexerTest {
 		g.addNode("W");
 		g.addNode("Y");
 
-		UIElementIndex zIndex = indexer.getNodeIndex("Z");
-		UIElementIndex wIndex = indexer.getNodeIndex("W");
-		UIElementIndex yIndex = indexer.getNodeIndex("Y");
+		ElementIndex zIndex = indexer.getNodeIndex("Z");
+		ElementIndex wIndex = indexer.getNodeIndex("W");
+		ElementIndex yIndex = indexer.getNodeIndex("Y");
 
 		Assert.assertEquals(zIndex.index(), 0);
 		Assert.assertEquals(wIndex.index(), 1);
@@ -117,14 +123,19 @@ public class DefaultIndexerTest {
 
 		ctx.close();
 	}
-	
+
 	@Test
 	public void testEdgeIndexes() {
 		DefaultGraph g = new DefaultGraph("g");
 		UIContext ctx = UIFactory.getDefaultFactory().createContext();
 
 		ctx.init(ThreadingModel.SOURCE_IN_UI_THREAD);
-		ctx.loadModule("indexer");
+
+		try {
+			ctx.loadModule("indexer");
+		} catch (InstantiationException | ModuleNotFoundException e) {
+			Assert.fail(e.getMessage());
+		}
 
 		UIIndexer indexer = (UIIndexer) ctx.getModule("indexer");
 		Assert.assertEquals(indexer.getClass(), DefaultIndexer.class);
@@ -137,11 +148,11 @@ public class DefaultIndexerTest {
 		g.addEdge("ZW", "Z", "W");
 		g.addEdge("ZY", "Z", "Y");
 		g.addEdge("YW", "Y", "W");
-		
-		UIElementIndex zwIndex = indexer.getEdgeIndex("ZW");
-		UIElementIndex zyIndex = indexer.getEdgeIndex("ZY");
-		UIElementIndex ywIndex = indexer.getEdgeIndex("YW");
-		
+
+		ElementIndex zwIndex = indexer.getEdgeIndex("ZW");
+		ElementIndex zyIndex = indexer.getEdgeIndex("ZY");
+		ElementIndex ywIndex = indexer.getEdgeIndex("YW");
+
 		Assert.assertEquals(zwIndex.index(), 0);
 		Assert.assertEquals(zyIndex.index(), 1);
 		Assert.assertEquals(ywIndex.index(), 2);
@@ -180,7 +191,7 @@ public class DefaultIndexerTest {
 		Assert.assertEquals(indexer.getEdgeIndex(0).id(), "YW");
 		Assert.assertEquals(indexer.getEdgeIndex(1), null);
 		Assert.assertEquals(indexer.getEdgeIndex(2), null);
-		
+
 		ctx.close();
 	}
 }

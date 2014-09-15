@@ -29,10 +29,20 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.style.parser;
+package org.graphstream.nui;
 
-import org.graphstream.nui.style.base.BaseGroupStyle;
+import org.graphstream.nui.attributes.AttributeHandler;
 
-public interface StyleSheetParserListener {
-	void elementStyleAdded(BaseGroupStyle style);
+public interface UIAttributes extends UIModule {
+	public static enum AttributeType {
+		ALL, GRAPH, ELEMENT, NODE, EDGE, SPRITE
+	}
+
+	public static final String MODULE_ID = "attributes";
+
+	void registerUIAttributeHandler(AttributeType type, String key,
+			AttributeHandler handler);
+
+	void unregisterUIAttributeHandler(AttributeType type, String key,
+			AttributeHandler handler);
 }

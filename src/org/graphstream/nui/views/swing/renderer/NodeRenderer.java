@@ -29,25 +29,39 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.indexer;
+package org.graphstream.nui.views.swing.renderer;
 
-public interface UIElementIndex {
-	public static enum Type {
-		NODE, EDGE, GRAPH, SPRITE
+import java.awt.Color;
+import java.awt.Graphics2D;
+
+import org.graphstream.nui.UIDataset;
+import org.graphstream.nui.indexer.ElementIndex;
+import org.graphstream.nui.style.GroupStyle;
+import org.graphstream.nui.views.UICamera;
+import org.graphstream.nui.views.swing.SwingElementRenderer;
+
+public class NodeRenderer implements SwingElementRenderer {
+	protected GroupStyle setupStyle;
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.views.swing.SwingElementRenderer#render(java.awt.
+	 * Graphics2D, org.graphstream.nui.views.UICamera,
+	 * org.graphstream.nui.UIDataset, org.graphstream.nui.style.ElementStyle,
+	 * org.graphstream.nui.indexer.UIElementIndex)
+	 */
+	@Override
+	public void render(Graphics2D g, UICamera camera, UIDataset dataset,
+			GroupStyle elementStyle, ElementIndex index) {
+		if (setupStyle != elementStyle)
+			setup(g, elementStyle);
+
 	}
 
-	/**
-	 * 
-	 * @return
-	 */
-	String id();
-
-	/**
-	 * -1 means that the element has been removed.
-	 * 
-	 * @return
-	 */
-	int index();
-	
-	Type getType();
+	protected void setup(Graphics2D g, GroupStyle elementStyle) {
+		setupStyle = elementStyle;
+		
+	}
 }
