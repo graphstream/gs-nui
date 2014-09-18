@@ -29,33 +29,38 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.indexer;
+package org.graphstream.nui.swapper;
 
-public interface ElementIndex {
-	public static enum Type {
-		SPRITE, NODE, EDGE, GRAPH
-	}
+import java.nio.ByteBuffer;
 
-	/**
-	 * 
-	 * @return
-	 */
-	String id();
+import org.graphstream.nui.indexer.ElementIndex;
 
-	/**
-	 * -1 means that the element has been removed.
-	 * 
-	 * @return
-	 */
-	int index();
+public interface UIBufferReference {
+	ByteBuffer buffer();
 
-	Type getType();
+	void release();
 
-	public static interface EdgeIndex extends ElementIndex {
-		ElementIndex getSource();
+	byte getByte(ElementIndex index, int component);
 
-		ElementIndex getTarget();
+	void setByte(ElementIndex index, int component, byte b);
 
-		boolean isDirected();
-	}
+	float getFloat(ElementIndex index, int component);
+
+	void setFloat(ElementIndex index, int component, float f);
+
+	double getDouble(ElementIndex index, int component);
+
+	void setDouble(ElementIndex index, int component, double d);
+
+	short getShort(ElementIndex index, int component);
+
+	void setShort(ElementIndex index, int component, short s);
+
+	int getInt(ElementIndex index, int component);
+
+	void setInt(ElementIndex index, int component, int i);
+
+	long getLong(ElementIndex index, int component);
+
+	void setLong(ElementIndex index, int component, long l);
 }

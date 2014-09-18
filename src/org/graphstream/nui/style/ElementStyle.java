@@ -48,6 +48,8 @@ public interface ElementStyle {
 	GroupStyle getGroupStyle();
 
 	int getColor();
+	
+	double getSize(int dim);
 
 	String getState();
 

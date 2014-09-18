@@ -31,11 +31,10 @@
  */
 package org.graphstream.nui.views.swing.renderer;
 
-import java.awt.Color;
 import java.awt.Graphics2D;
 
 import org.graphstream.nui.UIDataset;
-import org.graphstream.nui.indexer.ElementIndex;
+import org.graphstream.nui.style.ElementStyle;
 import org.graphstream.nui.style.GroupStyle;
 import org.graphstream.nui.views.UICamera;
 import org.graphstream.nui.views.swing.SwingElementRenderer;
@@ -49,19 +48,19 @@ public class NodeRenderer implements SwingElementRenderer {
 	 * @see
 	 * org.graphstream.nui.views.swing.SwingElementRenderer#render(java.awt.
 	 * Graphics2D, org.graphstream.nui.views.UICamera,
-	 * org.graphstream.nui.UIDataset, org.graphstream.nui.style.ElementStyle,
-	 * org.graphstream.nui.indexer.UIElementIndex)
+	 * org.graphstream.nui.UIDataset, org.graphstream.nui.style.ElementStyle)
 	 */
 	@Override
 	public void render(Graphics2D g, UICamera camera, UIDataset dataset,
-			GroupStyle elementStyle, ElementIndex index) {
+			ElementStyle elementStyle) {
 		if (setupStyle != elementStyle)
 			setup(g, elementStyle);
 
+		
 	}
 
-	protected void setup(Graphics2D g, GroupStyle elementStyle) {
-		setupStyle = elementStyle;
-		
+	protected void setup(Graphics2D g, ElementStyle elementStyle) {
+		setupStyle = elementStyle.getGroupStyle();
+
 	}
 }

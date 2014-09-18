@@ -39,38 +39,40 @@ import java.util.logging.Logger;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.DefaultGraph;
 import org.graphstream.nui.UIContext.ThreadingModel;
-import org.graphstream.nui.buffers.UIBufferReference;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.IndexerListener;
 import org.graphstream.nui.indexer.ElementIndex.Type;
+import org.graphstream.nui.swapper.UIBufferReference;
+import org.graphstream.nui.swing.SwingContext;
 
+@SuppressWarnings("unused")
 public class Demo {
 
-	@SuppressWarnings("unused")
 	public static void main(String[] args) {
-		Logger log = Logger.getAnonymousLogger();
+		final Logger log = Logger.getAnonymousLogger();
 
 		DefaultGraph g = new DefaultGraph("g");
-		UIContext ctx = UIFactory.getDefaultFactory().createContext();
+		final UIContext ctx = new SwingContext();// UIFactory.getDefaultFactory().createContext();
 
-		ctx.init(ThreadingModel.SOURCE_IN_UI_THREAD);
+		ctx.init(ThreadingModel.SOURCE_IN_ANOTHER_THREAD);
 
 		try {
-			ctx.loadModule(UIBuffers.MODULE_ID);
-			ctx.loadModule(UIDataset.MODULE_ID);
-			ctx.loadModule(UISpace.MODULE_ID);
-			ctx.loadModule(UIStyle.MODULE_ID);
-		} catch (InstantiationException | ModuleNotFoundException e) {
-			log.log(Level.SEVERE, "Can not load modules", e);
+			ctx.invokeOnUIThread(new Runnable() {
+				public void run() {
+					try {
+						ctx.loadModule(UISwapper.MODULE_ID);
+						ctx.loadModule(UIDataset.MODULE_ID);
+						ctx.loadModule(UISpace.MODULE_ID);
+						ctx.loadModule(UIStyle.MODULE_ID);
+					} catch (InstantiationException | ModuleNotFoundException e) {
+						log.log(Level.SEVERE, "Can not load modules", e);
+					}
+
+				}
+			});
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
 		}
-
-		UIIndexer indexer = (UIIndexer) ctx.getModule(UIIndexer.MODULE_ID);
-
-		UIBuffers buffers = (UIBuffers) ctx.getModule(UIBuffers.MODULE_ID);
-		UIBufferReference ref = buffers.createBuffer(Type.NODE, 1, 10, 3,
-				Double.SIZE / 8, true, null);
-
-		print(ref.buffer().asDoubleBuffer());
 
 		ctx.connect(g);
 
@@ -84,6 +86,37 @@ public class Demo {
 		Node y = g.addNode("Y");
 		g.addNode("W");
 		g.addEdge("ZW", "Z", "W");
+		//g.removeNode("Z");
+
+		try {
+			ctx.invokeOnUIThread(new Runnable() {
+				public void run() {
+					mainUIThread(ctx);
+				}
+			});
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+		
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		ctx.release();
+	}
+
+	static void mainUIThread(UIContext ctx) {
+		Logger log = Logger.getAnonymousLogger();
+
+		UIIndexer indexer = (UIIndexer) ctx.getModule(UIIndexer.MODULE_ID);
+
+		UISwapper buffers = (UISwapper) ctx.getModule(UISwapper.MODULE_ID);
+		UIBufferReference ref = buffers.createBuffer(Type.NODE, 3,
+				Double.SIZE / 8, true, null);
+
+		print(ref.buffer().asDoubleBuffer());
 
 		// y.setAttribute("xyz", 10, 15, 20);
 
@@ -100,17 +133,13 @@ public class Demo {
 		ref.setDouble(w, 1, 32.0);
 
 		print(ref.buffer().asDoubleBuffer());
-		
-		g.removeNode("Z");
-
-		print(ref.buffer().asDoubleBuffer());
 
 		Iterator<ElementIndex> it = style.getRenderingOrder();
 
 		while (it.hasNext()) {
 			ElementIndex idx = it.next();
-			//System.err.printf("%s : 0x%X%n", idx, style.getElementStyle(idx)
-			//		.getColor());
+			System.err.printf("%s : 0x%X%n", idx, style.getElementStyle(idx)
+					.getColor());
 		}
 	}
 

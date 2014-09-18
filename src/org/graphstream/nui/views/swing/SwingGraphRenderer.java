@@ -35,6 +35,7 @@ import javax.swing.JPanel;
 
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIDataset;
+import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.UIStyle;
 import org.graphstream.nui.views.UICamera;
 import org.graphstream.nui.views.UIController;
@@ -48,6 +49,7 @@ public class SwingGraphRenderer implements UIGraphRenderer, SwingView {
 	protected UIContext ctx;
 	protected UIDataset dataset;
 	protected UIStyle style;
+	protected UIIndexer indexer;
 
 	protected UICamera camera;
 	protected UIController controller;
@@ -77,9 +79,10 @@ public class SwingGraphRenderer implements UIGraphRenderer, SwingView {
 	public void init(UIContext ctx) {
 		this.ctx = ctx;
 
+		indexer = (UIIndexer) ctx.getModule(UIIndexer.MODULE_ID);
 		dataset = (UIDataset) ctx.getModule(UIDataset.MODULE_ID);
 		style = (UIStyle) ctx.getModule(UIStyle.MODULE_ID);
-		canvas = new SwingGraphCanvas(camera, dataset, style);
+		canvas = new SwingGraphCanvas(camera, indexer, dataset, style);
 	}
 
 	/*

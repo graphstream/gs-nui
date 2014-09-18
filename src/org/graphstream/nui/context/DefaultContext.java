@@ -32,5 +32,33 @@
 package org.graphstream.nui.context;
 
 public class DefaultContext extends AbstractContext {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.context.AbstractContext#invokeOnUIThread(java.lang
+	 * .Runnable)
+	 */
+	@Override
+	public void invokeOnUIThread(Runnable r) throws InterruptedException {
+		r.run();
+	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.context.AbstractContext#internalInit()
+	 */
+	@Override
+	protected void internalInit() {
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.context.AbstractContext#internalRelease()
+	 */
+	@Override
+	protected void internalRelease() {
+	}
 }

@@ -39,7 +39,6 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -56,8 +55,11 @@ import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.UIStyle;
 import org.graphstream.nui.UIAttributes.AttributeType;
+import org.graphstream.nui.UISwapper;
+import org.graphstream.nui.UISwapper.ValueFactory;
 import org.graphstream.nui.attributes.AttributeHandler;
 import org.graphstream.nui.indexer.ElementIndex;
+import org.graphstream.nui.indexer.ElementIndex.Type;
 import org.graphstream.nui.indexer.IndexerListener;
 import org.graphstream.nui.style.ElementStyle;
 import org.graphstream.nui.style.GroupStyle;
@@ -85,30 +87,27 @@ import org.graphstream.nui.style.parser.StyleSheetParserListener;
 import org.graphstream.nui.style.util.Colors;
 import org.graphstream.nui.style.util.Value;
 import org.graphstream.nui.style.util.Values;
+import org.graphstream.nui.swapper.UIArrayReference;
+import org.graphstream.nui.swapper.UIBufferReference;
 import org.graphstream.nui.util.Tools;
 import org.graphstream.stream.SinkAdapter;
 import org.graphstream.util.parser.ParseException;
 
 public class BaseStyle extends AbstractModule implements UIStyle,
 		IndexerListener, StyleSheetParserListener {
-	protected static final int DEFAULT_GROW_STEP = 1000;
-
 	protected Map<Selector, BaseGroupStyle> styles;
 	protected StyleTree sortedStyles;
 	protected ZIndexTree zIndexTree;
 
 	protected BaseElementStyle graphData;
-	protected BaseElementStyle[] nodeDatas;
-	protected BaseElementStyle[] edgeDatas;
-	protected BaseElementStyle[] spritesData;
+	protected UIArrayReference<BaseElementStyle> nodeDatas;
+	protected UIArrayReference<BaseElementStyle> edgeDatas;
+	protected UIArrayReference<BaseElementStyle> spritesData;
 
-	protected int[] nodeColors;
-	protected int[] edgeColors;
+	protected UIBufferReference nodeColors;
+	protected UIBufferReference edgeColors;
 
 	protected UIIndexer indexer;
-
-	protected int nodeGrowStep;
-	protected int edgeGrowStep;
 
 	protected List<StyleListener> listeners;
 
@@ -121,9 +120,6 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 		styles = new HashMap<Selector, BaseGroupStyle>();
 		sortedStyles = new StyleTree();
 		zIndexTree = new ZIndexTree();
-
-		nodeGrowStep = DEFAULT_GROW_STEP;
-		edgeGrowStep = DEFAULT_GROW_STEP;
 
 		listeners = new LinkedList<StyleListener>();
 	}
@@ -138,36 +134,54 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 	public void init(UIContext ctx) {
 		super.init(ctx);
 
+		UISwapper swapper = (UISwapper) ctx.getModule(UISwapper.MODULE_ID);
+
 		indexer = (UIIndexer) ctx.getModule(UIIndexer.MODULE_ID);
 		indexer.addIndexerListener(this);
 
+		setDefaultStyle();
+
 		graphData = new DefaultGraphStyle(indexer.getGraphIndex());
 
-		if (indexer.getNodeCount() > 0) {
-			nodeDatas = new BaseElementStyle[indexer.getNodeCount()
-					+ nodeGrowStep];
-			nodeColors = new int[indexer.getNodeCount() + nodeGrowStep];
+		nodeDatas = swapper.createArray(Type.NODE, 1, BaseElementStyle.class,
+				new ValueFactory<BaseElementStyle>() {
+					/*
+					 * (non-Javadoc)
+					 * 
+					 * @see
+					 * org.graphstream.nui.UISwapper.ValueFactory#createValue
+					 * (org.graphstream.nui.indexer.ElementIndex, int)
+					 */
+					@Override
+					public BaseElementStyle createValue(ElementIndex index,
+							int component) {
+						return new DefaultNodeStyle(index);
+					}
 
-			for (int i = 0; i < indexer.getNodeCount(); i++)
-				nodeDatas[i] = new DefaultNodeStyle(indexer.getNodeIndex(i));
-		} else {
-			nodeDatas = new BaseElementStyle[nodeGrowStep];
-			nodeColors = new int[nodeGrowStep];
-		}
+				});
 
-		if (indexer.getEdgeCount() > 0) {
-			edgeDatas = new BaseElementStyle[indexer.getEdgeCount()
-					+ edgeGrowStep];
-			edgeColors = new int[indexer.getEdgeCount() + edgeGrowStep];
+		nodeColors = swapper.createBuffer(Type.NODE, 1, Integer.SIZE / 8, true,
+				null);
 
-			for (int i = 0; i < indexer.getEdgeCount(); i++)
-				edgeDatas[i] = new DefaultEdgeStyle(indexer.getEdgeIndex(i));
-		} else {
-			edgeDatas = new BaseElementStyle[edgeGrowStep];
-			edgeColors = new int[edgeGrowStep];
-		}
+		edgeDatas = swapper.createArray(Type.EDGE, 1, BaseElementStyle.class,
+				new ValueFactory<BaseElementStyle>() {
+					/*
+					 * (non-Javadoc)
+					 * 
+					 * @see
+					 * org.graphstream.nui.UISwapper.ValueFactory#createValue
+					 * (org.graphstream.nui.indexer.ElementIndex, int)
+					 */
+					@Override
+					public BaseElementStyle createValue(ElementIndex index,
+							int component) {
+						return new DefaultEdgeStyle(index);
+					}
 
-		setDefaultStyle();
+				});
+
+		edgeColors = swapper.createBuffer(Type.EDGE, 1, Integer.SIZE / 8, true,
+				null);
 
 		UIAttributes attributes = (UIAttributes) ctx
 				.getModule(UIAttributes.MODULE_ID);
@@ -208,10 +222,10 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 
 				switch (index.getType()) {
 				case NODE:
-					style = nodeDatas[index.index()];
+					style = nodeDatas.get(index, 0);
 					break;
 				case EDGE:
-					style = edgeDatas[index.index()];
+					style = edgeDatas.get(index, 0);
 					break;
 				default:
 					break;
@@ -298,13 +312,13 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 
 		switch (index.getType()) {
 		case NODE:
-			data = nodeDatas[index.index()];
+			data = nodeDatas.get(index, 0);
 			break;
 		case EDGE:
-			data = edgeDatas[index.index()];
+			data = edgeDatas.get(index, 0);
 			break;
 		case SPRITE:
-			data = spritesData[index.index()];
+			data = spritesData.get(index, 0);
 			break;
 		case GRAPH:
 			data = graphData;
@@ -490,7 +504,8 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 
 			break;
 		case GRAPH:
-			graphData.checkStyleChanged();
+			if (graphData != null)
+				graphData.checkStyleChanged();
 			break;
 		default:
 			//
@@ -505,14 +520,14 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 		ElementIndex index = indexer.getNodeIndex(style.selector.id);
 
 		if (index != null) {
-			ElementStyle data = nodeDatas[index.index()];
+			ElementStyle data = nodeDatas.get(index, 0);
 			data.checkStyleChanged();
 		}
 	}
 
 	protected void fireNodeStyleUpdated(BaseGroupStyle style) {
 		for (int idx = 0; idx < indexer.getNodeCount(); idx++) {
-			BaseElementStyle data = nodeDatas[idx];
+			BaseElementStyle data = nodeDatas.get(indexer.getNodeIndex(idx), 0);
 
 			if (style == null || style.selector.match(data))
 				data.checkStyleChanged();
@@ -523,14 +538,14 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 		ElementIndex index = indexer.getEdgeIndex(style.selector.id);
 
 		if (index != null) {
-			ElementStyle data = edgeDatas[index.index()];
+			ElementStyle data = edgeDatas.get(index, 0);
 			data.checkStyleChanged();
 		}
 	}
 
 	protected void fireEdgeStyleUpdated(BaseGroupStyle style) {
 		for (int idx = 0; idx < indexer.getEdgeCount(); idx++) {
-			BaseElementStyle data = edgeDatas[idx];
+			BaseElementStyle data = edgeDatas.get(indexer.getEdgeIndex(idx), 0);
 
 			if (style == null || style.selector.match(data))
 				data.checkStyleChanged();
@@ -790,10 +805,10 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 		//
 		switch (data.index.getType()) {
 		case NODE:
-			nodeColors[data.index.index()] = data.computeColor();
+			nodeColors.setInt(data.index, 0, data.computeColor());
 			break;
 		case EDGE:
-			edgeColors[data.index.index()] = data.computeColor();
+			edgeColors.setInt(data.index, 0, data.computeColor());
 			break;
 		default:
 			break;
@@ -856,7 +871,11 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 		 */
 		@Override
 		public int getColor() {
-			return nodeColors[index.index()];
+			return nodeColors.getInt(index, 0);
+		}
+
+		public double getSize(int dim) {
+			return 0;
 		}
 	}
 
@@ -872,7 +891,18 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 		 */
 		@Override
 		public int getColor() {
-			return edgeColors[index.index()];
+			return edgeColors.getInt(index, 0);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.style.ElementStyle#getSize(int)
+		 */
+		@Override
+		public double getSize(int dim) {
+			// TODO Auto-generated method stub
+			return 0;
 		}
 	}
 
@@ -889,6 +919,16 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 		@Override
 		public int getColor() {
 			return 0;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.style.ElementStyle#getSize(int)
+		 */
+		@Override
+		public double getSize(int dim) {
+			return 1;
 		}
 	}
 
@@ -954,10 +994,10 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 
 			switch (o1.getType()) {
 			case NODE:
-				z1 = nodeDatas[o1.index()].style.getZIndex();
+				z1 = nodeDatas.get(o1, 0).style.getZIndex();
 				break;
 			case EDGE:
-				z1 = edgeDatas[o1.index()].style.getZIndex();
+				z1 = edgeDatas.get(o1, 0).style.getZIndex();
 				break;
 			case SPRITE:
 				break;
@@ -967,10 +1007,10 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 
 			switch (o2.getType()) {
 			case NODE:
-				z2 = nodeDatas[o2.index()].style.getZIndex();
+				z2 = nodeDatas.get(o2, 0).style.getZIndex();
 				break;
 			case EDGE:
-				z2 = edgeDatas[o2.index()].style.getZIndex();
+				z2 = edgeDatas.get(o2, 0).style.getZIndex();
 				break;
 			case SPRITE:
 				break;
@@ -1098,15 +1138,8 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 	 */
 	@Override
 	public void nodeAdded(ElementIndex nodeIndex) {
-		if (indexer.getNodeCount() >= nodeDatas.length) {
-			nodeDatas = Arrays.copyOf(nodeDatas, indexer.getNodeCount()
-					+ nodeGrowStep);
-			nodeColors = Arrays.copyOf(nodeColors, indexer.getNodeCount()
-					+ nodeGrowStep);
-		}
-
-		nodeDatas[nodeIndex.index()] = new DefaultNodeStyle(nodeIndex);
-		nodeDatas[nodeIndex.index()].checkStyleChanged();
+		// nodeDatas[nodeIndex.index()] = new DefaultNodeStyle(nodeIndex);
+		// nodeDatas[nodeIndex.index()].checkStyleChanged();
 	}
 
 	/*
@@ -1119,14 +1152,6 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 	@Override
 	public void nodeRemoved(ElementIndex nodeIndex) {
 		zIndexTree.remove(nodeIndex);
-		nodeDatas[nodeIndex.index()] = null;
-
-		if (indexer.getNodeCount() < nodeDatas.length / 3) {
-			nodeDatas = Arrays.copyOf(nodeDatas, indexer.getNodeCount()
-					+ nodeGrowStep);
-			nodeColors = Arrays.copyOf(nodeColors, indexer.getNodeCount()
-					+ nodeGrowStep);
-		}
 	}
 
 	/*
@@ -1138,15 +1163,6 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 	 */
 	@Override
 	public void nodesSwapped(ElementIndex nodeIndex1, ElementIndex nodeIndex2) {
-		BaseElementStyle tmp = nodeDatas[nodeIndex1.index()];
-
-		nodeDatas[nodeIndex1.index()] = nodeDatas[nodeIndex2.index()];
-		nodeDatas[nodeIndex2.index()] = tmp;
-
-		int itmp = nodeColors[nodeIndex1.index()];
-
-		nodeColors[nodeIndex1.index()] = nodeColors[nodeIndex2.index()];
-		nodeColors[nodeIndex2.index()] = itmp;
 	}
 
 	/*
@@ -1160,15 +1176,8 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 	@Override
 	public void edgeAdded(ElementIndex edgeIndex, ElementIndex sourceIndex,
 			ElementIndex targetIndex, boolean directed) {
-		if (indexer.getEdgeCount() >= edgeDatas.length) {
-			edgeDatas = Arrays.copyOf(edgeDatas, indexer.getEdgeCount()
-					+ edgeGrowStep);
-			edgeColors = Arrays.copyOf(edgeColors, indexer.getEdgeCount()
-					+ edgeGrowStep);
-		}
-
-		edgeDatas[edgeIndex.index()] = new DefaultEdgeStyle(edgeIndex);
-		edgeDatas[edgeIndex.index()].checkStyleChanged();
+		// edgeDatas[edgeIndex.index()] = new DefaultEdgeStyle(edgeIndex);
+		// edgeDatas[edgeIndex.index()].checkStyleChanged();
 		// zIndexTree.add(edgeIndex);
 	}
 
@@ -1182,14 +1191,6 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 	@Override
 	public void edgeRemoved(ElementIndex edgeIndex) {
 		zIndexTree.remove(edgeIndex);
-		edgeDatas[edgeIndex.index()] = null;
-
-		if (indexer.getEdgeCount() < edgeDatas.length / 3) {
-			edgeDatas = Arrays.copyOf(edgeDatas, indexer.getEdgeCount()
-					+ edgeGrowStep);
-			edgeColors = Arrays.copyOf(edgeColors, indexer.getEdgeCount()
-					+ edgeGrowStep);
-		}
 	}
 
 	/*
@@ -1201,15 +1202,6 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 	 */
 	@Override
 	public void edgesSwapped(ElementIndex edgeIndex1, ElementIndex edgeIndex2) {
-		BaseElementStyle tmp = edgeDatas[edgeIndex1.index()];
-
-		edgeDatas[edgeIndex1.index()] = edgeDatas[edgeIndex2.index()];
-		edgeDatas[edgeIndex2.index()] = tmp;
-
-		int itmp = edgeColors[edgeIndex1.index()];
-
-		edgeColors[edgeIndex1.index()] = edgeColors[edgeIndex2.index()];
-		edgeColors[edgeIndex2.index()] = itmp;
 	}
 
 	/*
@@ -1219,8 +1211,6 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 	 */
 	@Override
 	public void elementsClear() {
-		nodeDatas = new BaseElementStyle[nodeGrowStep];
-		edgeDatas = new BaseElementStyle[edgeGrowStep];
 		zIndexTree.clear();
 	}
 }

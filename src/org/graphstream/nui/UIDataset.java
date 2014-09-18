@@ -48,35 +48,35 @@ public interface UIDataset extends UIModule {
 
 	int getEdgeCount();
 
-	double getNodeX(int nodeIndex);
+	double getNodeX(ElementIndex nodeIndex);
 
-	double getNodeY(int nodeIndex);
+	double getNodeY(ElementIndex nodeIndex);
 
-	double getNodeZ(int nodeIndex);
+	double getNodeZ(ElementIndex nodeIndex);
 
-	double[] getNodeXYZ(int nodexIndex, double[] xyz);
+	double[] getNodeXYZ(ElementIndex nodexIndex, double[] xyz);
 
 	DoubleBuffer getNodesXYZ();
 
-	void setNodeX(int nodeIndex, double x);
+	void setNodeX(ElementIndex nodeIndex, double x);
 
-	void setNodeY(int nodeIndex, double y);
+	void setNodeY(ElementIndex nodeIndex, double y);
 
-	void setNodeZ(int nodeIndex, double z);
+	void setNodeZ(ElementIndex nodeIndex, double z);
 
-	void setNodeXYZ(int nodexIndex, double[] xyz);
+	void setNodeXYZ(ElementIndex nodexIndex, double[] xyz);
 
-	ElementIndex getEdgeSource(int edgeIndex);
+	ElementIndex getEdgeSource(ElementIndex edgeIndex);
 
-	ElementIndex getEdgeTarget(int edgeIndex);
+	ElementIndex getEdgeTarget(ElementIndex edgeIndex);
 
-	boolean isEdgeDirected(int edgeIndex);
+	boolean isEdgeDirected(ElementIndex edgeIndex);
 
-	Point3[] getEdgePoints(int edgeIndex);
+	Point3[] getEdgePoints(ElementIndex edgeIndex);
 
-	EdgePointsType getEdgePointsType(int edgeIndex);
+	EdgePointsType getEdgePointsType(ElementIndex edgeIndex);
 
-	void setEdgePoints(int edgeIndex, EdgePointsType type, Point3[] points);
+	void setEdgePoints(ElementIndex edgeIndex, EdgePointsType type, Point3[] points);
 
 	void addDatasetListener(DatasetListener l);
 

@@ -29,33 +29,12 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.indexer;
+package org.graphstream.nui.swapper;
 
-public interface ElementIndex {
-	public static enum Type {
-		SPRITE, NODE, EDGE, GRAPH
-	}
+public interface Swappable {
+	void checkSize();
 
-	/**
-	 * 
-	 * @return
-	 */
-	String id();
+	void swap(int index1, int index2);
 
-	/**
-	 * -1 means that the element has been removed.
-	 * 
-	 * @return
-	 */
-	int index();
-
-	Type getType();
-
-	public static interface EdgeIndex extends ElementIndex {
-		ElementIndex getSource();
-
-		ElementIndex getTarget();
-
-		boolean isDirected();
-	}
+	void release();
 }

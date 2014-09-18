@@ -31,33 +31,21 @@
  */
 package org.graphstream.nui;
 
-import java.nio.ByteBuffer;
-import java.nio.DoubleBuffer;
+import java.io.IOException;
+import java.util.Properties;
+
+import org.graphstream.nui.context.DefaultContext;
 
 public class Lab {
 
 	public static void main(String[] args) {
-		ByteBuffer buffer = ByteBuffer.allocate(32);
-		
-		//System.err.printf("position=%d, limit=%d, capacity=%d, remaining=%d%n", buffer.position(), buffer.limit(), buffer.capacity(), buffer.remaining());
-		//buffer.limit(512);
-		//buffer.position(128);
-		//System.err.printf("position=%d, limit=%d, capacity=%d, remaining=%d%n", buffer.position(), buffer.limit(), buffer.capacity(), buffer.remaining());
+		Properties prop = new Properties();
+		prop.setProperty("context.class", DefaultContext.class.getName());
 
-		print(buffer.asDoubleBuffer());
-		buffer.putDouble(0, 23.0);
-		buffer.putDouble(8, 32.0);
-		print(buffer.asDoubleBuffer());
-	}
-	
-	static void print(DoubleBuffer buffer) {
-		buffer.rewind();
-		System.err.printf("%d elements {", buffer.remaining());
-
-		while (buffer.hasRemaining())
-			System.err.printf("%f%s", buffer.get(),
-					buffer.hasRemaining() ? "; " : "");
-
-		System.err.printf("}%n");
+		try {
+			prop.store(System.out, "Defaults properties");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

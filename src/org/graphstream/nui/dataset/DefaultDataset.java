@@ -32,17 +32,20 @@
 package org.graphstream.nui.dataset;
 
 import java.nio.DoubleBuffer;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
 import org.graphstream.nui.AbstractModule;
+import org.graphstream.nui.UISwapper;
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.indexer.ElementIndex;
-import org.graphstream.nui.indexer.IndexerListener;
+import org.graphstream.nui.indexer.ElementIndex.EdgeIndex;
+import org.graphstream.nui.indexer.ElementIndex.Type;
+import org.graphstream.nui.swapper.UIArrayReference;
+import org.graphstream.nui.swapper.UIBufferReference;
 import org.graphstream.nui.util.Tools;
 import org.graphstream.stream.SinkAdapter;
 import org.graphstream.ui.geom.Point3;
@@ -51,30 +54,17 @@ import org.graphstream.ui.geom.Point3;
  * 
  */
 public class DefaultDataset extends AbstractModule implements UIDataset {
-	public static final int DEFAULT_NODE_GROW_STEP = 1000;
-	public static final int DEFAULT_EDGE_GROW_STEP = 1000;
-
-	protected double[] nodesPoints;
-	protected int nodeCount;
 	protected int dim;
-
-	protected EdgeData[] edgesData;
-	protected int edgeCount;
-
+	protected UIBufferReference nodesPoints;
+	protected UIArrayReference<EdgeData> edgesData;
 	protected UIIndexer indexer;
-
 	protected List<DatasetListener> listeners;
-	protected int nodeGrowStep;
-	protected int edgeGrowStep;
-
-	protected ElementListener elementListener;
 	protected CoordinatesListener coordinatesListener;
 
 	public DefaultDataset() {
 		super(MODULE_ID, UIIndexer.MODULE_ID);
 
 		listeners = new LinkedList<DatasetListener>();
-		elementListener = new ElementListener();
 		coordinatesListener = new CoordinatesListener();
 	}
 
@@ -88,20 +78,32 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	public void init(UIContext ctx) {
 		super.init(ctx);
 
+		UISwapper swapper = (UISwapper) ctx.getModule(UISwapper.MODULE_ID);
+
 		indexer = (UIIndexer) ctx.getModule("indexer");
-		indexer.addIndexerListener(elementListener);
 
 		ctx.getContextProxy().addAttributeSink(coordinatesListener);
 
 		dim = 3;
 
-		nodeGrowStep = DEFAULT_NODE_GROW_STEP;
-		edgeGrowStep = DEFAULT_EDGE_GROW_STEP;
-		nodeCount = 0;
-		edgeCount = 0;
+		nodesPoints = swapper.createBuffer(Type.NODE, dim, Double.SIZE / 8,
+				true, null);
 
-		nodesPoints = new double[dim * nodeGrowStep];
-		edgesData = new EdgeData[edgeGrowStep];
+		edgesData = swapper.createArray(Type.EDGE, 1, EdgeData.class,
+				new UISwapper.ValueFactory<EdgeData>() {
+					/*
+					 * (non-Javadoc)
+					 * 
+					 * @see
+					 * org.graphstream.nui.UISwapper.ValueFactory#createValue
+					 * (org.graphstream.nui.indexer.ElementIndex,int)
+					 */
+					@Override
+					public EdgeData createValue(ElementIndex index,
+							int component) {
+						return new EdgeData();
+					}
+				});
 	}
 
 	/*
@@ -111,9 +113,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 */
 	@Override
 	public void release() {
-		indexer.removeIndexerListener(elementListener);
 		indexer = null;
-
 		ctx.getContextProxy().removeAttributeSink(coordinatesListener);
 
 		super.release();
@@ -156,8 +156,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#getNodeX(int)
 	 */
 	@Override
-	public double getNodeX(int nodeIndex) {
-		return nodesPoints[nodeIndex * dim];
+	public double getNodeX(ElementIndex nodeIndex) {
+		return nodesPoints.getDouble(nodeIndex, 0);
 	}
 
 	/*
@@ -166,8 +166,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#getNodeY(int)
 	 */
 	@Override
-	public double getNodeY(int nodeIndex) {
-		return nodesPoints[nodeIndex * dim + 1];
+	public double getNodeY(ElementIndex nodeIndex) {
+		return nodesPoints.getDouble(nodeIndex, 1);
 	}
 
 	/*
@@ -176,8 +176,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#getNodeZ(int)
 	 */
 	@Override
-	public double getNodeZ(int nodeIndex) {
-		return dim == 3 ? nodesPoints[nodeIndex * dim + 2] : 0;
+	public double getNodeZ(ElementIndex nodeIndex) {
+		return dim == 3 ? nodesPoints.getDouble(nodeIndex, 2) : 0;
 	}
 
 	/*
@@ -186,12 +186,12 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#getNodeXYZ(int, double[])
 	 */
 	@Override
-	public double[] getNodeXYZ(int nodeIndex, double[] xyz) {
+	public double[] getNodeXYZ(ElementIndex nodeIndex, double[] xyz) {
 		if (xyz == null || xyz.length < dim)
 			xyz = new double[dim];
 
 		for (int i = 0; i < dim; i++)
-			xyz[i] = nodesPoints[nodeIndex * dim + i];
+			xyz[i] = nodesPoints.getDouble(nodeIndex, i);
 
 		return xyz;
 	}
@@ -203,16 +203,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 */
 	@Override
 	public DoubleBuffer getNodesXYZ() {
-		if (direct)
-			return nodesPoints;
-
-		if (buffer == null || buffer.length < nodeCount * dim)
-			buffer = new double[nodeCount * dim];
-
-		for (int i = 0; i < nodeCount * dim; i++)
-			buffer[i] = nodesPoints[i];
-
-		return buffer;
+		return nodesPoints.buffer().asDoubleBuffer();
 	}
 
 	/*
@@ -221,8 +212,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#setNodeX(int, double)
 	 */
 	@Override
-	public void setNodeX(int nodeIndex, double x) {
-		nodesPoints[nodeIndex * dim] = x;
+	public void setNodeX(ElementIndex nodeIndex, double x) {
+		nodesPoints.setDouble(nodeIndex, 0, x);
 		fireNodeMoved(nodeIndex);
 	}
 
@@ -232,8 +223,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#setNodeY(int, double)
 	 */
 	@Override
-	public void setNodeY(int nodeIndex, double y) {
-		nodesPoints[nodeIndex * dim + 1] = y;
+	public void setNodeY(ElementIndex nodeIndex, double y) {
+		nodesPoints.setDouble(nodeIndex, 1, y);
 		fireNodeMoved(nodeIndex);
 	}
 
@@ -243,9 +234,9 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#setNodeZ(int, double)
 	 */
 	@Override
-	public void setNodeZ(int nodeIndex, double z) {
+	public void setNodeZ(ElementIndex nodeIndex, double z) {
 		if (dim == 3) {
-			nodesPoints[nodeIndex * dim + 2] = z;
+			nodesPoints.setDouble(nodeIndex, 2, z);
 			fireNodeMoved(nodeIndex);
 		}
 	}
@@ -256,9 +247,9 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#setNodeXYZ(int, double[])
 	 */
 	@Override
-	public void setNodeXYZ(int nodeIndex, double[] xyz) {
+	public void setNodeXYZ(ElementIndex nodeIndex, double[] xyz) {
 		for (int i = 0; i < Math.min(xyz.length, dim); i++)
-			nodesPoints[nodeIndex * dim + i] = xyz[i];
+			nodesPoints.setDouble(nodeIndex, i, xyz[i]);
 
 		fireNodeMoved(nodeIndex);
 	}
@@ -269,8 +260,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#getEdgeSource(int)
 	 */
 	@Override
-	public ElementIndex getEdgeSource(int edgeIndex) {
-		return edgesData[edgeIndex].source;
+	public ElementIndex getEdgeSource(ElementIndex edgeIndex) {
+		return ((EdgeIndex) edgeIndex).getSource();
 	}
 
 	/*
@@ -279,8 +270,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#getEdgeTarget(int)
 	 */
 	@Override
-	public ElementIndex getEdgeTarget(int edgeIndex) {
-		return edgesData[edgeIndex].target;
+	public ElementIndex getEdgeTarget(ElementIndex edgeIndex) {
+		return ((EdgeIndex) edgeIndex).getTarget();
 	}
 
 	/*
@@ -289,8 +280,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#isEdgeDirected(int)
 	 */
 	@Override
-	public boolean isEdgeDirected(int edgeIndex) {
-		return edgesData[edgeIndex].directed;
+	public boolean isEdgeDirected(ElementIndex edgeIndex) {
+		return ((EdgeIndex) edgeIndex).isDirected();
 	}
 
 	/*
@@ -299,8 +290,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#getEdgePoints(int)
 	 */
 	@Override
-	public Point3[] getEdgePoints(int edgeIndex) {
-		return edgesData[edgeIndex].points;
+	public Point3[] getEdgePoints(ElementIndex edgeIndex) {
+		return edgesData.get(edgeIndex, 0).points;
 	}
 
 	/*
@@ -309,8 +300,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#getEdgePointsType(int)
 	 */
 	@Override
-	public EdgePointsType getEdgePointsType(int edgeIndex) {
-		return edgesData[edgeIndex].pointsType;
+	public EdgePointsType getEdgePointsType(ElementIndex edgeIndex) {
+		return edgesData.get(edgeIndex, 0).pointsType;
 	}
 
 	/*
@@ -319,10 +310,10 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#setEdgePoints(int, double[])
 	 */
 	@Override
-	public void setEdgePoints(int edgeIndex, EdgePointsType type,
+	public void setEdgePoints(ElementIndex edgeIndex, EdgePointsType type,
 			Point3[] points) {
-		edgesData[edgeIndex].points = points;
-		edgesData[edgeIndex].pointsType = type;
+		edgesData.get(edgeIndex, 0).points = points;
+		edgesData.get(edgeIndex, 0).pointsType = type;
 
 		fireEdgePointsChanged(edgeIndex);
 	}
@@ -362,21 +353,25 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 			return;
 		}
 
-		double[] tmp = new double[(nodeCount + nodeGrowStep) * dim];
+		UISwapper swapper = (UISwapper) ctx.getModule(UISwapper.MODULE_ID);
+		UIBufferReference tmp = swapper.createBuffer(Type.NODE, dim,
+				Double.SIZE / 8, true, null);
 
-		for (int i = 0; i < nodeCount; i++) {
-			tmp[i * dim] = nodesPoints[i * this.dim];
-			tmp[i * dim + 1] = nodesPoints[i * this.dim + 1];
+		for (int i = 0; i < indexer.getNodeCount(); i++) {
+			ElementIndex index = indexer.getNodeIndex(i);
+
+			tmp.setDouble(index, 0, nodesPoints.getDouble(index, 0));
+			tmp.setDouble(index, 1, nodesPoints.getDouble(index, 1));
 
 			if (dim == 3)
-				tmp[i * dim + 2] = 0;
+				tmp.setDouble(index, 2, nodesPoints.getDouble(index, 2));
 		}
 
+		nodesPoints.release();
 		nodesPoints = tmp;
 	}
 
-	protected void fireNodeMoved(int nodeIndex) {
-		ElementIndex index = indexer.getNodeIndex(nodeIndex);
+	protected void fireNodeMoved(ElementIndex nodeIndex) {
 		double x = getNodeX(nodeIndex);
 		double y = getNodeY(nodeIndex);
 		double z = getNodeZ(nodeIndex);
@@ -386,10 +381,10 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 						+ ")");
 
 		for (DatasetListener l : listeners)
-			l.nodeMoved(index, x, y, z);
+			l.nodeMoved(nodeIndex, x, y, z);
 	}
 
-	protected void fireEdgePointsChanged(int edgeIndex) {
+	protected void fireEdgePointsChanged(ElementIndex edgeIndex) {
 
 	}
 
@@ -434,17 +429,17 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 					double x = Tools.checkAndGetDouble(value);
 					ElementIndex index = indexer.getNodeIndex(nodeId);
 
-					setNodeX(index.index(), x);
+					setNodeX(index, x);
 				} else if (c1 == 'y' || c1 == 'Z') {
 					double y = Tools.checkAndGetDouble(value);
 					ElementIndex index = indexer.getNodeIndex(nodeId);
 
-					setNodeY(index.index(), y);
+					setNodeY(index, y);
 				} else if (c1 == 'z' || c1 == 'Z') {
 					double z = Tools.checkAndGetDouble(value);
 					ElementIndex index = indexer.getNodeIndex(nodeId);
 
-					setNodeZ(index.index(), z);
+					setNodeZ(index, z);
 				}
 
 				break;
@@ -456,7 +451,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 					double[] xy = Tools.checkAndGetDoubleArray(value);
 					ElementIndex index = indexer.getNodeIndex(nodeId);
 
-					setNodeXYZ(index.index(), xy);
+					setNodeXYZ(index, xy);
 				}
 
 				break;
@@ -470,7 +465,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 					double[] xyz = Tools.checkAndGetDoubleArray(value);
 					ElementIndex index = indexer.getNodeIndex(nodeId);
 
-					setNodeXYZ(index.index(), xyz);
+					setNodeXYZ(index, xyz);
 				}
 
 				break;
@@ -480,157 +475,11 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 		}
 	}
 
-	class ElementListener implements IndexerListener {
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.indexer.IndexerListener#nodeAdded(org.graphstream
-		 * .nui.indexer.ElementIndex)
-		 */
-		@Override
-		public void nodeAdded(ElementIndex nodeIndex) {
-			nodeCount++;
-
-			if (nodeCount * dim >= nodesPoints.length)
-				nodesPoints = Arrays.copyOf(nodesPoints, nodesPoints.length
-						+ dim * nodeGrowStep);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.indexer.IndexerListener#nodeRemoved(org.graphstream
-		 * .nui.indexer.ElementIndex)
-		 */
-		@Override
-		public void nodeRemoved(ElementIndex nodeIndex) {
-			nodeCount--;
-
-			//
-			// Reduce the buffer when it is too big.
-			//
-			if (nodeCount * dim < nodesPoints.length / 2
-					&& nodeGrowStep * dim < nodesPoints.length / 4)
-				nodesPoints = Arrays.copyOf(nodesPoints,
-						(nodeCount + nodeGrowStep) * dim);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.indexer.IndexerListener#nodesSwapped(org.graphstream
-		 * .nui.indexer.ElementIndex, org.graphstream.nui.indexer.ElementIndex)
-		 */
-		@Override
-		public void nodesSwapped(ElementIndex nodeIndex1,
-				ElementIndex nodeIndex2) {
-			double x, y;
-			int i1 = nodeIndex1.index() * dim;
-			int i2 = nodeIndex2.index() * dim;
-
-			x = nodesPoints[i1];
-			y = nodesPoints[i1 + 1];
-
-			nodesPoints[i1] = nodesPoints[i2];
-			nodesPoints[i2] = x;
-
-			nodesPoints[i1 + 1] = nodesPoints[i2 + 1];
-			nodesPoints[i2 + 1] = y;
-
-			if (dim == 3) {
-				double z = nodesPoints[i1 + 2];
-
-				nodesPoints[i1 + 2] = nodesPoints[i2 + 2];
-				nodesPoints[i2 + 2] = z;
-			}
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.indexer.IndexerListener#edgeAdded(org.graphstream
-		 * .nui.indexer.ElementIndex)
-		 */
-		@Override
-		public void edgeAdded(ElementIndex edgeIndex, ElementIndex sourceIndex,
-				ElementIndex targetIndex, boolean directed) {
-			edgeCount++;
-
-			if (edgeCount >= edgesData.length)
-				edgesData = Arrays.copyOf(edgesData, edgesData.length
-						+ edgeGrowStep);
-
-			edgesData[edgeIndex.index()] = new EdgeData(sourceIndex,
-					targetIndex, directed);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.indexer.IndexerListener#edgeRemoved(org.graphstream
-		 * .nui.indexer.ElementIndex)
-		 */
-		@Override
-		public void edgeRemoved(ElementIndex edgeIndex) {
-			edgeCount--;
-
-			edgesData[edgeIndex.index()] = null;
-
-			//
-			// Reduce the buffer when it is too big.
-			//
-			if (edgeCount < edgesData.length / 2
-					&& edgeGrowStep < edgesData.length / 4)
-				edgesData = Arrays.copyOf(edgesData, edgeCount + edgeGrowStep);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.indexer.IndexerListener#edgesSwapped(org.graphstream
-		 * .nui.indexer.ElementIndex, org.graphstream.nui.indexer.ElementIndex)
-		 */
-		@Override
-		public void edgesSwapped(ElementIndex edgeIndex1,
-				ElementIndex edgeIndex2) {
-			EdgeData ed = edgesData[edgeIndex1.index()];
-
-			edgesData[edgeIndex1.index()] = edgesData[edgeIndex2.index()];
-			edgesData[edgeIndex2.index()] = ed;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.graphstream.nui.indexer.IndexerListener#elementsClear()
-		 */
-		@Override
-		public void elementsClear() {
-			nodeCount = 0;
-			edgeCount = 0;
-
-			nodesPoints = new double[nodeGrowStep * dim];
-			edgesData = new EdgeData[edgeGrowStep];
-		}
-	}
-
 	class EdgeData {
-		final ElementIndex source;
-		final ElementIndex target;
-		final boolean directed;
 		Point3[] points;
 		EdgePointsType pointsType;
 
-		EdgeData(ElementIndex s, ElementIndex t, boolean d) {
-			source = s;
-			target = t;
-			directed = d;
+		EdgeData() {
 			points = null;
 		}
 	}

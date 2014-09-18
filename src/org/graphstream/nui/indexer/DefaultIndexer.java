@@ -58,7 +58,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 		nodes = new IndexSet(ElementIndex.Type.NODE);
 		edges = new IndexSet(ElementIndex.Type.EDGE);
 
-		graphIndex = new IEIndex(Type.GRAPH, "graph", 0);
+		graphIndex = new _ElementIndex(Type.GRAPH, "graph", 0);
 
 		listeners = new LinkedList<IndexerListener>();
 	}
@@ -348,13 +348,13 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 */
 	private class IndexSet {
 		final ElementIndex.Type type;
-		final Map<String, IEIndex> id2index;
-		final List<IEIndex> indexes;
+		final Map<String, _ElementIndex> id2index;
+		final List<_ElementIndex> indexes;
 
 		IndexSet(ElementIndex.Type indexSetType) {
 			type = indexSetType;
-			id2index = new HashMap<String, IEIndex>();
-			indexes = new Vector<IEIndex>();
+			id2index = new HashMap<String, _ElementIndex>();
+			indexes = new Vector<_ElementIndex>();
 		}
 
 		int size() {
@@ -373,8 +373,18 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 		}
 
 		ElementIndex add(String id, Object... args) {
-			IEIndex index = new IEIndex(type, id, indexes.size());
+			_ElementIndex index;
 
+			switch (type) {
+			case EDGE:
+				index = new _EdgeIndex(id, indexes.size(),
+						(_ElementIndex) args[0], (_ElementIndex) args[1],
+						(Boolean) args[2]);
+				break;
+			default:
+				index = new _ElementIndex(type, id, indexes.size());
+			}
+			
 			id2index.put(id, index);
 			indexes.add(index);
 
@@ -384,13 +394,13 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 		}
 
 		ElementIndex remove(String id) {
-			IEIndex index = id2index.get(id);
+			_ElementIndex index = id2index.get(id);
 
 			if (index == null)
 				return null;
 
 			if (index.index < indexes.size() - 1) {
-				IEIndex last = indexes.get(indexes.size() - 1);
+				_ElementIndex last = indexes.get(indexes.size() - 1);
 
 				last.index = index.index;
 				index.index = indexes.size() - 1;
@@ -417,12 +427,12 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	/*
 	 * Internal implementation of ElementIndex.
 	 */
-	private class IEIndex implements ElementIndex {
+	private class _ElementIndex implements ElementIndex {
 		private final String id;
 		private final Type type;
 		private int index;
 
-		IEIndex(Type type, String id, int index) {
+		_ElementIndex(Type type, String id, int index) {
 			this.type = type;
 			this.id = id;
 			this.index = index;
@@ -466,6 +476,51 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 		@Override
 		public String toString() {
 			return String.format("<%s>#%s@%d", type, id, index);
+		}
+	}
+
+	private class _EdgeIndex extends _ElementIndex implements
+			ElementIndex.EdgeIndex {
+		final ElementIndex source, target;
+		final boolean directed;
+
+		_EdgeIndex(String id, int index, ElementIndex source,
+				ElementIndex target, boolean directed) {
+			super(Type.EDGE, id, index);
+
+			this.source = source;
+			this.target = target;
+			this.directed = directed;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.indexer.ElementIndex.EdgeIndex#getSource()
+		 */
+		@Override
+		public ElementIndex getSource() {
+			return source;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.indexer.ElementIndex.EdgeIndex#getTarget()
+		 */
+		@Override
+		public ElementIndex getTarget() {
+			return target;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.indexer.ElementIndex.EdgeIndex#isDirected()
+		 */
+		@Override
+		public boolean isDirected() {
+			return directed;
 		}
 	}
 }

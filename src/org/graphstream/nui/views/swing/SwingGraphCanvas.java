@@ -42,7 +42,7 @@ import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.UIStyle;
 import org.graphstream.nui.indexer.ElementIndex;
-import org.graphstream.nui.style.base.BaseGroupStyle;
+import org.graphstream.nui.style.ElementStyle;
 import org.graphstream.nui.views.UICamera;
 import org.graphstream.nui.views.swing.renderer.BackgroundRenderer;
 
@@ -131,8 +131,8 @@ public class SwingGraphCanvas extends JPanel {
 		}
 	}
 
-	protected void renderBackground(Graphics2D g, BaseGroupStyle graphStyle) {
-		backgroundRenderer.render(g, camera, graphStyle, null);
+	protected void renderBackground(Graphics2D g, ElementStyle graphStyle) {
+		backgroundRenderer.render(g, camera, dataset, graphStyle);
 	}
 
 	protected void renderElements(Graphics2D g) {
@@ -157,8 +157,8 @@ public class SwingGraphCanvas extends JPanel {
 			}
 
 			if (renderer != null) {
-				BaseGroupStyle eStyle = style.getElementStyle(eIndex);
-				renderer.render(g, camera, eStyle, eIndex);
+				ElementStyle eStyle = style.getElementStyle(eIndex);
+				renderer.render(g, camera, dataset, eStyle);
 			}
 		}
 	}

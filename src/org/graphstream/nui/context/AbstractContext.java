@@ -34,9 +34,7 @@ package org.graphstream.nui.context;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,6 +46,7 @@ import org.graphstream.nui.UIModules;
 import org.graphstream.nui.UIView;
 import org.graphstream.stream.Pipe;
 import org.graphstream.stream.PipeBase;
+import org.graphstream.stream.ProxyPipe;
 import org.graphstream.stream.Replayable;
 import org.graphstream.stream.Replayable.Controller;
 import org.graphstream.stream.Source;
@@ -85,15 +84,17 @@ public abstract class AbstractContext implements UIContext {
 	//
 	// Lock used to manage the waitForInitialization method.
 	//
-	private ReentrantLock initLock;
-	//
-	// Condition used to manage the waitForInitialization method.
-	//
-	private Condition initCondition;
+	protected ReentrantLock invocationLock;
 	//
 	// Flag to tell if this context is initialized.
 	//
 	private AtomicBoolean isInitialized;
+
+	private Runnable syncAction = new Runnable() {
+		public void run() {
+			sync();
+		}
+	};
 
 	/**
 	 * 
@@ -101,8 +102,7 @@ public abstract class AbstractContext implements UIContext {
 	protected AbstractContext() {
 		modules = new HashMap<String, UIModule>();
 		views = new HashMap<String, UIView>();
-		initLock = new ReentrantLock();
-		initCondition = initLock.newCondition();
+		invocationLock = new ReentrantLock();
 		isInitialized = new AtomicBoolean(false);
 	}
 
@@ -114,52 +114,61 @@ public abstract class AbstractContext implements UIContext {
 	 */
 	@Override
 	public void init(ThreadingModel threadingModel) {
-		initLock.lock();
+		if (isInitialized.getAndSet(true)) {
+			Logger log = Logger.getLogger(getClass().getName());
+			log.warning("ui context already initialized");
+
+			return;
+		}
+
+		this.threadingModel = threadingModel;
+
+		switch (AbstractContext.this.threadingModel) {
+		case SOURCE_IN_UI_THREAD:
+			proxy = new PipeBase();
+			break;
+		default:
+			proxy = new ThreadProxyPipe();
+			break;
+		}
 
 		try {
-			if (isInitialized.getAndSet(true)) {
-				Logger log = Logger.getLogger(getClass().getName());
-				log.warning("ui context already initialized");
+			invokeOnUIThread(new Runnable() {
+				public void run() {
+					AbstractContext.this.thread = Thread.currentThread();
+					internalInit();
+				}
+			});
 
-				initLock.unlock();
-				return;
-			}
-
-			this.thread = Thread.currentThread();
-			this.threadingModel = threadingModel;
-
-			switch (threadingModel) {
-			case SOURCE_IN_UI_THREAD:
-				proxy = new PipeBase();
-				break;
-			default:
-				proxy = new ThreadProxyPipe();
-				break;
-			}
-
-			initCondition.signalAll();
-		} finally {
-			initLock.unlock();
+			Logger.getGlobal().info(getContextThread().getName());
+		} catch (InterruptedException e) {
+			Logger.getLogger(getClass().getName()).log(Level.SEVERE,
+					"ui-context initialization does not end correctly", e);
 		}
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.UIContext#waitForInitialization(long)
+	 * @see org.graphstream.nui.UIContext#invokeOnUIThread(java.lang.Runnable)
 	 */
 	@Override
-	public boolean waitForInitialization(long timeout)
-			throws InterruptedException {
-		if (!isInitialized.get()) {
-			if (timeout <= 0)
-				initCondition.await();
-			else
-				initCondition.await(timeout, TimeUnit.MILLISECONDS);
-		}
+	public abstract void invokeOnUIThread(Runnable r)
+			throws InterruptedException;
 
-		return isInitialized.get();
-	}
+	/**
+	 * An initialization action called inside the ui-thread during the
+	 * initialization of the context. Things that have to be done inside the
+	 * ui-thread to initialize this context should be defined in this method.
+	 */
+	protected abstract void internalInit();
+
+	/**
+	 * An release action called inside the ui-thread during the release process
+	 * of the context. Things that have to be done inside the ui-thread to
+	 * release this context should be defined in this method.
+	 */
+	protected abstract void internalRelease();
 
 	/*
 	 * (non-Javadoc)
@@ -194,10 +203,42 @@ public abstract class AbstractContext implements UIContext {
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see org.graphstream.nui.UIContext#sync()
+	 */
+	@Override
+	public void sync() {
+		if (proxy instanceof ProxyPipe) {
+			if (Thread.currentThread() != thread) {
+				try {
+					invokeOnUIThread(syncAction);
+				} catch (InterruptedException e) {
+					Logger.getLogger(getClass().getName()).log(Level.WARNING,
+							"sync was interrupted", e);
+				}
+			} else {
+				((ProxyPipe) proxy).pump();
+			}
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.graphstream.nui.UIContext#close()
 	 */
 	@Override
-	public void close() {
+	public void release() {
+		try {
+			invokeOnUIThread(new Runnable() {
+				public void run() {
+					internalRelease();
+				}
+			});
+		} catch (InterruptedException e) {
+			Logger.getLogger(getClass().getName()).log(Level.SEVERE,
+					"ui-context release does not end correctly", e);
+		}
+
 		for (UIView view : views.values())
 			view.close();
 

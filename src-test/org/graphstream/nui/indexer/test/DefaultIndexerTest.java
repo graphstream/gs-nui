@@ -121,7 +121,7 @@ public class DefaultIndexerTest {
 		Assert.assertEquals(indexer.getNodeIndex(1).id(), "Y");
 		Assert.assertEquals(indexer.getNodeIndex(2).id(), "W");
 
-		ctx.close();
+		ctx.release();
 	}
 
 	@Test
@@ -192,6 +192,6 @@ public class DefaultIndexerTest {
 		Assert.assertEquals(indexer.getEdgeIndex(1), null);
 		Assert.assertEquals(indexer.getEdgeIndex(2), null);
 
-		ctx.close();
+		ctx.release();
 	}
 }

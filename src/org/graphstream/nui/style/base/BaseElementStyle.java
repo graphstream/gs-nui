@@ -65,7 +65,7 @@ public abstract class BaseElementStyle implements ElementStyle {
 		this.visibility = VisibilityMode.NORMAL;
 		this.showLabel = true;
 
-		// checkStyleChanged();
+		checkStyleChanged();
 	}
 
 	protected abstract void elementStyleUpdated();

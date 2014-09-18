@@ -34,27 +34,24 @@ package org.graphstream.nui.views.swing.renderer;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
-import org.graphstream.nui.indexer.ElementIndex;
-import org.graphstream.nui.style.GroupStyle;
+import org.graphstream.nui.UIDataset;
+import org.graphstream.nui.style.ElementStyle;
 import org.graphstream.nui.views.UICamera;
 import org.graphstream.nui.views.swing.SwingElementRenderer;
 
-public class BackgroundRenderer implements
-		SwingElementRenderer {
+public class BackgroundRenderer implements SwingElementRenderer {
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * org.graphstream.nui.views.swing.renderer.SwingBackgroundRenderer#
-	 * renderBackground(java.awt.Graphics2D,
-	 * org.graphstream.nui.style.ElementStyle)
+	 * org.graphstream.nui.views.swing.SwingElementRenderer#render(java.awt.
+	 * Graphics2D, org.graphstream.nui.views.UICamera,
+	 * org.graphstream.nui.UIDataset, org.graphstream.nui.style.ElementStyle)
 	 */
 	@Override
-	public void render(Graphics2D g, UICamera camera,
-			GroupStyle graphStyle, ElementIndex index) {
+	public void render(Graphics2D g, UICamera camera, UIDataset dataset,
+			ElementStyle graphStyle) {
 		g.setColor(Color.LIGHT_GRAY);
-
-		g.drawRect(0, 0, camera.getDisplayWidth(),
-				camera.getDisplayHeight());
+		g.drawRect(0, 0, camera.getDisplayWidth(), camera.getDisplayHeight());
 	}
 }

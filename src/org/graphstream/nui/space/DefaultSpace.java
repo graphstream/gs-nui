@@ -305,35 +305,37 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 		hx = hy = hz = dataset.getNodeCount() == 0 ? 1 : -Double.MAX_VALUE;
 
 		for (int i = 0; i < dataset.getNodeCount(); i++) {
-			xyz = dataset.getNodeXYZ(i, xyz);
+			ElementIndex index = indexer.getNodeIndex(i);
+
+			xyz = dataset.getNodeXYZ(index, xyz);
 
 			if (xyz[0] < lx) {
-				lxBounds = indexer.getNodeIndex(i);
+				lxBounds = index;
 				lx = xyz[0];
 			}
 
 			if (xyz[0] > hx) {
-				hxBounds = indexer.getNodeIndex(i);
+				hxBounds = index;
 				hx = xyz[0];
 			}
 
 			if (xyz[1] < ly) {
-				lyBounds = indexer.getNodeIndex(i);
+				lyBounds = index;
 				ly = xyz[1];
 			}
 
 			if (xyz[1] > hy) {
-				hyBounds = indexer.getNodeIndex(i);
+				hyBounds = index;
 				hy = xyz[1];
 			}
 
 			if (xyz[2] < lz) {
-				lzBounds = indexer.getNodeIndex(i);
+				lzBounds = index;
 				lz = xyz[2];
 			}
 
 			if (xyz[2] > hz) {
-				hzBounds = indexer.getNodeIndex(i);
+				hzBounds = index;
 				hz = xyz[2];
 			}
 		}

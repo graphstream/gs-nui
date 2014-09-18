@@ -29,38 +29,12 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.buffers;
+package org.graphstream.nui;
 
-import java.nio.ByteBuffer;
+public interface UIViewer {
+	void init();
 
-import org.graphstream.nui.indexer.ElementIndex;
+	UIContext getContext();
 
-public interface UIBufferReference {
-	ByteBuffer buffer();
-
-	void release();
-
-	byte getByte(ElementIndex index, int component);
-
-	float getFloat(ElementIndex index, int component);
-
-	double getDouble(ElementIndex index, int component);
-
-	short getShort(ElementIndex index, int component);
-
-	int getInteger(ElementIndex index, int component);
-
-	long getLong(ElementIndex index, int component);
-
-	void setByte(ElementIndex index, int component, byte b);
-
-	void setFloat(ElementIndex index, int component, float f);
-
-	void setDouble(ElementIndex index, int component, double d);
-
-	void setShort(ElementIndex index, int component, short s);
-
-	void setInteger(ElementIndex index, int component, int i);
-
-	void setLong(ElementIndex index, int component, long l);
+	void close();
 }

@@ -33,8 +33,9 @@ package org.graphstream.nui;
 
 import java.nio.ByteOrder;
 
-import org.graphstream.nui.buffers.UIBufferReference;
 import org.graphstream.nui.indexer.ElementIndex;
+import org.graphstream.nui.swapper.UIArrayReference;
+import org.graphstream.nui.swapper.UIBufferReference;
 
 /**
  * One of the main parts of the ui is to maintain data in buffers that fit the
@@ -45,12 +46,12 @@ import org.graphstream.nui.indexer.ElementIndex;
  * element datas always fit the index of elements.
  * 
  * When created, the new buffer can be accessed through a
- * {@link org.graphstream.nui.buffers.UIBufferReference}. Using the reference
+ * {@link org.graphstream.nui.swapper.UIBufferReference}. Using the reference
  * rather than the buffer is an important point since the buffer itself can
  * change when we have to make it bigger.
  */
-public interface UIBuffers extends UIModule {
-	public static final String MODULE_ID = "buffers";
+public interface UISwapper extends UIModule {
+	public static final String MODULE_ID = "swapper";
 
 	/**
 	 * Create and registered a new buffer.
@@ -72,7 +73,13 @@ public interface UIBuffers extends UIModule {
 	 *            byte order of the buffer
 	 * @return a reference to the new registered buffer
 	 */
-	UIBufferReference createBuffer(ElementIndex.Type type, int initialSize,
-			int growingSize, int components, int componentSize, boolean direct,
-			ByteOrder order);
+	UIBufferReference createBuffer(ElementIndex.Type type, int components,
+			int componentSize, boolean direct, ByteOrder order);
+
+	<T> UIArrayReference<T> createArray(ElementIndex.Type type, int components,
+			Class<T> valueType, ValueFactory<T> valueFactory);
+
+	public static interface ValueFactory<T> {
+		T createValue(ElementIndex index, int component);
+	}
 }

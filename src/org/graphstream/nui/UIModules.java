@@ -41,11 +41,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import org.graphstream.nui.attributes.DefaultAttributes;
-import org.graphstream.nui.buffers.DefaultBuffers;
 import org.graphstream.nui.dataset.DefaultDataset;
 import org.graphstream.nui.indexer.DefaultIndexer;
 import org.graphstream.nui.space.DefaultSpace;
 import org.graphstream.nui.style.base.BaseStyle;
+import org.graphstream.nui.swapper.DefaultSwapper;
 
 public class UIModules {
 	private static final Map<String, Class<? extends UIModule>> MODULES_CLASSES;
@@ -78,16 +78,17 @@ public class UIModules {
 
 			if (MODULES_CLASSES.containsKey(moduleId)) {
 				log.warning(String.format(
-						"module %s is already registered with class %s",
+						"module \"%s\" is already registered with class %s",
 						moduleId, MODULES_CLASSES.get(moduleId).getName()));
-				log.warning(String.format("overriding module %s with class %s",
-						moduleId, moduleClass.getName()));
+				log.warning(String.format(
+						"overriding module \"%s\" with class %s", moduleId,
+						moduleClass.getName()));
 			}
 
 			MODULES_CLASSES.put(moduleId, moduleClass);
 
-			log.info(String
-					.format("module %s succesfully registered", moduleId));
+			log.info(String.format("module \"%s\" succesfully registered",
+					moduleId));
 		} catch (InstantiationException | IllegalAccessException e) {
 			throw new RegisterException(moduleClass.getName(), e);
 		}
@@ -101,7 +102,7 @@ public class UIModules {
 		 */
 		try {
 			registerModule(DefaultIndexer.class);
-			registerModule(DefaultBuffers.class);
+			registerModule(DefaultSwapper.class);
 			registerModule(DefaultAttributes.class);
 			registerModule(DefaultDataset.class);
 			registerModule(DefaultSpace.class);

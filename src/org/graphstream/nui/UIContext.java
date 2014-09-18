@@ -90,23 +90,13 @@ public interface UIContext {
 	 */
 	void init(ThreadingModel threadingModel);
 
-	void invokeOnUIThread(Runnable r);
-	
 	/**
-	 * Since the context may have to be initialized in its own thread, the
-	 * thread of the source needs a way to know when this initialization is done
-	 * (before using {@link #connect(Source)} method for example). This method
-	 * allows to wait for the end of the {@link #init(ThreadingModel)}.
+	 * Run a task on the ui thread and wait until this task is done.
 	 * 
-	 * @param timeout
-	 *            timeout in milliseconds to wait for the initialization, or
-	 *            zero (or less) to disable timeout and wait until the end
-	 * @return true if the context is initialized
+	 * @param r
 	 * @throws InterruptedException
-	 *             if the thread is interrupted while waiting for the
-	 *             initialization
 	 */
-	boolean waitForInitialization(long timeout) throws InterruptedException;
+	void invokeOnUIThread(Runnable r) throws InterruptedException;
 
 	/**
 	 * This context has to be connected to at least one source. This has to be
@@ -129,15 +119,14 @@ public interface UIContext {
 	 */
 	void disconnect(Source source);
 
+	void sync();
+
 	/**
-	 * This context can be closed when it is no more in use. This has to be done
-	 * INSIDE the UI thread. All modules will be released and all views will be
-	 * closed.
-	 * 
-	 * @UIThreadUse
+	 * This context can be released when it is no more in use. All modules will be
+	 * released and all views will be closed.
 	 * 
 	 */
-	void close();
+	void release();
 
 	/**
 	 * Get the UI thread. This is the thread used to call the

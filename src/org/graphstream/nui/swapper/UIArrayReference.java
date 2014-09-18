@@ -29,33 +29,16 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.indexer;
+package org.graphstream.nui.swapper;
 
-public interface ElementIndex {
-	public static enum Type {
-		SPRITE, NODE, EDGE, GRAPH
-	}
+import org.graphstream.nui.indexer.ElementIndex;
 
-	/**
-	 * 
-	 * @return
-	 */
-	String id();
+public interface UIArrayReference<T> {
+	T get(ElementIndex index, int component);
 
-	/**
-	 * -1 means that the element has been removed.
-	 * 
-	 * @return
-	 */
-	int index();
+	void set(ElementIndex index, int component, T value);
 
-	Type getType();
+	T[] array();
 
-	public static interface EdgeIndex extends ElementIndex {
-		ElementIndex getSource();
-
-		ElementIndex getTarget();
-
-		boolean isDirected();
-	}
+	void release();
 }

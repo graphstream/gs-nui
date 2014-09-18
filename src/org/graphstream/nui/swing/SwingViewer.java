@@ -29,33 +29,42 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.indexer;
+package org.graphstream.nui.swing;
 
-public interface ElementIndex {
-	public static enum Type {
-		SPRITE, NODE, EDGE, GRAPH
+import org.graphstream.nui.UIContext;
+import org.graphstream.nui.UIViewer;
+
+public class SwingViewer implements UIViewer {
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIViewer#init()
+	 */
+	@Override
+	public void init() {
+		
 	}
 
-	/**
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @return
+	 * @see org.graphstream.nui.UIViewer#getContext()
 	 */
-	String id();
+	@Override
+	public UIContext getContext() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-	/**
-	 * -1 means that the element has been removed.
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @return
+	 * @see org.graphstream.nui.UIViewer#close()
 	 */
-	int index();
+	@Override
+	public void close() {
+		// TODO Auto-generated method stub
 
-	Type getType();
-
-	public static interface EdgeIndex extends ElementIndex {
-		ElementIndex getSource();
-
-		ElementIndex getTarget();
-
-		boolean isDirected();
 	}
 }
