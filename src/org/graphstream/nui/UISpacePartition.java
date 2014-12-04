@@ -35,4 +35,12 @@ import org.graphstream.nui.spacePartition.SpaceCell;
 
 public interface UISpacePartition extends UIModule, Iterable<SpaceCell> {
 	public static final String MODULE_ID = "spacePartition";
+
+	public static final int DEFAULT_MAX_ELEMENTS_PER_CELL = 50;
+
+	int getMaxElementsPerCell();
+
+	UIDataset getDataset();
+	
+	UISpace getSpace();
 }

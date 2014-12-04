@@ -31,10 +31,41 @@
  */
 package org.graphstream.nui.spacePartition;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+
+import org.graphstream.nui.UISpacePartition;
 import org.graphstream.nui.indexer.ElementIndex;
+import org.graphstream.nui.space.Bounds;
 
-public interface SpaceCell extends Iterable<ElementIndex> {
-	SpaceCell insert(ElementIndex e);
+public abstract class BaseSpaceCell implements SpaceCell {
+	protected final LinkedList<ElementIndex> elements;
+	protected final Bounds boundary;
+	protected final UISpacePartition spacePartition;
 
-	boolean remove(ElementIndex e);
+	protected BaseSpaceCell(UISpacePartition spacePartition, Bounds boundary) {
+		this.spacePartition = spacePartition;
+		this.boundary = boundary;
+		this.elements = new LinkedList<ElementIndex>();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Iterable#iterator()
+	 */
+	@Override
+	public Iterator<ElementIndex> iterator() {
+		return elements.iterator();
+	}
+
+	protected void register() {
+		if (spacePartition instanceof SpaceCellHandler)
+			((SpaceCellHandler) spacePartition).register(this);
+	}
+
+	protected void unregister() {
+		if (spacePartition instanceof SpaceCellHandler)
+			((SpaceCellHandler) spacePartition).unregister(this);
+	}
 }

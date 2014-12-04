@@ -93,8 +93,11 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 		// Release all the buffers
 		//
 		for (List<Swappable> l : buffers.values()) {
-			for (Swappable ref : l)
-				ref.release();
+			while (l.size() > 0) {
+				Swappable sw = l.get(0);
+				l.remove(0);
+				sw.release();
+			}
 
 			l.clear();
 		}
@@ -180,8 +183,17 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 		List<Swappable> l = buffers.get(type);
 
 		if (l != null) {
+			//
+			// First, we have to check the size of all the reference.
+			//
 			for (Swappable ref : l)
 				ref.checkSize();
+
+			//
+			// And now we can init the default values.
+			//
+			for (Swappable ref : l)
+				ref.initDefaultValues();
 		}
 	}
 
@@ -308,6 +320,12 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 			theBuffer.limit(getElementCount() * cc);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.swapper.Swappable#checkSize()
+		 */
+		@Override
 		public void checkSize() {
 			int elementCount = getElementCount();
 
@@ -350,6 +368,22 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 			}
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.swapper.Swappable#initDefaultValues()
+		 */
+		@Override
+		public void initDefaultValues() {
+
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.swapper.Swappable#swap(int, int)
+		 */
+		@Override
 		public void swap(int idx1, int idx2) {
 			idx1 = idx1 * cc;
 			idx2 = idx2 * cc;
@@ -546,6 +580,7 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 					* initialSize);
 
 			checkSize();
+			initDefaultValues();
 		}
 
 		/*
@@ -562,6 +597,16 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 			else if (elementCount < data.length / 2
 					&& elementCount + growingSize > initialSize)
 				data = Arrays.copyOf(data, elementCount + growingSize);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.swapper.Swappable#initDefaultValues()
+		 */
+		@Override
+		public void initDefaultValues() {
+			int elementCount = getElementCount();
 
 			if (valueFactory != null)
 				for (int i = size; i < elementCount; i++) {

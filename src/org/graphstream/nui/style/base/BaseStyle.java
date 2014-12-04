@@ -336,7 +336,38 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 	 */
 	@Override
 	public Iterator<ElementIndex> getRenderingOrder() {
-		return zIndexTree.iterator();
+		return new Iterator<ElementIndex>() {
+			final Iterator<BaseElementStyle> it = zIndexTree.iterator();
+
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see java.util.Iterator#hasNext()
+			 */
+			@Override
+			public boolean hasNext() {
+				return it.hasNext();
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see java.util.Iterator#next()
+			 */
+			@Override
+			public ElementIndex next() {
+				return it.next().index;
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see java.util.Iterator#remove()
+			 */
+			@Override
+			public void remove() {
+			}
+		};
 	}
 
 	/*
@@ -796,8 +827,8 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 		// Maybe the z-index of this element was updated...
 		//
 		if (data.index.getType() != ElementIndex.Type.GRAPH) {
-			zIndexTree.remove(data.index);
-			zIndexTree.add(data.index);
+			zIndexTree.remove(data);
+			zIndexTree.add(data);
 		}
 
 		//
@@ -981,42 +1012,19 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 		}
 	}
 
-	protected class ZIndexComparator implements Comparator<ElementIndex> {
+	protected class ZIndexComparator implements Comparator<BaseElementStyle> {
 		/*
 		 * (non-Javadoc)
 		 * 
 		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
 		 */
 		@Override
-		public int compare(ElementIndex o1, ElementIndex o2) {
-			int z1 = 0, z2 = 0, t1 = o1.getType().ordinal(), t2 = o2.getType()
-					.ordinal();
+		public int compare(BaseElementStyle o1, BaseElementStyle o2) {
+			int z1 = 0, z2 = 0, t1 = o1.index.getType().ordinal(), t2 = o2.index
+					.getType().ordinal();
 
-			switch (o1.getType()) {
-			case NODE:
-				z1 = nodeDatas.get(o1, 0).style.getZIndex();
-				break;
-			case EDGE:
-				z1 = edgeDatas.get(o1, 0).style.getZIndex();
-				break;
-			case SPRITE:
-				break;
-			default:
-				z1 = 0;
-			}
-
-			switch (o2.getType()) {
-			case NODE:
-				z2 = nodeDatas.get(o2, 0).style.getZIndex();
-				break;
-			case EDGE:
-				z2 = edgeDatas.get(o2, 0).style.getZIndex();
-				break;
-			case SPRITE:
-				break;
-			default:
-				z2 = 0;
-			}
+			z1 = o1.style.getZIndex();
+			z2 = o2.style.getZIndex();
 
 			//
 			// TreeSet needs that elements are all different, so we need some
@@ -1027,7 +1035,7 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 				// If types are equals, we can use id comparison.
 				//
 				if (t1 == t2)
-					return o1.id().compareTo(o2.id());
+					return o1.index.id().compareTo(o2.index.id());
 				//
 				// Else we just use the ordinal of the type as order.
 				//
@@ -1039,7 +1047,7 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 	}
 
 	@SuppressWarnings("serial")
-	protected class ZIndexTree extends TreeSet<ElementIndex> {
+	protected class ZIndexTree extends TreeSet<BaseElementStyle> {
 		public ZIndexTree() {
 			super(new ZIndexComparator());
 		}

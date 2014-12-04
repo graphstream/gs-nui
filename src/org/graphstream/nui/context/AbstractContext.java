@@ -232,29 +232,29 @@ public abstract class AbstractContext implements UIContext {
 			invokeOnUIThread(new Runnable() {
 				public void run() {
 					internalRelease();
+
+					for (UIView view : views.values())
+						view.close();
+
+					views.clear();
+
+					for (UIModule module : modules.values())
+						module.release();
+
+					modules.clear();
+
+					proxy.clearSinks();
+					proxy = null;
+
+					thread = null;
+					threadingModel = null;
+					isInitialized.set(false);
 				}
 			});
 		} catch (InterruptedException e) {
 			Logger.getLogger(getClass().getName()).log(Level.SEVERE,
 					"ui-context release does not end correctly", e);
 		}
-
-		for (UIView view : views.values())
-			view.close();
-
-		views.clear();
-
-		for (UIModule module : modules.values())
-			module.release();
-
-		modules.clear();
-
-		proxy.clearSinks();
-		proxy = null;
-
-		thread = null;
-		threadingModel = null;
-		isInitialized.set(false);
 	}
 
 	/*

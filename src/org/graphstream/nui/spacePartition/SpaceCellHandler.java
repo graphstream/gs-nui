@@ -31,10 +31,10 @@
  */
 package org.graphstream.nui.spacePartition;
 
-import org.graphstream.nui.indexer.ElementIndex;
+import org.graphstream.nui.UISpacePartition;
 
-public interface SpaceCell extends Iterable<ElementIndex> {
-	SpaceCell insert(ElementIndex e);
-
-	boolean remove(ElementIndex e);
+interface SpaceCellHandler extends UISpacePartition {
+	void register(SpaceCell cell);
+	
+	void unregister(SpaceCell cell);
 }

@@ -76,4 +76,27 @@ public class Tools {
 
 		return r;
 	}
+
+	public static int checkAndGetInt(Object value)
+			throws IllegalArgumentException {
+		if (value instanceof Integer
+				|| Integer.TYPE.isAssignableFrom(value.getClass()))
+			return (Integer) value;
+		else if (value instanceof Number)
+			return ((Number) value).intValue();
+
+		throw new IllegalArgumentException();
+	}
+
+	public static String checkAndGetString(Object value, boolean nullAllowed)
+			throws IllegalArgumentException {
+		if (value == null) {
+			if (nullAllowed)
+				return null;
+			else
+				throw new IllegalArgumentException();
+		}
+
+		return value.toString();
+	}
 }

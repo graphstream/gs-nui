@@ -31,10 +31,47 @@
  */
 package org.graphstream.nui.spacePartition;
 
-import org.graphstream.nui.indexer.ElementIndex;
+import java.util.Iterator;
+import java.util.LinkedList;
 
-public interface SpaceCell extends Iterable<ElementIndex> {
-	SpaceCell insert(ElementIndex e);
+public class SpaceCellIterator implements Iterator<SpaceCell> {
+	LinkedList<Iterator<SpaceCell>> iterators;
 
-	boolean remove(ElementIndex e);
+	public SpaceCellIterator(SpaceCell sc) {
+		
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Iterator#hasNext()
+	 */
+	@Override
+	public boolean hasNext() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Iterator#next()
+	 */
+	@Override
+	public SpaceCell next() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Iterator#remove()
+	 */
+	@Override
+	public void remove() {
+		//
+		// Read-only iterator
+		//
+	}
 }

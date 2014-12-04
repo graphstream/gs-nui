@@ -1,4 +1,0 @@
-[context]
-
-class=org.graphstream.nui.context.DefaultContext
-modules=indexer,swapper,dataset,space,style

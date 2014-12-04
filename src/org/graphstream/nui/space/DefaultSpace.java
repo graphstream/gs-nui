@@ -41,13 +41,13 @@ import org.graphstream.nui.UISpace;
 import org.graphstream.nui.dataset.DatasetListener;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.util.Tools;
+import org.graphstream.nui.views.UICamera;
 import org.graphstream.ui.geom.Point3;
 
 public class DefaultSpace extends AbstractModule implements UISpace {
 	public static final double DEFAULT_PADDING = 0.1;
 	protected Mode mode;
-	protected final Point3 lowest;
-	protected final Point3 highest;
+	protected final Bounds bounds;
 	protected boolean is3D;
 
 	protected UIIndexer indexer;
@@ -67,8 +67,7 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 	public DefaultSpace() {
 		super(MODULE_ID, UIIndexer.MODULE_ID, UIDataset.MODULE_ID);
 
-		lowest = new Point3(-1, -1, -1);
-		highest = new Point3(1, 1, 1);
+		bounds = new InternalBounds();
 		listener = new CoordinatesListener();
 
 		lxBounds = hxBounds = lyBounds = hyBounds = lzBounds = hzBounds = null;
@@ -86,8 +85,7 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 	public void init(UIContext ctx) {
 		super.init(ctx);
 
-		lowest.set(-1, -1, -1);
-		highest.set(1, 1, 1);
+		bounds.set(-1, -1, -1, 1, 1, 1);
 		is3D = false;
 		mode = Mode.GROWING;
 
@@ -159,7 +157,7 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 						|| (l.length != 3 && is3D))
 					throw new IllegalArgumentException("bad dimension");
 
-				lowest.set(l[0], l[1], l[2]);
+				bounds.getLowestPoint().set(l[0], l[1], l[2]);
 			} catch (IllegalArgumentException e) {
 				Logger.getLogger(getClass().getName()).warning(
 						"can not set the lowest point of space : "
@@ -183,7 +181,7 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 						|| (h.length != 3 && is3D))
 					throw new IllegalArgumentException("bad dimension");
 
-				highest.set(h[0], h[1], h[2]);
+				bounds.getHighestPoint().set(h[0], h[1], h[2]);
 			} catch (IllegalArgumentException e) {
 				Logger.getLogger(getClass().getName()).warning(
 						"can not set the highest point of space : "
@@ -224,8 +222,6 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 		default:
 			break;
 		}
-
-		fireSpaceUpdated();
 	}
 
 	/*
@@ -249,50 +245,9 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 		fireSpaceUpdated();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UISpace#getLowestPoint()
-	 */
 	@Override
-	public Point3 getLowestPoint() {
-		return lowest;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.graphstream.nui.UISpace#setLowestPoint(org.graphstream.ui.geom.Point3
-	 * )
-	 */
-	@Override
-	public void setLowestPoint(Point3 xyz) {
-		lowest.copy(xyz);
-		fireSpaceUpdated();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UISpace#getHighestPoint()
-	 */
-	@Override
-	public Point3 getHighestPoint() {
-		return highest;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.graphstream.nui.UISpace#setHighestPoint(org.graphstream.ui.geom.Point3
-	 * )
-	 */
-	@Override
-	public void setHighestPoint(Point3 xyz) {
-		highest.copy(xyz);
-		fireSpaceUpdated();
+	public Bounds getBounds() {
+		return bounds;
 	}
 
 	protected void computeSpace() {
@@ -340,12 +295,12 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 			}
 		}
 
-		lowest.set(lx - padding, ly - padding, lz - padding);
-		highest.set(hx + padding, hy + padding, hz + padding);
+		bounds.set(lx - padding, ly - padding, lz - padding, hx + padding, hy
+				+ padding, hz + padding);
 	}
 
 	protected void fireSpaceUpdated() {
-		Logger.getGlobal().info("space updated " + lowest + " : " + highest);
+		Logger.getGlobal().info("space updated " + bounds);
 	}
 
 	class CoordinatesListener implements DatasetListener {
@@ -363,28 +318,28 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 
 			switch (mode) {
 			case GROWING:
-				if (x < lowest.x) {
-					lowest.x = x;
+				if (x < bounds.lowestPoint.x) {
+					bounds.lowestPoint.x = x;
 					changed = true;
-				} else if (x > highest.x) {
-					highest.x = x;
+				} else if (x > bounds.highestPoint.x) {
+					bounds.highestPoint.x = x;
 					changed = true;
 				}
 
-				if (y < lowest.y) {
-					lowest.y = y;
+				if (y < bounds.lowestPoint.y) {
+					bounds.lowestPoint.y = y;
 					changed = true;
-				} else if (y > highest.y) {
-					highest.y = y;
+				} else if (y > bounds.highestPoint.y) {
+					bounds.highestPoint.y = y;
 					changed = true;
 				}
 
 				if (is3D) {
-					if (z < lowest.z) {
-						lowest.z = z;
+					if (z < bounds.lowestPoint.z) {
+						bounds.lowestPoint.z = z;
 						changed = true;
-					} else if (z > highest.z) {
-						highest.z = z;
+					} else if (z > bounds.highestPoint.z) {
+						bounds.highestPoint.z = z;
 						changed = true;
 					}
 				}
@@ -397,33 +352,33 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 					computeSpace();
 					changed = true;
 				} else {
-					if (x < lowest.x + padding) {
-						lowest.x = x - padding;
+					if (x < bounds.lowestPoint.x + padding) {
+						bounds.lowestPoint.x = x - padding;
 						lxBounds = nodeIndex;
 						changed = true;
-					} else if (x > highest.x - padding) {
-						highest.x = x + padding;
+					} else if (x > bounds.highestPoint.x - padding) {
+						bounds.highestPoint.x = x + padding;
 						hxBounds = nodeIndex;
 						changed = true;
 					}
 
-					if (y < lowest.y + padding) {
-						lowest.y = y - padding;
+					if (y < bounds.lowestPoint.y + padding) {
+						bounds.lowestPoint.y = y - padding;
 						lyBounds = nodeIndex;
 						changed = true;
-					} else if (y > highest.y - padding) {
-						highest.y = y + padding;
+					} else if (y > bounds.highestPoint.y - padding) {
+						bounds.highestPoint.y = y + padding;
 						hyBounds = nodeIndex;
 						changed = true;
 					}
 
 					if (is3D) {
-						if (z < lowest.z + padding) {
-							lowest.z = z - padding;
+						if (z < bounds.lowestPoint.z + padding) {
+							bounds.lowestPoint.z = z - padding;
 							lzBounds = nodeIndex;
 							changed = true;
-						} else if (z > highest.z - padding) {
-							highest.z = z + padding;
+						} else if (z > bounds.highestPoint.z - padding) {
+							bounds.highestPoint.z = z + padding;
 							hzBounds = nodeIndex;
 							changed = true;
 						}
@@ -440,6 +395,34 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 
 			if (changed)
 				fireSpaceUpdated();
+		}
+	}
+
+	@Override
+	public int lengthToPX(UICamera camera, double lengthInGU) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double lengthToGU(UICamera camera, int lengthInPX) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	private class InternalBounds extends Bounds {
+		InternalBounds() {
+			super(new Point3(-1, -1, -1), new Point3(1, 1, 1));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.space.Bounds#fireBoundsUpdated()
+		 */
+		@Override
+		protected void fireBoundsUpdated() {
+			fireSpaceUpdated();
 		}
 	}
 }

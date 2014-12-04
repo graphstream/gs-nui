@@ -34,6 +34,8 @@ package org.graphstream.nui.swapper;
 public interface Swappable {
 	void checkSize();
 
+	void initDefaultValues();
+
 	void swap(int index1, int index2);
 
 	void release();

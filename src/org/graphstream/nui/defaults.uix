@@ -1,0 +1,16 @@
+<ui:context class="org.graphstream.nui.context.DefaultContext">
+	<name>The Default Context</name>
+	<description></description>
+	
+	<modules>
+		<load id="indexer"/>
+		<load id="swapper"/>
+		<load id="dataset"/>
+		<load id="space"/>
+		<load id="style"/>
+	</modules>
+	
+	<views>
+	
+	</views>
+</ui:context>

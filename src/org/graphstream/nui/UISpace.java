@@ -31,7 +31,8 @@
  */
 package org.graphstream.nui;
 
-import org.graphstream.ui.geom.Point3;
+import org.graphstream.nui.space.Bounds;
+import org.graphstream.nui.views.UICamera;
 
 /**
  * The module UISpace allows to manage the space of the nodes coordinates. It is
@@ -128,33 +129,9 @@ public interface UISpace extends UIModule {
 	 */
 	void set3D(boolean on);
 
-	/**
-	 * Getter for the lowest point of the space.
-	 * 
-	 * @return the lowest point of the space
-	 */
-	Point3 getLowestPoint();
+	Bounds getBounds();
 
-	/**
-	 * Setter for the lowest point of the space.
-	 * 
-	 * @param xyz
-	 *            the point defining the new lowest boundary of this space
-	 */
-	void setLowestPoint(Point3 xyz);
+	int lengthToPX(UICamera camera, double lengthInGU);
 
-	/**
-	 * Getter for the highest point of the space.
-	 * 
-	 * @return the highest point of this space
-	 */
-	Point3 getHighestPoint();
-
-	/**
-	 * Setter for the highest point of the space.
-	 * 
-	 * @param xyz
-	 *            the point defining the new highest boundary of this space
-	 */
-	void setHighestPoint(Point3 xyz);
+	double lengthToGU(UICamera camera, int lengthInPX);
 }
