@@ -39,6 +39,7 @@ import org.graphstream.ui.geom.Point3;
 
 public interface UIDataset extends UIModule {
 	public static final String MODULE_ID = "dataset";
+	public static final int MODULE_PRIORITY = HIGH_PRIORITY ;
 
 	public static enum EdgePointsType {
 		RELATIVE, ABSOLUTE, ABSOLUTE_SCREEN
@@ -76,7 +77,8 @@ public interface UIDataset extends UIModule {
 
 	EdgePointsType getEdgePointsType(ElementIndex edgeIndex);
 
-	void setEdgePoints(ElementIndex edgeIndex, EdgePointsType type, Point3[] points);
+	void setEdgePoints(ElementIndex edgeIndex, EdgePointsType type,
+			Point3[] points);
 
 	void addDatasetListener(DatasetListener l);
 

@@ -57,6 +57,8 @@ import org.graphstream.stream.thread.ThreadProxyPipe;
  * implements.
  */
 public abstract class AbstractContext implements UIContext {
+	private static final Logger LOGGER = Logger.getLogger(AbstractContext.class
+			.getName());
 	/**
 	 * The UI thread used to initialize this context.
 	 */
@@ -115,9 +117,7 @@ public abstract class AbstractContext implements UIContext {
 	@Override
 	public void init(ThreadingModel threadingModel) {
 		if (isInitialized.getAndSet(true)) {
-			Logger log = Logger.getLogger(getClass().getName());
-			log.warning("ui context already initialized");
-
+			LOGGER.warning("ui context already initialized");
 			return;
 		}
 
@@ -140,9 +140,9 @@ public abstract class AbstractContext implements UIContext {
 				}
 			});
 
-			Logger.getGlobal().info(getContextThread().getName());
+			LOGGER.info(getContextThread().getName());
 		} catch (InterruptedException e) {
-			Logger.getLogger(getClass().getName()).log(Level.SEVERE,
+			LOGGER.log(Level.SEVERE,
 					"ui-context initialization does not end correctly", e);
 		}
 	}
@@ -212,8 +212,7 @@ public abstract class AbstractContext implements UIContext {
 				try {
 					invokeOnUIThread(syncAction);
 				} catch (InterruptedException e) {
-					Logger.getLogger(getClass().getName()).log(Level.WARNING,
-							"sync was interrupted", e);
+					LOGGER.log(Level.WARNING, "sync was interrupted", e);
 				}
 			} else {
 				((ProxyPipe) proxy).pump();
@@ -252,7 +251,7 @@ public abstract class AbstractContext implements UIContext {
 				}
 			});
 		} catch (InterruptedException e) {
-			Logger.getLogger(getClass().getName()).log(Level.SEVERE,
+			LOGGER.log(Level.SEVERE,
 					"ui-context release does not end correctly", e);
 		}
 	}
@@ -346,13 +345,11 @@ public abstract class AbstractContext implements UIContext {
 	 */
 	@Override
 	public boolean tryLoadModule(String moduleId) {
-		Logger log = Logger.getLogger(UIModules.class.getName());
-
 		try {
 			loadModule(moduleId);
 			return true;
 		} catch (InstantiationException | ModuleNotFoundException e) {
-			log.log(Level.INFO, "unable to load module " + moduleId);
+			LOGGER.log(Level.INFO, "unable to load module " + moduleId);
 		}
 
 		return false;
@@ -371,11 +368,15 @@ public abstract class AbstractContext implements UIContext {
 
 		checkThread();
 
-		for (int i = 0; i < modules.length; i++)
+		for (int i = 0; i < modules.length; i++) {
+			LOGGER.info("insert module " + modules[i].getModuleID());
 			this.modules.put(modules[i].getModuleID(), modules[i]);
+		}
 
-		for (int i = 0; i < modules.length; i++)
+		for (int i = 0; i < modules.length; i++) {
+			LOGGER.info("init module " + modules[i].getModuleID());
 			modules[i].init(this);
+		}
 	}
 
 	/*

@@ -39,6 +39,7 @@ import org.graphstream.nui.indexer.IndexerListener;
  */
 public interface UIIndexer extends UIModule {
 	public static final String MODULE_ID = "indexer";
+	public static final int MODULE_PRIORITY = LOW_PRIORITY;
 
 	/**
 	 * Get the index of the graph.

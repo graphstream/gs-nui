@@ -64,15 +64,23 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell {
 		return s;
 	}
 
+	protected void insert(ElementIndex e) {
+		double x = spacePartition.getDataset().getNodeX(e);
+		double y = spacePartition.getDataset().getNodeY(e);
+		double z = spacePartition.getDataset().getNodeZ(e);
+
+		insert(e, x, y, z);
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see
 	 * org.graphstream.nui.spacePartition.SpaceCell#insert(org.graphstream.nui
-	 * .indexer.ElementIndex)
+	 * .indexer.ElementIndex, double, double, double)
 	 */
 	@Override
-	public SpaceCell insert(ElementIndex e) {
+	public SpaceCell insert(ElementIndex e, double x, double y, double z) {
 		if (!contains(e))
 			return null;
 
@@ -91,7 +99,7 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell {
 		}
 
 		for (int i = 0; i < neighbourhood.length; i++) {
-			SpaceCell sc = neighbourhood[i].insert(e);
+			SpaceCell sc = neighbourhood[i].insert(e, x, y, z);
 
 			if (sc != null)
 				return sc;

@@ -67,6 +67,7 @@ import org.graphstream.nui.views.UICamera;
  */
 public interface UISpace extends UIModule {
 	public static final String MODULE_ID = "space";
+	public static final int MODULE_PRIORITY = UIDataset.MODULE_PRIORITY + 1;
 
 	/**
 	 * Defines the several modes who rule how the space will evolve.

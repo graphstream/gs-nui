@@ -39,16 +39,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.graphstream.nui.AbstractModule;
+import org.graphstream.nui.UIAttributes;
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.UISpace;
 import org.graphstream.nui.UISpacePartition;
+import org.graphstream.nui.UISwapper;
+import org.graphstream.nui.dataset.DatasetListener;
+import org.graphstream.nui.indexer.ElementIndex;
+import org.graphstream.nui.indexer.ElementIndex.Type;
+import org.graphstream.nui.spacePartition.ntree.OctTreeSpaceCell;
 import org.graphstream.nui.spacePartition.ntree.QuadTreeSpaceCell;
+import org.graphstream.nui.swapper.UIArrayReference;
 import org.graphstream.nui.util.Tools;
 
 public class DefaultSpacePartition extends AbstractModule implements
-		SpaceCellHandler {
+		SpaceCellHandler, DatasetListener {
 	private static final Logger LOGGER = Logger
 			.getLogger(DefaultSpacePartition.class.getName());
 
@@ -69,9 +76,11 @@ public class DefaultSpacePartition extends AbstractModule implements
 
 	protected SpaceCell root;
 
-	protected DefaultSpacePartition() {
-		super(MODULE_ID, UIIndexer.MODULE_ID, UIDataset.MODULE_ID,
-				UISpace.MODULE_ID);
+	protected UIArrayReference<SpaceCell> nodeCell;
+
+	public DefaultSpacePartition() {
+		super(MODULE_ID, UIIndexer.MODULE_ID, UIAttributes.MODULE_ID,
+				UISwapper.MODULE_ID, UIDataset.MODULE_ID, UISpace.MODULE_ID);
 
 		cells = new LinkedList<SpaceCell>();
 		cellFactory = new SpaceCellFactory() {
@@ -84,7 +93,8 @@ public class DefaultSpacePartition extends AbstractModule implements
 			 */
 			@Override
 			public SpaceCell createRootCell(UISpacePartition spacePartition) {
-				return new QuadTreeSpaceCell(spacePartition);
+				return spacePartition.getSpace().is3D() ? new OctTreeSpaceCell(
+						spacePartition) : new QuadTreeSpaceCell(spacePartition);
 			}
 		};
 	}
@@ -108,6 +118,10 @@ public class DefaultSpacePartition extends AbstractModule implements
 		space = (UISpace) ctx.getModule(UISpace.MODULE_ID);
 		assert space != null;
 
+		UISwapper swapper = (UISwapper) ctx.getModule(UISwapper.MODULE_ID);
+		nodeCell = swapper.createArray(Type.NODE, 1, SpaceCell.class, null);
+
+		dataset.addDatasetListener(this);
 		root = cellFactory.createRootCell(this);
 	}
 
@@ -119,7 +133,10 @@ public class DefaultSpacePartition extends AbstractModule implements
 	@Override
 	public void release() {
 		super.release();
+
+		dataset.removeDatasetListener(this);
 		dataset = null;
+
 		space = null;
 	}
 
@@ -138,6 +155,9 @@ public class DefaultSpacePartition extends AbstractModule implements
 		case ATTRIBUTE_ELEMENTS_PER_CELL:
 			try {
 				maxElementsPerCell = Tools.checkAndGetInt(value);
+
+				LOGGER.info(String.format("set %s.%s to %d", MODULE_ID,
+						ATTRIBUTE_ELEMENTS_PER_CELL, maxElementsPerCell));
 			} catch (IllegalArgumentException e) {
 				LOGGER.warning(String.format("Illegal value for %s.%s : %s",
 						MODULE_ID, ATTRIBUTE_ELEMENTS_PER_CELL, value));
@@ -209,6 +229,7 @@ public class DefaultSpacePartition extends AbstractModule implements
 	@Override
 	public void register(SpaceCell cell) {
 		cells.add(cell);
+		LOGGER.info(String.format("new space cell %s", cell));
 	}
 
 	/*
@@ -220,6 +241,7 @@ public class DefaultSpacePartition extends AbstractModule implements
 	@Override
 	public void unregister(SpaceCell cell) {
 		cells.remove(cell);
+		LOGGER.info(String.format("remove space cell %s", cell));
 	}
 
 	public void setSpaceCellFactory(String cls) {
@@ -238,8 +260,15 @@ public class DefaultSpacePartition extends AbstractModule implements
 			cellFactory = (SpaceCellFactory) obj;
 			root = cellFactory.createRootCell(this);
 
-			for (int idx = 0; idx < indexer.getNodeCount(); idx++)
-				root.insert(indexer.getNodeIndex(idx));
+			for (int idx = 0; idx < indexer.getNodeCount(); idx++) {
+				ElementIndex e = indexer.getNodeIndex(idx);
+
+				double x = dataset.getNodeX(e);
+				double y = dataset.getNodeY(e);
+				double z = dataset.getNodeZ(e);
+
+				root.insert(e, x, y, z);
+			}
 		} catch (ClassNotFoundException e) {
 			LOGGER.severe("SpaceCellFactory class not found : " + cls);
 		} catch (NoSuchMethodException e) {
@@ -250,5 +279,29 @@ public class DefaultSpacePartition extends AbstractModule implements
 				| InvocationTargetException e) {
 			LOGGER.log(Level.SEVERE, "Something goes wrong", e);
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.dataset.DatasetListener#nodeMoved(org.graphstream
+	 * .nui.indexer.ElementIndex, double, double, double)
+	 */
+	@Override
+	public void nodeMoved(ElementIndex nodeIndex, double x, double y, double z) {
+		SpaceCell sc = nodeCell.get(nodeIndex, 0);
+
+		if (sc != null && !sc.getBoundary().contains(x, y, z)) {
+			sc.remove(nodeIndex);
+			sc = null;
+		}
+
+		if (sc == null) {
+			sc = root.insert(nodeIndex, x, y, z);
+			nodeCell.set(nodeIndex, 0, sc);
+		}
+
+		LOGGER.info(String.format("%s in %s%n", nodeIndex, sc));
 	}
 }

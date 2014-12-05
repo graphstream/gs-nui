@@ -32,6 +32,10 @@
 package org.graphstream.nui;
 
 public interface UIModule {
+	public static final int HIGH_PRIORITY = 100;
+	public static final int LOW_PRIORITY = 10;
+	public static final int DEFAULT_PRIORITY = 50;
+
 	/**
 	 * Get the unique identifier linked to this module.
 	 * 

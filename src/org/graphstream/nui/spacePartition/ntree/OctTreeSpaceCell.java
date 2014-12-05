@@ -39,16 +39,16 @@ import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.space.Bounds;
 import org.graphstream.ui.geom.Point3;
 
-public class QuadTreeSpaceCell extends NTreeSpaceCell {
+public class OctTreeSpaceCell extends NTreeSpaceCell {
 	private static final Logger LOGGER = Logger
-			.getLogger(QuadTreeSpaceCell.class.getName());
+			.getLogger(OctTreeSpaceCell.class.getName());
 
-	public QuadTreeSpaceCell(UISpacePartition spacePartition) {
+	public OctTreeSpaceCell(UISpacePartition spacePartition) {
 		this(spacePartition, spacePartition.getSpace().getBounds(), null);
 	}
 
-	public QuadTreeSpaceCell(UISpacePartition spacePartition, Bounds boundary,
-			QuadTreeSpaceCell parent) {
+	public OctTreeSpaceCell(UISpacePartition spacePartition, Bounds boundary,
+			OctTreeSpaceCell parent) {
 		super(spacePartition, boundary, parent);
 	}
 
@@ -69,18 +69,22 @@ public class QuadTreeSpaceCell extends NTreeSpaceCell {
 
 		double lx = se.x, hx = nw.x, cx = (lx + hx) / 2;
 		double ly = se.y, hy = nw.y, cy = (ly + hy) / 2;
+		double lz = se.z, hz = nw.z, cz = (lz + hz) / 2;
 
-		double[][] points = { { lx, cy, cx, hy }, { cx, cy, hx, hy },
-				{ lx, ly, cx, cy }, { cx, ly, hx, cy } };
+		double[][] points = { { lx, cy, lz, cx, hy, cz },
+				{ cx, cy, lz, hx, hy, cz }, { lx, ly, lz, cx, cy, cz },
+				{ cx, ly, lz, hx, cy, cz }, { lx, cy, cz, cx, hy, hz },
+				{ cx, cy, cz, hx, hy, hz }, { lx, ly, cz, cx, cy, hz },
+				{ cx, ly, cz, hx, cy, hz } };
 
-		neighbourhood = new QuadTreeSpaceCell[4];
+		neighbourhood = new OctTreeSpaceCell[8];
 
 		for (int i = 0; i < points.length; i++) {
-			Point3 l = new Point3(points[i][0], points[i][1]);
-			Point3 h = new Point3(points[i][2], points[i][3]);
+			Point3 l = new Point3(points[i][0], points[i][1], points[i][2]);
+			Point3 h = new Point3(points[i][3], points[i][4], points[i][5]);
 			Bounds b = new Bounds(l, h);
 
-			neighbourhood[i] = new QuadTreeSpaceCell(spacePartition, b, this);
+			neighbourhood[i] = new OctTreeSpaceCell(spacePartition, b, this);
 		}
 
 		for (int i = 0; i < elements.size(); i++)
@@ -99,6 +103,8 @@ public class QuadTreeSpaceCell extends NTreeSpaceCell {
 	@Override
 	public boolean contains(ElementIndex e) {
 		UIDataset dataset = spacePartition.getDataset();
-		return boundary.contains(dataset.getNodeX(e), dataset.getNodeY(e));
+		return boundary.contains(dataset.getNodeX(e), dataset.getNodeY(e),
+				dataset.getNodeZ(e));
 	}
+
 }

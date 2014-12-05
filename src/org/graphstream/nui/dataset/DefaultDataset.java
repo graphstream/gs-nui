@@ -54,6 +54,9 @@ import org.graphstream.ui.geom.Point3;
  * 
  */
 public class DefaultDataset extends AbstractModule implements UIDataset {
+	private static final Logger LOGGER = Logger.getLogger(DefaultDataset.class
+			.getName());
+
 	protected int dim;
 	protected UIBufferReference nodesPoints;
 	protected UIArrayReference<EdgeData> edgesData;
@@ -62,7 +65,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	protected CoordinatesListener coordinatesListener;
 
 	public DefaultDataset() {
-		super(MODULE_ID, UIIndexer.MODULE_ID);
+		super(MODULE_ID, UIIndexer.MODULE_ID, UISwapper.MODULE_ID);
 
 		listeners = new LinkedList<DatasetListener>();
 		coordinatesListener = new CoordinatesListener();
@@ -79,8 +82,10 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 		super.init(ctx);
 
 		UISwapper swapper = (UISwapper) ctx.getModule(UISwapper.MODULE_ID);
+		assert swapper != null;
 
 		indexer = (UIIndexer) ctx.getModule("indexer");
+		assert indexer != null;
 
 		ctx.getContextProxy().addAttributeSink(coordinatesListener);
 
@@ -347,8 +352,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 			return;
 
 		if (dim != 2 && dim != 3) {
-			Logger.getLogger(getClass().getName()).warning(
-					"invalid dimension " + dim);
+			LOGGER.warning("invalid dimension " + dim);
 
 			return;
 		}

@@ -68,4 +68,24 @@ public abstract class BaseSpaceCell implements SpaceCell {
 		if (spacePartition instanceof SpaceCellHandler)
 			((SpaceCellHandler) spacePartition).unregister(this);
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.spacePartition.SpaceCell#getBoundary()
+	 */
+	@Override
+	public Bounds getBoundary() {
+		return boundary;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return String.format("space_cell@%s%s", boundary, elements);
+	}
 }

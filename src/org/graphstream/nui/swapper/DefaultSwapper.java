@@ -74,11 +74,19 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 		edgeGrowingSize = 2000;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.AbstractModule#init(org.graphstream.nui.UIContext)
+	 */
 	@Override
 	public void init(UIContext ctx) {
 		super.init(ctx);
 
 		indexer = (UIIndexer) ctx.getModule(UIIndexer.MODULE_ID);
+		assert indexer != null;
+
 		indexer.addIndexerListener(listener);
 	}
 

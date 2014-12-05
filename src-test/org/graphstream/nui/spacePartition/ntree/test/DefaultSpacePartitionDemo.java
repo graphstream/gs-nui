@@ -29,15 +29,57 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.spacePartition;
+package org.graphstream.nui.spacePartition.ntree.test;
 
-import org.graphstream.nui.indexer.ElementIndex;
-import org.graphstream.nui.space.Bounds;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public interface SpaceCell extends Iterable<ElementIndex> {
-	SpaceCell insert(ElementIndex e, double x, double y, double z);
+import org.graphstream.graph.implementations.DefaultGraph;
+import org.graphstream.nui.ModuleNotFoundException;
+import org.graphstream.nui.UIContext;
+import org.graphstream.nui.UIFactory;
+import org.graphstream.nui.UISpacePartition;
+import org.graphstream.nui.UIContext.ThreadingModel;
+import org.graphstream.nui.spacePartition.SpaceCell;
 
-	boolean remove(ElementIndex e);
-	
-	Bounds getBoundary();
+public class DefaultSpacePartitionDemo {
+	public static void main(String[] args) {
+		final Logger log = Logger.getAnonymousLogger();
+
+		DefaultGraph g = new DefaultGraph("g");
+		final UIContext ctx = UIFactory.getDefaultFactory().createContext();
+
+		ctx.init(ThreadingModel.SOURCE_IN_UI_THREAD);
+
+		try {
+			ctx.invokeOnUIThread(new Runnable() {
+				public void run() {
+					try {
+						ctx.loadModule(UISpacePartition.MODULE_ID);
+					} catch (InstantiationException | ModuleNotFoundException e) {
+						log.log(Level.SEVERE, "Can not load modules", e);
+					}
+
+				}
+			});
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+
+		ctx.connect(g);
+
+		g.addAttribute("ui.spacePartition.maxElementsPerCell", 1);
+
+		g.addNode("Z").addAttribute("xyz", new double[] { 0.5, 0.5, 0 });
+		g.addNode("Y").addAttribute("xyz", new double[] { -0.5, 0.5, 0 });
+		g.addNode("W").addAttribute("xyz", new double[] { 0.5, -0.5, 0 });
+		g.addEdge("ZW", "Z", "W");
+
+		UISpacePartition spacePartition = (UISpacePartition) ctx
+				.getModule(UISpacePartition.MODULE_ID);
+
+		for (SpaceCell sc : spacePartition) {
+			System.out.println(sc);
+		}
+	}
 }

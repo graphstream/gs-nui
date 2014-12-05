@@ -107,4 +107,14 @@ public class Bounds {
 
 		return false;
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return String.format("%s;%s", lowestPoint, highestPoint);
+	}
 }

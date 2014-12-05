@@ -52,6 +52,7 @@ import org.graphstream.nui.swapper.UIBufferReference;
  */
 public interface UISwapper extends UIModule {
 	public static final String MODULE_ID = "swapper";
+	public static final int MODULE_PRIORITY = HIGH_PRIORITY;
 
 	/**
 	 * Create and registered a new buffer.
