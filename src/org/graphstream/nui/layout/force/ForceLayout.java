@@ -29,22 +29,10 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui;
+package org.graphstream.nui.layout.force;
 
-import org.graphstream.nui.indexer.ElementIndex;
-import org.graphstream.nui.spacePartition.SpaceCell;
+import org.graphstream.nui.layout.BaseLayout;
 
-public interface UISpacePartition extends UIModule, Iterable<SpaceCell> {
-	public static final String MODULE_ID = "spacePartition";
-	public static final int MODULE_PRIORITY = LOW_PRIORITY;
+public class ForceLayout extends BaseLayout {
 
-	public static final int DEFAULT_MAX_ELEMENTS_PER_CELL = 50;
-
-	int getMaxElementsPerCell();
-
-	UIDataset getDataset();
-
-	UISpace getSpace();
-
-	SpaceCell getSpaceCell(ElementIndex nodeIndex);
 }

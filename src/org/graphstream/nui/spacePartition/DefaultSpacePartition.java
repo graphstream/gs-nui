@@ -55,7 +55,7 @@ import org.graphstream.nui.swapper.UIArrayReference;
 import org.graphstream.nui.util.Tools;
 
 public class DefaultSpacePartition extends AbstractModule implements
-		SpaceCellHandler, DatasetListener {
+		SpaceCellHandler, DatasetListener, TreeSpacePartition {
 	private static final Logger LOGGER = Logger
 			.getLogger(DefaultSpacePartition.class.getName());
 
@@ -192,6 +192,18 @@ public class DefaultSpacePartition extends AbstractModule implements
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see
+	 * org.graphstream.nui.UISpacePartition#getSpaceCell(org.graphstream.nui
+	 * .indexer.ElementIndex)
+	 */
+	@Override
+	public SpaceCell getSpaceCell(ElementIndex nodeIndex) {
+		return nodeCell.get(nodeIndex, 0);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.graphstream.nui.UISpacePartition#getMaxElementsPerCell()
 	 */
 	@Override
@@ -242,6 +254,19 @@ public class DefaultSpacePartition extends AbstractModule implements
 	public void unregister(SpaceCell cell) {
 		cells.remove(cell);
 		LOGGER.info(String.format("remove space cell %s", cell));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.spacePartition.TreeSpacePartition#getRootCell()
+	 */
+	@Override
+	public TreeSpaceCell getRootCell() {
+		if (root instanceof TreeSpaceCell)
+			return (TreeSpaceCell) root;
+
+		return null;
 	}
 
 	public void setSpaceCellFactory(String cls) {

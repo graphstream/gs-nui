@@ -36,8 +36,10 @@ import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.space.Bounds;
 import org.graphstream.nui.spacePartition.BaseSpaceCell;
 import org.graphstream.nui.spacePartition.SpaceCell;
+import org.graphstream.nui.spacePartition.TreeSpaceCell;
 
-public abstract class NTreeSpaceCell extends BaseSpaceCell {
+public abstract class NTreeSpaceCell extends BaseSpaceCell implements
+		TreeSpaceCell {
 	protected final NTreeSpaceCell parent;
 
 	protected NTreeSpaceCell[] neighbourhood;
@@ -135,6 +137,39 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell {
 		}
 
 		return false;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.spacePartition.TreeSpaceCell#getParent()
+	 */
+	@Override
+	public TreeSpaceCell getParent() {
+		return parent;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.spacePartition.TreeSpaceCell#getChildrenCount()
+	 */
+	@Override
+	public int getChildrenCount() {
+		return neighbourhood == null ? 0 : neighbourhood.length;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.spacePartition.TreeSpaceCell#getChild(int)
+	 */
+	@Override
+	public TreeSpaceCell getChild(int i) {
+		if (neighbourhood == null)
+			return null;
+
+		return neighbourhood[i];
 	}
 
 	protected void checkMergeNeeded() {

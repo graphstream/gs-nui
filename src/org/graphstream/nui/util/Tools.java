@@ -88,6 +88,17 @@ public class Tools {
 		throw new IllegalArgumentException();
 	}
 
+	public static long checkAndGetLong(Object value)
+			throws IllegalArgumentException {
+		if (value instanceof Long
+				|| Long.TYPE.isAssignableFrom(value.getClass()))
+			return (Integer) value;
+		else if (value instanceof Number)
+			return ((Number) value).longValue();
+
+		throw new IllegalArgumentException();
+	}
+
 	public static String checkAndGetString(Object value, boolean nullAllowed)
 			throws IllegalArgumentException {
 		if (value == null) {
@@ -98,5 +109,13 @@ public class Tools {
 		}
 
 		return value.toString();
+	}
+
+	public static boolean checkAndGetBoolean(Object value)
+			throws IllegalArgumentException {
+		if (value instanceof Boolean)
+			return (Boolean) value;
+
+		throw new IllegalArgumentException();
 	}
 }

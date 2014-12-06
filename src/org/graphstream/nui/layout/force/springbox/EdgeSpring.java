@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 - 2014
+ * Copyright 2006 - 2013
  *     Stefan Balev     <stefan.balev@graphstream-project.org>
  *     Julien Baudry    <julien.baudry@graphstream-project.org>
  *     Antoine Dutot    <antoine.dutot@graphstream-project.org>
@@ -29,22 +29,66 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui;
+package org.graphstream.nui.layout.force.springbox;
 
 import org.graphstream.nui.indexer.ElementIndex;
-import org.graphstream.nui.spacePartition.SpaceCell;
+import org.graphstream.nui.indexer.ElementIndex.EdgeIndex;
+import org.graphstream.ui.geom.Vector3;
 
-public interface UISpacePartition extends UIModule, Iterable<SpaceCell> {
-	public static final String MODULE_ID = "spacePartition";
-	public static final int MODULE_PRIORITY = LOW_PRIORITY;
+/**
+ * Edge representation.
+ * 
+ * <p>
+ * This is mainly used to store data about an edge, all the computation is done
+ * in the node particle.
+ * </p>
+ */
+public class EdgeSpring {
+	/**
+	 * The edge identifier.
+	 */
+	public final EdgeIndex index;
 
-	public static final int DEFAULT_MAX_ELEMENTS_PER_CELL = 50;
+	/**
+	 * Edge weight.
+	 */
+	public double weight = 1f;
 
-	int getMaxElementsPerCell();
+	/**
+	 * The attraction force on this edge.
+	 */
+	public Vector3 spring = new Vector3();
 
-	UIDataset getDataset();
+	/**
+	 * Make this edge ignored by the layout algorithm ?.
+	 */
+	public boolean ignored = false;
 
-	UISpace getSpace();
+	/**
+	 * The edge attraction energy.
+	 */
+	public double attE;
 
-	SpaceCell getSpaceCell(ElementIndex nodeIndex);
+	/**
+	 * New edge between two given nodes.
+	 * 
+	 * @param index
+	 *            The edge identifier.
+	 */
+	public EdgeSpring(EdgeIndex index) {
+		this.index = index;
+	}
+
+	/**
+	 * Considering the two nodes of the edge, return the one that was not given
+	 * as argument.
+	 * 
+	 * @param node
+	 *            One of the nodes of the edge.
+	 * @return The other node.
+	 */
+	public ElementIndex getOpposite(ElementIndex node) {
+		return index.getSource() == node ? index.getTarget() : index
+				.getSource();
+	}
 }
