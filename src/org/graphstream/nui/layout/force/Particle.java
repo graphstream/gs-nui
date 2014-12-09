@@ -29,28 +29,37 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui;
+package org.graphstream.nui.layout.force;
 
-import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.spacePartition.SpaceCell;
-import org.graphstream.nui.spacePartition.data.SpaceCellDataFactory;
-import org.graphstream.nui.spacePartition.data.SpaceCellDataIndex;
+import org.graphstream.ui.geom.Vector3;
 
-public interface UISpacePartition extends UIModule, Iterable<SpaceCell> {
-	public static final String MODULE_ID = "spacePartition";
-	public static final int MODULE_PRIORITY = LOW_PRIORITY;
+public abstract class Particle {
+	protected Vector3 displacement;
 
-	public static final int DEFAULT_MAX_ELEMENTS_PER_CELL = 50;
+	public abstract void attraction(Particle friend, Spring spring);
 
-	int getMaxElementsPerCell();
+	public abstract void repulsion(Particle notFriend);
 
-	UIDataset getDataset();
+	public abstract void repulsion(SpaceCell baryFriends);
 
-	UISpace getSpace();
+	public double x() {
+		return 0;
+	}
 
-	SpaceCell getSpaceCell(ElementIndex nodeIndex);
+	public double y() {
+		return 0;
+	}
 
-	SpaceCellDataIndex addSpaceCellData(SpaceCellDataFactory dataFactory);
-	
-	void removeSpaceCellData(SpaceCellDataIndex index);
+	public double z() {
+		return 0;
+	}
+
+	public int degree() {
+		return 0;
+	}
+
+	public double weight() {
+		return 1.0;
+	}
 }

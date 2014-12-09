@@ -31,8 +31,103 @@
  */
 package org.graphstream.nui.layout.force;
 
+import org.graphstream.nui.UIContext;
+import org.graphstream.nui.UISwapper;
+import org.graphstream.nui.UISwapper.ValueFactory;
+import org.graphstream.nui.indexer.ElementIndex;
+import org.graphstream.nui.indexer.ElementIndex.Type;
 import org.graphstream.nui.layout.BaseLayout;
+import org.graphstream.nui.swapper.UIArrayReference;
 
-public class ForceLayout extends BaseLayout {
+public abstract class ForceLayout extends BaseLayout {
 
+	/**
+	 * Global force strength. This is a factor in [0..1] that is used to scale
+	 * all computed displacements.
+	 */
+	protected double force = 1f;
+
+	/**
+	 * The stabilization limit of this algorithm.
+	 */
+	protected double stabilizationLimit = 0.9;
+
+	protected UIArrayReference<Particle> particles;
+
+	protected UIArrayReference<Spring> springs;
+	
+	protected Energies energies;
+
+	protected ForceLayout() {
+		super(UISwapper.MODULE_ID);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.layout.BaseLayout#init(org.graphstream.nui.UIContext)
+	 */
+	@Override
+	public void init(UIContext ctx) {
+		super.init(ctx);
+
+		UISwapper swapper = (UISwapper) ctx.getModule(UISwapper.MODULE_ID);
+		assert swapper != null;
+
+		particles = swapper.createArray(Type.NODE, 1, Particle.class,
+				new ValueFactory<Particle>() {
+					/*
+					 * (non-Javadoc)
+					 * 
+					 * @see
+					 * org.graphstream.nui.UISwapper.ValueFactory#createValue
+					 * (org.graphstream.nui.indexer.ElementIndex, int)
+					 */
+					@Override
+					public Particle createValue(ElementIndex index,
+							int component) {
+						return ForceLayout.this.createParticle(index);
+					}
+				});
+
+		springs = swapper.createArray(Type.EDGE, 1, Spring.class,
+				new ValueFactory<Spring>() {
+					/*
+					 * (non-Javadoc)
+					 * 
+					 * @see
+					 * org.graphstream.nui.UISwapper.ValueFactory#createValue
+					 * (org.graphstream.nui.indexer.ElementIndex, int)
+					 */
+					@Override
+					public Spring createValue(ElementIndex index, int component) {
+						return createSpring(index);
+					}
+				});
+	}
+
+	public double getForce() {
+		return force;
+	}
+
+	public void setForce(double value) {
+		this.force = value;
+	}
+
+	public double getStabilizationLimit() {
+		return stabilizationLimit;
+	}
+
+	public void setStabilizationLimit(double value) {
+		this.stabilizationLimit = value;
+	}
+
+	public void compute() {
+		
+	}
+
+	protected abstract Particle createParticle(ElementIndex index);
+
+	protected abstract Spring createSpring(ElementIndex index);
 }

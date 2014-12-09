@@ -33,6 +33,7 @@ package org.graphstream.nui.layout;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -77,6 +78,8 @@ public class BaseLayout extends AbstractModule implements UILayout {
 
 	public static final String ATTRIBUTE_VIEW_ZONE = "viewZone";
 
+	public static final String ATTRIBUTE_RANDOM_SEED = "randomSeed";
+
 	protected UIIndexer indexer;
 
 	protected UISpace space;
@@ -88,6 +91,13 @@ public class BaseLayout extends AbstractModule implements UILayout {
 	protected boolean enableSpacePartition;
 
 	protected double viewZone;
+
+	/**
+	 * Random number generator.
+	 */
+	protected Random random;
+
+	protected long randomSeed = Long.MAX_VALUE;
 
 	protected BaseLayout(String... extDeps) {
 		super(MODULE_ID, join(extDeps, UIIndexer.MODULE_ID, UISpace.MODULE_ID));
@@ -110,6 +120,11 @@ public class BaseLayout extends AbstractModule implements UILayout {
 		assert space != null;
 
 		stats = new LayoutStatistics();
+
+		if (randomSeed == Long.MAX_VALUE)
+			random = new Random(System.currentTimeMillis());
+		else
+			random = new Random(randomSeed);
 	}
 
 	/*
@@ -123,6 +138,16 @@ public class BaseLayout extends AbstractModule implements UILayout {
 		super.setAttribute(key, value);
 
 		switch (key) {
+		case ATTRIBUTE_RANDOM_SEED:
+			try {
+				randomSeed = Tools.checkAndGetLong(value);
+				random = new Random(randomSeed);
+			} catch (IllegalArgumentException e) {
+				LOGGER.warning(String.format("Illegal value for %s.%s : %s",
+						MODULE_ID, ATTRIBUTE_RANDOM_SEED, value));
+			}
+
+			break;
 		case ATTRIBUTE_SPACE_PARTITION:
 			try {
 				enableSpacePartition(Tools.checkAndGetBoolean(value));
@@ -171,5 +196,26 @@ public class BaseLayout extends AbstractModule implements UILayout {
 			return ElementIterator.iterateOn(indexer, Type.NODE);
 
 		return new NeighbourhoodIterator(spacePartition, source, viewZone);
+	}
+
+	protected double randomXInsideBounds() {
+		double lx = space.getBounds().getLowestPoint().x;
+		double hx = space.getBounds().getHighestPoint().x;
+
+		return lx + random.nextDouble() * (hx - lx);
+	}
+
+	protected double randomYInsideBounds() {
+		double ly = space.getBounds().getLowestPoint().y;
+		double hy = space.getBounds().getHighestPoint().y;
+
+		return ly + random.nextDouble() * (hy - ly);
+	}
+
+	protected double randomZInsideBounds() {
+		double lz = space.getBounds().getLowestPoint().z;
+		double hz = space.getBounds().getHighestPoint().z;
+
+		return lz + random.nextDouble() * (hz - lz);
 	}
 }

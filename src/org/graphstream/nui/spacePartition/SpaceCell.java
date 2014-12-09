@@ -33,6 +33,9 @@ package org.graphstream.nui.spacePartition;
 
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.space.Bounds;
+import org.graphstream.nui.spacePartition.data.SpaceCellData;
+import org.graphstream.nui.spacePartition.data.SpaceCellDataIndex;
+import org.graphstream.nui.spacePartition.data.SpaceCellDataSet;
 
 public interface SpaceCell extends Iterable<ElementIndex> {
 	SpaceCell insert(ElementIndex e, double x, double y, double z);
@@ -40,4 +43,10 @@ public interface SpaceCell extends Iterable<ElementIndex> {
 	boolean remove(ElementIndex e);
 	
 	Bounds getBoundary();
+	
+	void setSpaceCellDataCell(SpaceCellDataSet set);
+	
+	SpaceCellData getData(SpaceCellDataIndex index);
+	
+	int getElementCount();
 }

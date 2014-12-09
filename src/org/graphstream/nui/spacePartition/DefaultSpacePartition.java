@@ -33,8 +33,10 @@ package org.graphstream.nui.spacePartition;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,6 +51,10 @@ import org.graphstream.nui.UISwapper;
 import org.graphstream.nui.dataset.DatasetListener;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.ElementIndex.Type;
+import org.graphstream.nui.spacePartition.data.SpaceCellData;
+import org.graphstream.nui.spacePartition.data.SpaceCellDataFactory;
+import org.graphstream.nui.spacePartition.data.SpaceCellDataIndex;
+import org.graphstream.nui.spacePartition.data.SpaceCellDataSet;
 import org.graphstream.nui.spacePartition.ntree.OctTreeSpaceCell;
 import org.graphstream.nui.spacePartition.ntree.QuadTreeSpaceCell;
 import org.graphstream.nui.swapper.UIArrayReference;
@@ -78,9 +84,13 @@ public class DefaultSpacePartition extends AbstractModule implements
 
 	protected UIArrayReference<SpaceCell> nodeCell;
 
+	protected final DataSetPool datasets;
+
 	public DefaultSpacePartition() {
 		super(MODULE_ID, UIIndexer.MODULE_ID, UIAttributes.MODULE_ID,
 				UISwapper.MODULE_ID, UIDataset.MODULE_ID, UISpace.MODULE_ID);
+
+		datasets = new DataSetPool();
 
 		cells = new LinkedList<SpaceCell>();
 		cellFactory = new SpaceCellFactory() {
@@ -224,6 +234,30 @@ public class DefaultSpacePartition extends AbstractModule implements
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see
+	 * org.graphstream.nui.UISpacePartition#addSpaceCellData(org.graphstream
+	 * .nui.spacePartition.data.SpaceCellDataFactory)
+	 */
+	@Override
+	public SpaceCellDataIndex addSpaceCellData(SpaceCellDataFactory dataFactory) {
+		return datasets.add(dataFactory);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.UISpacePartition#removeSpaceCellData(org.graphstream
+	 * .nui.spacePartition.data.SpaceCellDataIndex)
+	 */
+	@Override
+	public void removeSpaceCellData(SpaceCellDataIndex index) {
+		datasets.remove(index);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.graphstream.nui.UISpacePartition#getSpace()
 	 */
 	@Override
@@ -241,6 +275,8 @@ public class DefaultSpacePartition extends AbstractModule implements
 	@Override
 	public void register(SpaceCell cell) {
 		cells.add(cell);
+		datasets.add(cell);
+
 		LOGGER.info(String.format("new space cell %s", cell));
 	}
 
@@ -252,7 +288,9 @@ public class DefaultSpacePartition extends AbstractModule implements
 	 */
 	@Override
 	public void unregister(SpaceCell cell) {
+		datasets.remove(cell);
 		cells.remove(cell);
+
 		LOGGER.info(String.format("remove space cell %s", cell));
 	}
 
@@ -328,5 +366,102 @@ public class DefaultSpacePartition extends AbstractModule implements
 		}
 
 		LOGGER.info(String.format("%s in %s%n", nodeIndex, sc));
+	}
+
+	static class DataIndex implements SpaceCellDataIndex {
+		int index;
+
+		DataIndex(int index) {
+			this.index = index;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.graphstream.nui.spacePartition.data.SpaceCellDataIndex#getIndex()
+		 */
+		@Override
+		public int getIndex() {
+			return index;
+		}
+	}
+
+	@SuppressWarnings("serial")
+	static class DefaultDataSet extends LinkedList<SpaceCellData> implements
+			SpaceCellDataSet {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.graphstream.nui.spacePartition.data.SpaceCellDataSet#get(org.
+		 * graphstream.nui.spacePartition.data.SpaceCellDataIndex)
+		 */
+		@Override
+		public SpaceCellData get(SpaceCellDataIndex index) {
+			return get(index.getIndex());
+		}
+	}
+
+	@SuppressWarnings("serial")
+	static class DataSetPool extends HashMap<SpaceCell, DefaultDataSet> {
+		final LinkedList<SpaceCellDataFactory> factories;
+		final LinkedList<DataIndex> indexes;
+
+		DataSetPool() {
+			this.factories = new LinkedList<SpaceCellDataFactory>();
+			this.indexes = new LinkedList<DataIndex>();
+		}
+
+		void add(SpaceCell cell) {
+			DefaultDataSet dataset = new DefaultDataSet();
+			put(cell, dataset);
+
+			cell.setSpaceCellDataCell(dataset);
+
+			for (int i = 0; i < factories.size(); i++) {
+				SpaceCellData data = factories.get(i).createNewData(cell);
+				data.compute(cell);
+				dataset.add(data);
+			}
+		}
+
+		DataIndex add(SpaceCellDataFactory factory) {
+			DataIndex index = new DataIndex(size());
+
+			for (Map.Entry<SpaceCell, DefaultDataSet> entry : entrySet()) {
+				DefaultDataSet dataset = entry.getValue();
+				SpaceCellData data = factory.createNewData(entry.getKey());
+
+				data.compute(entry.getKey());
+				dataset.add(data);
+			}
+
+			return index;
+		}
+
+		void remove(SpaceCellDataIndex index) {
+			if (index.getIndex() == size() - 1) {
+				for (DefaultDataSet dataset : values())
+					dataset.removeLast();
+
+				factories.removeLast();
+				indexes.removeLast();
+			} else {
+				for (DefaultDataSet dataset : values()) {
+					SpaceCellData last = dataset.getLast();
+
+					dataset.set(index.getIndex(), last);
+					dataset.removeLast();
+				}
+
+				factories.set(index.getIndex(), factories.getLast());
+				factories.removeLast();
+
+				indexes.getLast().index = index.getIndex();
+				indexes.set(index.getIndex(), indexes.getLast());
+				indexes.removeLast();
+			}
+		}
 	}
 }

@@ -109,8 +109,6 @@ public abstract class BarnesHutLayout extends ForceLayout {
 	private static final Logger LOGGER = Logger.getLogger(BarnesHutLayout.class
 			.getName());
 
-	public static final String ATTRIBUTE_RANDOM_SEED = "randomSeed";
-
 	public static final String ATTRIBUTE_QUALITY = "quality";
 
 	/**
@@ -124,20 +122,9 @@ public abstract class BarnesHutLayout extends ForceLayout {
 	protected int lastElementCount = 0;
 
 	/**
-	 * Random number generator.
-	 */
-	protected Random random;
-
-	/**
 	 * Energy, and the history of energies.
 	 */
 	protected Energies energies = new Energies();
-
-	/**
-	 * Global force strength. This is a factor in [0..1] that is used to scale
-	 * all computed displacements.
-	 */
-	protected double force = 1f;
 
 	/**
 	 * The view distance at which the cells of the n-tree are explored
@@ -160,19 +147,12 @@ public abstract class BarnesHutLayout extends ForceLayout {
 	 */
 	protected double area = 1;
 
-	/**
-	 * The stabilization limit of this algorithm.
-	 */
-	protected double stabilizationLimit = 0.9;
-
 	// Attributes -- Settings
 
 	/**
 	 * The gravity factor. If set to 0 the gravity computation is disabled.
 	 */
 	protected double gravity = 0;
-
-	protected long randomSeed = Long.MAX_VALUE;
 
 	/**
 	 * New 2D Barnes-Hut simulation.
@@ -202,12 +182,6 @@ public abstract class BarnesHutLayout extends ForceLayout {
 	@Override
 	public void init(UIContext ctx) {
 		super.init(ctx);
-
-		if (randomSeed == Long.MAX_VALUE)
-			random = new Random(System.currentTimeMillis());
-		else
-			random = new Random(randomSeed);
-
 		setQuality(quality);
 	}
 
@@ -222,16 +196,7 @@ public abstract class BarnesHutLayout extends ForceLayout {
 		super.setAttribute(key, value);
 
 		switch (key) {
-		case ATTRIBUTE_RANDOM_SEED:
-			try {
-				randomSeed = Tools.checkAndGetLong(value);
-				random = new Random(randomSeed);
-			} catch (IllegalArgumentException e) {
-				LOGGER.warning(String.format("Illegal value for %s.%s : %s",
-						MODULE_ID, ATTRIBUTE_RANDOM_SEED, value));
-			}
 
-			break;
 		case ATTRIBUTE_QUALITY:
 			try {
 				quality = Tools.checkAndGetDouble(value);
@@ -245,27 +210,6 @@ public abstract class BarnesHutLayout extends ForceLayout {
 		default:
 			break;
 		}
-	}
-
-	protected double randomXInsideBounds() {
-		double lx = space.getBounds().getLowestPoint().x;
-		double hx = space.getBounds().getHighestPoint().x;
-
-		return lx + random.nextDouble() * (hx - lx);
-	}
-
-	protected double randomYInsideBounds() {
-		double ly = space.getBounds().getLowestPoint().y;
-		double hy = space.getBounds().getHighestPoint().y;
-
-		return ly + random.nextDouble() * (hy - ly);
-	}
-
-	protected double randomZInsideBounds() {
-		double lz = space.getBounds().getLowestPoint().z;
-		double hz = space.getBounds().getHighestPoint().z;
-
-		return lz + random.nextDouble() * (hz - lz);
 	}
 
 	/**
@@ -304,20 +248,8 @@ public abstract class BarnesHutLayout extends ForceLayout {
 		return 0;
 	}
 
-	public double getStabilizationLimit() {
-		return stabilizationLimit;
-	}
-
 	public double getQuality() {
 		return quality;
-	}
-
-	public double getForce() {
-		return force;
-	}
-
-	public Random getRandom() {
-		return random;
 	}
 
 	public Energies getEnergies() {
@@ -333,10 +265,6 @@ public abstract class BarnesHutLayout extends ForceLayout {
 		return theta;
 	}
 
-	public double getViewZone() {
-		return viewZone;
-	}
-
 	/**
 	 * Change the barnes-hut theta parameter allowing to know if we use a pole
 	 * or not.
@@ -348,14 +276,6 @@ public abstract class BarnesHutLayout extends ForceLayout {
 		if (theta > 0 && theta < 1) {
 			this.theta = theta;
 		}
-	}
-
-	public void setForce(double value) {
-		this.force = value;
-	}
-
-	public void setStabilizationLimit(double value) {
-		this.stabilizationLimit = value;
 	}
 
 	public void setQuality(double qualityLevel) {
@@ -492,12 +412,6 @@ public abstract class BarnesHutLayout extends ForceLayout {
 	 */
 	protected abstract void chooseNodePosition(NodeParticle n0, NodeParticle n1);
 
-	protected void addEdgeBreakPoint(String edgeId, int points) {
-		LOGGER.warning(String.format(
-				"layout %s: edge break points are not handled yet.",
-				getLayoutAlgorithmName()));
-	}
-
 	protected void ignoreEdge(String edgeId, boolean on) {
 		EdgeSpring edge = edges.get(edgeId);
 
@@ -511,19 +425,6 @@ public abstract class BarnesHutLayout extends ForceLayout {
 
 		if (edge != null)
 			edge.weight = weight;
-	}
-
-	protected void removeEdge(String sourceId, String id) {
-		EdgeSpring e = edges.remove(id);
-
-		if (e != null) {
-			e.node0.unregisterEdge(e);
-			e.node1.unregisterEdge(e);
-		} else {
-			LOGGER.warning(String.format(
-					"layout %s: cannot remove non existing edge %s%n",
-					getLayoutAlgorithmName(), id));
-		}
 	}
 
 	// SourceBase interface

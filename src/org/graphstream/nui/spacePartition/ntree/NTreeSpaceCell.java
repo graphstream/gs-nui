@@ -44,10 +44,14 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 
 	protected NTreeSpaceCell[] neighbourhood;
 
+	protected int elementsCount;
+
 	protected NTreeSpaceCell(UISpacePartition spacePartition, Bounds boundary,
 			NTreeSpaceCell parent) {
 		super(spacePartition, boundary);
+
 		this.parent = parent;
+		this.changed = true;
 	}
 
 	public abstract void subdivide();
@@ -55,15 +59,10 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 	public abstract boolean contains(ElementIndex e);
 
 	public int getElementCount() {
-		if (neighbourhood == null)
-			return elements.size();
+		if (changed)
+			computeData();
 
-		int s = 0;
-
-		for (int i = 0; i < neighbourhood.length; i++)
-			s += neighbourhood[i].getElementCount();
-
-		return s;
+		return elementsCount;
 	}
 
 	protected void insert(ElementIndex e) {
@@ -89,6 +88,7 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 		if (elements.size() < spacePartition.getMaxElementsPerCell()
 				&& neighbourhood == null) {
 			elements.add(e);
+			changed = true;
 			return this;
 		}
 
@@ -103,8 +103,10 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 		for (int i = 0; i < neighbourhood.length; i++) {
 			SpaceCell sc = neighbourhood[i].insert(e, x, y, z);
 
-			if (sc != null)
+			if (sc != null) {
+				changed = true;
 				return sc;
+			}
 		}
 
 		return null;
@@ -183,5 +185,23 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 			neighbourhood = null;
 			register();
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.spacePartition.BaseSpaceCell#computeData()
+	 */
+	@Override
+	protected void computeData() {
+		if (neighbourhood == null)
+			elementsCount = elements.size();
+
+		elementsCount = 0;
+
+		for (int i = 0; i < neighbourhood.length; i++)
+			elementsCount += neighbourhood[i].getElementCount();
+
+		super.computeData();
 	}
 }

@@ -37,11 +37,16 @@ import java.util.LinkedList;
 import org.graphstream.nui.UISpacePartition;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.space.Bounds;
+import org.graphstream.nui.spacePartition.data.SpaceCellData;
+import org.graphstream.nui.spacePartition.data.SpaceCellDataIndex;
+import org.graphstream.nui.spacePartition.data.SpaceCellDataSet;
 
 public abstract class BaseSpaceCell implements SpaceCell {
 	protected final LinkedList<ElementIndex> elements;
 	protected final Bounds boundary;
 	protected final UISpacePartition spacePartition;
+	protected boolean changed;
+	protected SpaceCellDataSet datas;
 
 	protected BaseSpaceCell(UISpacePartition spacePartition, Bounds boundary) {
 		this.spacePartition = spacePartition;
@@ -82,10 +87,44 @@ public abstract class BaseSpaceCell implements SpaceCell {
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see
+	 * org.graphstream.nui.spacePartition.SpaceCell#getData(org.graphstream.
+	 * nui.spacePartition.data.SpaceCellDataIndex)
+	 */
+	@Override
+	public SpaceCellData getData(SpaceCellDataIndex index) {
+		if (changed)
+			computeData();
+
+		return datas.get(index);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.spacePartition.SpaceCell#setSpaceCellDataCell(org
+	 * .graphstream.nui.spacePartition.data.SpaceCellDataSet)
+	 */
+	@Override
+	public void setSpaceCellDataCell(SpaceCellDataSet set) {
+		this.datas = set;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
 		return String.format("space_cell@%s%s", boundary, elements);
+	}
+
+	protected void computeData() {
+		for (SpaceCellData data : datas)
+			data.compute(this);
+
+		changed = false;
 	}
 }

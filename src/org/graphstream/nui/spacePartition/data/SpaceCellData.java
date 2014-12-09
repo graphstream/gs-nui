@@ -29,28 +29,10 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui;
+package org.graphstream.nui.spacePartition.data;
 
-import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.spacePartition.SpaceCell;
-import org.graphstream.nui.spacePartition.data.SpaceCellDataFactory;
-import org.graphstream.nui.spacePartition.data.SpaceCellDataIndex;
 
-public interface UISpacePartition extends UIModule, Iterable<SpaceCell> {
-	public static final String MODULE_ID = "spacePartition";
-	public static final int MODULE_PRIORITY = LOW_PRIORITY;
-
-	public static final int DEFAULT_MAX_ELEMENTS_PER_CELL = 50;
-
-	int getMaxElementsPerCell();
-
-	UIDataset getDataset();
-
-	UISpace getSpace();
-
-	SpaceCell getSpaceCell(ElementIndex nodeIndex);
-
-	SpaceCellDataIndex addSpaceCellData(SpaceCellDataFactory dataFactory);
-	
-	void removeSpaceCellData(SpaceCellDataIndex index);
+public interface SpaceCellData {
+	void compute(SpaceCell cell);
 }
