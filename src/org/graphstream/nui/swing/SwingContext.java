@@ -34,6 +34,7 @@ package org.graphstream.nui.swing;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,8 +44,6 @@ import javax.swing.Timer;
 import org.graphstream.nui.context.AbstractContext;
 
 public class SwingContext extends AbstractContext {
-	public static final int TIMER_DELAY = 1000 / 60;
-
 	protected Timer timer;
 
 	public SwingContext() {
@@ -72,8 +71,7 @@ public class SwingContext extends AbstractContext {
 	 */
 	@Override
 	protected void internalInit() {
-		timer = new Timer(TIMER_DELAY, new Synchronizer());
-		timer.start();
+		createTimer();
 	}
 
 	/*
@@ -109,7 +107,29 @@ public class SwingContext extends AbstractContext {
 		}
 	}
 
-	class Synchronizer implements ActionListener {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.context.AbstractContext#setTickLength(long,
+	 * java.util.concurrent.TimeUnit)
+	 */
+	@Override
+	public void setTickLength(long tickLength, TimeUnit unit) {
+		super.setTickLength(tickLength, unit);
+		createTimer();
+	}
+
+	protected void createTimer() {
+		if (timer != null)
+			timer.stop();
+
+		timer = new Timer((int) TimeUnit.MILLISECONDS.convert(tickLength,
+				tickLengthUnits), new Ticker());
+
+		timer.start();
+	}
+
+	class Ticker implements ActionListener {
 		/*
 		 * (non-Javadoc)
 		 * 
@@ -119,7 +139,7 @@ public class SwingContext extends AbstractContext {
 		 */
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			SwingContext.this.sync();
+			SwingContext.this.tick();
 
 			//
 			// Should add here actions that have to be triggered at each timer

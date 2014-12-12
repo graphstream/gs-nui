@@ -32,34 +32,30 @@
 package org.graphstream.nui.indexer;
 
 import java.util.LinkedList;
-import java.util.Vector;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import org.graphstream.graph.EdgeFactory;
+import org.graphstream.graph.Graph;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.NodeFactory;
+import org.graphstream.graph.implementations.AbstractEdge;
+import org.graphstream.graph.implementations.AbstractGraph;
+import org.graphstream.graph.implementations.AbstractNode;
+import org.graphstream.graph.implementations.AdjacencyListGraph;
+import org.graphstream.graph.implementations.AdjacencyListNode;
 import org.graphstream.nui.AbstractModule;
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIIndexer;
-import org.graphstream.nui.indexer.ElementIndex.Type;
-import org.graphstream.stream.ElementSink;
 
-public class DefaultIndexer extends AbstractModule implements UIIndexer,
-		ElementSink {
-	protected final IndexSet nodes;
-	protected final IndexSet edges;
-
-	protected final ElementIndex graphIndex;
-
+public class DefaultIndexer extends AbstractModule implements UIIndexer {
 	protected final List<IndexerListener> listeners;
+
+	protected final Indexes struct;
 
 	public DefaultIndexer() {
 		super(MODULE_ID);
 
-		nodes = new IndexSet(ElementIndex.Type.NODE);
-		edges = new IndexSet(ElementIndex.Type.EDGE);
-
-		graphIndex = new _ElementIndex(Type.GRAPH, "graph", 0);
-
+		struct = new Indexes();
 		listeners = new LinkedList<IndexerListener>();
 	}
 
@@ -72,7 +68,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	@Override
 	public void init(UIContext ctx) {
 		super.init(ctx);
-		ctx.getContextProxy().addElementSink(this);
+		ctx.getContextProxy().addElementSink(struct);
 	}
 
 	/*
@@ -82,7 +78,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 */
 	@Override
 	public void release() {
-		ctx.getContextProxy().removeElementSink(this);
+		ctx.getContextProxy().removeElementSink(struct);
 		super.release();
 	}
 
@@ -93,7 +89,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 */
 	@Override
 	public ElementIndex getGraphIndex() {
-		return graphIndex;
+		return struct;
 	}
 
 	/*
@@ -103,7 +99,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 */
 	@Override
 	public int getNodeCount() {
-		return nodes.size();
+		return struct.getNodeCount();
 	}
 
 	/*
@@ -113,7 +109,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 */
 	@Override
 	public int getEdgeCount() {
-		return edges.size();
+		return struct.getEdgeCount();
 	}
 
 	/*
@@ -134,7 +130,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 */
 	@Override
 	public ElementIndex getNodeIndex(String nodeId) {
-		return nodes.get(nodeId);
+		return struct.getNode(nodeId);
 	}
 
 	/*
@@ -144,7 +140,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 */
 	@Override
 	public ElementIndex getEdgeIndex(String edgeId) {
-		return edges.get(edgeId);
+		return struct.getEdge(edgeId);
 	}
 
 	/*
@@ -165,7 +161,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 */
 	@Override
 	public ElementIndex getNodeIndex(int nodeIndex) {
-		return nodes.get(nodeIndex);
+		return struct.getNode(nodeIndex);
 	}
 
 	/*
@@ -175,7 +171,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 	 */
 	@Override
 	public ElementIndex getEdgeIndex(int edgeIndex) {
-		return edges.get(edgeIndex);
+		return struct.getEdge(edgeIndex);
 	}
 
 	/*
@@ -213,88 +209,8 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 		listeners.remove(l);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.stream.ElementSink#edgeAdded(java.lang.String, long,
-	 * java.lang.String, java.lang.String, java.lang.String, boolean)
-	 */
-	@Override
-	public void edgeAdded(String sourceId, long timeId, String edgeId,
-			String node1Id, String node2Id, boolean directed) {
-		ElementIndex source = nodes.get(node1Id);
-		ElementIndex target = nodes.get(node2Id);
-
-		if (source == null)
-			source = nodes.add(node1Id);
-
-		if (target == null)
-			target = nodes.add(node2Id);
-
-		edges.add(edgeId, source, target, directed);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.stream.ElementSink#edgeRemoved(java.lang.String,
-	 * long, java.lang.String)
-	 */
-	@Override
-	public void edgeRemoved(String sourceId, long timeId, String edgeId) {
-		edges.remove(edgeId);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.stream.ElementSink#graphCleared(java.lang.String,
-	 * long)
-	 */
-	@Override
-	public void graphCleared(String arg0, long arg1) {
-		for (IndexerListener l : listeners)
-			l.elementsClear();
-
-		edges.clear();
-		nodes.clear();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.stream.ElementSink#nodeAdded(java.lang.String, long,
-	 * java.lang.String)
-	 */
-	@Override
-	public void nodeAdded(String sourceId, long timeId, String nodeId) {
-		nodes.add(nodeId);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.stream.ElementSink#nodeRemoved(java.lang.String,
-	 * long, java.lang.String)
-	 */
-	@Override
-	public void nodeRemoved(String sourceId, long timeId, String nodeId) {
-		nodes.remove(nodeId);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.stream.ElementSink#stepBegins(java.lang.String,
-	 * long, double)
-	 */
-	@Override
-	public void stepBegins(String arg0, long arg1, double arg2) {
-	}
-
-	protected void fireElementAdded(ElementIndex.Type type, ElementIndex index,
-			Object... args) {
-		switch (type) {
+	protected void fireElementAdded(ElementIndex index, Object... args) {
+		switch (index.getType()) {
 		case NODE:
 			for (IndexerListener l : listeners)
 				l.nodeAdded(index);
@@ -310,9 +226,10 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 		}
 	}
 
-	protected void fireElementsSwap(ElementIndex.Type type, ElementIndex e1,
-			ElementIndex e2) {
-		switch (type) {
+	protected void fireElementsSwap(ElementIndex e1, ElementIndex e2) {
+		assert e1.getType() == e2.getType();
+
+		switch (e1.getType()) {
 		case NODE:
 			for (IndexerListener l : listeners)
 				l.nodesSwapped(e1, e2);
@@ -327,8 +244,8 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 		}
 	}
 
-	protected void fireElementRemoved(ElementIndex.Type type, ElementIndex index) {
-		switch (type) {
+	protected void fireElementRemoved(ElementIndex index) {
+		switch (index.getType()) {
 		case NODE:
 			for (IndexerListener l : listeners)
 				l.nodeRemoved(index);
@@ -343,105 +260,52 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 		}
 	}
 
-	/*
-	 * Object who manages a set of element indexes.
-	 */
-	private class IndexSet {
-		final ElementIndex.Type type;
-		final Map<String, _ElementIndex> id2index;
-		final List<_ElementIndex> indexes;
-
-		IndexSet(ElementIndex.Type indexSetType) {
-			type = indexSetType;
-			id2index = new HashMap<String, _ElementIndex>();
-			indexes = new Vector<_ElementIndex>();
-		}
-
-		int size() {
-			return indexes.size();
-		}
-
-		ElementIndex get(String id) {
-			return id2index.get(id);
-		}
-
-		ElementIndex get(int index) {
-			if (index >= indexes.size())
-				return null;
-
-			return indexes.get(index);
-		}
-
-		ElementIndex add(String id, Object... args) {
-			_ElementIndex index;
-
-			switch (type) {
-			case EDGE:
-				index = new _EdgeIndex(id, indexes.size(),
-						(_ElementIndex) args[0], (_ElementIndex) args[1],
-						(Boolean) args[2]);
-				break;
-			default:
-				index = new _ElementIndex(type, id, indexes.size());
-			}
-			
-			id2index.put(id, index);
-			indexes.add(index);
-
-			fireElementAdded(type, index, args);
-
-			return index;
-		}
-
-		ElementIndex remove(String id) {
-			_ElementIndex index = id2index.get(id);
-
-			if (index == null)
-				return null;
-
-			if (index.index < indexes.size() - 1) {
-				_ElementIndex last = indexes.get(indexes.size() - 1);
-
-				last.index = index.index;
-				index.index = indexes.size() - 1;
-				indexes.set(last.index, last);
-				indexes.set(index.index, index);
-
-				fireElementsSwap(type, last, index);
-			}
-
-			fireElementRemoved(type, index);
-			indexes.remove(indexes.size() - 1);
-
-			index.index = -1;
-
-			return id2index.remove(id);
-		}
-
-		void clear() {
-			id2index.clear();
-			indexes.clear();
-		}
+	protected void fireElementCleared() {
+		for (IndexerListener l : listeners)
+			l.elementsClear();
 	}
 
-	/*
-	 * Internal implementation of ElementIndex.
-	 */
-	private class _ElementIndex implements ElementIndex {
-		private final String id;
-		private final Type type;
-		private int index;
+	private class Indexes extends AdjacencyListGraph implements ElementIndex {
 
-		_ElementIndex(Type type, String id, int index) {
-			this.type = type;
-			this.id = id;
-			this.index = index;
+		public Indexes() {
+			super("graph");
+
+			setNodeFactory(new NodeFactory<_NodeIndex>() {
+				/*
+				 * (non-Javadoc)
+				 * 
+				 * @see
+				 * org.graphstream.graph.NodeFactory#newInstance(java.lang.String
+				 * , org.graphstream.graph.Graph)
+				 */
+				@Override
+				public _NodeIndex newInstance(String id, Graph graph) {
+					return new _NodeIndex((AbstractGraph) graph, id);
+				}
+			});
+
+			setEdgeFactory(new EdgeFactory<DefaultIndexer._EdgeIndex>() {
+				/*
+				 * (non-Javadoc)
+				 * 
+				 * @see
+				 * org.graphstream.graph.EdgeFactory#newInstance(java.lang.String
+				 * , org.graphstream.graph.Node, org.graphstream.graph.Node,
+				 * boolean)
+				 */
+				@Override
+				public DefaultIndexer._EdgeIndex newInstance(String id,
+						Node src, Node dst, boolean directed) {
+					return new DefaultIndexer._EdgeIndex(id, (_NodeIndex) src,
+							(_NodeIndex) dst, directed);
+				}
+			});
 		}
 
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see org.graphstream.nui.util.ElementIndex#id()
+		 * @see org.graphstream.nui.indexer.ElementIndex#id()
 		 */
 		@Override
 		public String id() {
@@ -451,46 +315,220 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see org.graphstream.nui.util.ElementIndex#index()
+		 * @see org.graphstream.nui.indexer.ElementIndex#index()
 		 */
 		@Override
 		public int index() {
-			return index;
+			return 0;
 		}
 
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see org.graphstream.nui.indexer.UIElementIndex#getType()
+		 * @see org.graphstream.nui.indexer.ElementIndex#getType()
 		 */
 		@Override
 		public Type getType() {
-			return type;
+			return Type.GRAPH;
 		}
 
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see java.lang.Object#toString()
+		 * @see
+		 * org.graphstream.graph.implementations.AdjacencyListGraph#addNodeCallback
+		 * (org.graphstream.graph.implementations.AbstractNode)
 		 */
 		@Override
-		public String toString() {
-			return String.format("<%s>#%s@%d", type, id, index);
+		protected void addNodeCallback(AbstractNode node) {
+			super.addNodeCallback(node);
+			fireElementAdded((_NodeIndex) node);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.graphstream.graph.implementations.AdjacencyListGraph#addEdgeCallback
+		 * (org.graphstream.graph.implementations.AbstractEdge)
+		 */
+		@Override
+		protected void addEdgeCallback(AbstractEdge edge) {
+			super.addEdgeCallback(edge);
+			
+			fireElementAdded((_EdgeIndex) edge, edge.getSourceNode(),
+					edge.getTargetNode(), edge.isDirected());
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.graph.implementations.AdjacencyListGraph#
+		 * removeEdgeCallback
+		 * (org.graphstream.graph.implementations.AbstractEdge)
+		 */
+		@Override
+		protected void removeEdgeCallback(AbstractEdge edge) {
+			_EdgeIndex index = (_EdgeIndex) edge;
+			_EdgeIndex last = (_EdgeIndex) edgeArray[edgeCount - 1];
+			boolean swap = index != last;
+
+			if (swap) {
+				int i = edge.getIndex();
+				edgeArray[i] = last;
+				last.setIndex(i);
+				edgeArray[edgeCount - 1] = index;
+				index.setIndex(edgeCount - 1);
+
+				fireElementsSwap(index, last);
+			}
+
+			fireElementRemoved(index);
+
+			edgeMap.remove(edge.getId());
+			edgeArray[--edgeCount] = null;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.graph.implementations.AdjacencyListGraph#
+		 * removeNodeCallback
+		 * (org.graphstream.graph.implementations.AbstractNode)
+		 */
+		@Override
+		protected void removeNodeCallback(AbstractNode node) {
+			_NodeIndex index = (_NodeIndex) node;
+			_NodeIndex last = (_NodeIndex) nodeArray[nodeCount - 1];
+			boolean swap = index != last;
+
+			if (swap) {
+				int i = node.getIndex();
+				nodeArray[i] = last;
+				last.setIndex(i);
+				nodeArray[nodeCount - 1] = index;
+				index.setIndex(nodeCount - 1);
+
+				fireElementsSwap(index, last);
+			}
+
+			fireElementRemoved(index);
+
+			nodeMap.remove(node.getId());
+			nodeArray[--nodeCount] = null;
+			index.setIndex(-1);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.graphstream.graph.implementations.AdjacencyListGraph#clearCallback
+		 * ()
+		 */
+		@Override
+		protected void clearCallback() {
+			super.clearCallback();
+			fireElementCleared();
 		}
 	}
 
-	private class _EdgeIndex extends _ElementIndex implements
+	private class _NodeIndex extends AdjacencyListNode implements
+			ElementIndex.NodeIndex {
+
+		protected _NodeIndex(AbstractGraph graph, String id) {
+			super(graph, id);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.indexer.ElementIndex#id()
+		 */
+		@Override
+		public String id() {
+			return id;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.indexer.ElementIndex#index()
+		 */
+		@Override
+		public int index() {
+			return getIndex();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.indexer.ElementIndex#getType()
+		 */
+		@Override
+		public Type getType() {
+			return Type.NODE;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.graphstream.graph.implementations.AbstractElement#setIndex(int)
+		 */
+		@Override
+		protected void setIndex(int index) {
+			super.setIndex(index);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.graphstream.nui.indexer.ElementIndex.NodeIndex#getEdgeIndex(int)
+		 */
+		@Override
+		public EdgeIndex getEdgeIndex(int i) {
+			return (EdgeIndex) edges[i];
+		}
+	}
+
+	private class _EdgeIndex extends AbstractEdge implements
 			ElementIndex.EdgeIndex {
-		final ElementIndex source, target;
-		final boolean directed;
 
-		_EdgeIndex(String id, int index, ElementIndex source,
-				ElementIndex target, boolean directed) {
-			super(Type.EDGE, id, index);
+		protected _EdgeIndex(String id, _NodeIndex source, _NodeIndex target,
+				boolean directed) {
+			super(id, source, target, directed);
+		}
 
-			this.source = source;
-			this.target = target;
-			this.directed = directed;
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.indexer.ElementIndex#id()
+		 */
+		@Override
+		public String id() {
+			return id;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.indexer.ElementIndex#index()
+		 */
+		@Override
+		public int index() {
+			return getIndex();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.indexer.ElementIndex#getType()
+		 */
+		@Override
+		public Type getType() {
+			return Type.EDGE;
 		}
 
 		/*
@@ -500,7 +538,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 		 */
 		@Override
 		public ElementIndex getSource() {
-			return source;
+			return (ElementIndex) source;
 		}
 
 		/*
@@ -510,17 +548,18 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer,
 		 */
 		@Override
 		public ElementIndex getTarget() {
-			return target;
+			return (ElementIndex) target;
 		}
 
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see org.graphstream.nui.indexer.ElementIndex.EdgeIndex#isDirected()
+		 * @see
+		 * org.graphstream.graph.implementations.AbstractElement#setIndex(int)
 		 */
 		@Override
-		public boolean isDirected() {
-			return directed;
+		protected void setIndex(int index) {
+			super.setIndex(index);
 		}
 	}
 }

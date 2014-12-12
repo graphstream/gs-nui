@@ -58,4 +58,10 @@ public interface ElementIndex {
 
 		boolean isDirected();
 	}
+
+	public static interface NodeIndex extends ElementIndex {
+		int getDegree();
+
+		EdgeIndex getEdgeIndex(int i);
+	}
 }

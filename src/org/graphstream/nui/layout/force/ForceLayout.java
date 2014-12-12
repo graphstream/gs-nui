@@ -35,8 +35,13 @@ import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UISwapper;
 import org.graphstream.nui.UISwapper.ValueFactory;
 import org.graphstream.nui.indexer.ElementIndex;
+import org.graphstream.nui.indexer.ElementIndex.EdgeIndex;
+import org.graphstream.nui.indexer.ElementIndex.NodeIndex;
 import org.graphstream.nui.indexer.ElementIndex.Type;
 import org.graphstream.nui.layout.BaseLayout;
+import org.graphstream.nui.spacePartition.SpaceCell;
+import org.graphstream.nui.spacePartition.data.BarycenterData;
+import org.graphstream.nui.spacePartition.data.SpaceCellDataIndex;
 import org.graphstream.nui.swapper.UIArrayReference;
 
 public abstract class ForceLayout extends BaseLayout {
@@ -55,8 +60,10 @@ public abstract class ForceLayout extends BaseLayout {
 	protected UIArrayReference<Particle> particles;
 
 	protected UIArrayReference<Spring> springs;
-	
+
 	protected Energies energies;
+
+	protected SpaceCellDataIndex barycenterIndex;
 
 	protected ForceLayout() {
 		super(UISwapper.MODULE_ID);
@@ -105,6 +112,23 @@ public abstract class ForceLayout extends BaseLayout {
 						return createSpring(index);
 					}
 				});
+
+		barycenterIndex = spacePartition
+				.addSpaceCellData(BarycenterData.FACTORY);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.AbstractModule#release()
+	 */
+	@Override
+	public void release() {
+		spacePartition.removeSpaceCellData(barycenterIndex);
+		springs.release();
+		particles.release();
+
+		super.release();
 	}
 
 	public double getForce() {
@@ -124,7 +148,20 @@ public abstract class ForceLayout extends BaseLayout {
 	}
 
 	public void compute() {
-		
+
+	}
+
+	protected double getAttractionWeight(NodeIndex source, EdgeIndex target) {
+		return dataset.getElementWeight(target);
+	}
+
+	protected double getRepulsionWeight(NodeIndex source, NodeIndex target) {
+		return dataset.getElementWeight(target);
+	}
+
+	protected double getRepulsionWeight(NodeIndex source, SpaceCell target) {
+		BarycenterData data = (BarycenterData) target.getData(barycenterIndex);
+		return data.getWeight();
 	}
 
 	protected abstract Particle createParticle(ElementIndex index);

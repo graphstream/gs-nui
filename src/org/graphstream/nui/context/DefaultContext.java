@@ -31,7 +31,24 @@
  */
 package org.graphstream.nui.context;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class DefaultContext extends AbstractContext {
+	protected ScheduledExecutorService executor;
+	protected Runnable ticker = new Runnable() {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.lang.Runnable#run()
+		 */
+		@Override
+		public void run() {
+			tick();
+		}
+	};
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -51,6 +68,7 @@ public class DefaultContext extends AbstractContext {
 	 */
 	@Override
 	protected void internalInit() {
+		createExecutor();
 	}
 
 	/*
@@ -60,5 +78,27 @@ public class DefaultContext extends AbstractContext {
 	 */
 	@Override
 	protected void internalRelease() {
+		executor.shutdownNow();
+		executor = null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.context.AbstractContext#setTickLength(long,
+	 * java.util.concurrent.TimeUnit)
+	 */
+	@Override
+	public void setTickLength(long tickLength, TimeUnit unit) {
+		super.setTickLength(tickLength, unit);
+
+		ScheduledExecutorService oldExecutor = executor;
+		createExecutor();
+		oldExecutor.shutdown();
+	}
+
+	protected void createExecutor() {
+		executor = Executors.newScheduledThreadPool(1);
+		executor.scheduleAtFixedRate(ticker, 100, tickLength, tickLengthUnits);
 	}
 }

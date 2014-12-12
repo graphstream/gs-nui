@@ -29,44 +29,10 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui;
+package org.graphstream.nui.context;
 
-public interface UIModule {
-	public static final int HIGH_PRIORITY = 100;
-	public static final int LOW_PRIORITY = 10;
-	public static final int DEFAULT_PRIORITY = 50;
+public interface TickTask extends Runnable {
+	int getCycleLength();
 
-	/**
-	 * Get the unique identifier linked to this module.
-	 * 
-	 * @return the module id
-	 */
-	String getModuleID();
-
-	/**
-	 * Get the id of modules which this module is depending.
-	 * 
-	 * @return
-	 */
-	Iterable<String> getModuleDeps();
-
-	/**
-	 * 
-	 * @param ctx
-	 */
-	void init(UIContext ctx);
-
-	/**
-	 * 
-	 */
-	void release();
-
-	/**
-	 * 
-	 * @param key
-	 * @param value
-	 */
-	void setAttribute(String key, Object value);
-
-	UIContext getContext();
+	boolean isPeriodic();
 }

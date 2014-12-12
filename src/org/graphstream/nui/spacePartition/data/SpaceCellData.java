@@ -31,8 +31,9 @@
  */
 package org.graphstream.nui.spacePartition.data;
 
+import org.graphstream.nui.UIContext;
 import org.graphstream.nui.spacePartition.SpaceCell;
 
 public interface SpaceCellData {
-	void compute(SpaceCell cell);
+	void compute(UIContext ctx, SpaceCell cell);
 }

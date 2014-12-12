@@ -34,6 +34,9 @@ package org.graphstream.nui.context;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -82,6 +85,14 @@ public abstract class AbstractContext implements UIContext {
 	 * The proxy used to dispatch events from the sources to the ui components.
 	 */
 	protected Pipe proxy;
+
+	protected Map<String, TickTaskWrapper> tasks;
+
+	protected DelayQueue<TickTaskWrapper> tasksQueue;
+
+	protected long tickLength;
+
+	protected TimeUnit tickLengthUnits;
 
 	//
 	// Lock used to manage the waitForInitialization method.
@@ -132,6 +143,10 @@ public abstract class AbstractContext implements UIContext {
 			break;
 		}
 
+		tickLength = 1000 / 30;
+		tickLengthUnits = TimeUnit.MILLISECONDS;
+		tasksQueue = new DelayQueue<TickTaskWrapper>();
+
 		try {
 			invokeOnUIThread(new Runnable() {
 				public void run() {
@@ -169,6 +184,58 @@ public abstract class AbstractContext implements UIContext {
 	 * release this context should be defined in this method.
 	 */
 	protected abstract void internalRelease();
+
+	protected void tick() {
+		assert Thread.currentThread() == thread;
+
+		sync();
+
+		TickTaskWrapper ttw;
+
+		while ((ttw = tasksQueue.poll()) != null) {
+			ttw.resetNextExecutionDate();
+			ttw.run();
+
+			if (ttw.task.isPeriodic())
+				tasksQueue.add(ttw);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIContext#addTickTask(java.lang.String,
+	 * org.graphstream.nui.context.TickTask)
+	 */
+	@Override
+	public void addTickTask(String id, TickTask task) {
+		TickTaskWrapper ttw = new TickTaskWrapper(task);
+
+		tasks.put(id, ttw);
+		tasksQueue.offer(ttw);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIContext#removeTickTask(java.lang.String)
+	 */
+	@Override
+	public void removeTickTask(String id) {
+		TickTaskWrapper ttw = tasks.remove(id);
+
+		if (id == null) {
+			LOGGER.warning("no such task " + id);
+			return;
+		}
+
+		tasksQueue.remove(ttw);
+	}
+
+	public void setTickLength(long tickLength, TimeUnit unit) {
+		this.tickLength = tickLength;
+		this.tickLengthUnits = unit;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -427,9 +494,59 @@ public abstract class AbstractContext implements UIContext {
 
 	protected void checkThread() {
 		if (Thread.currentThread() != thread) {
-			Logger.getLogger(AbstractContext.class.getName())
-					.warning(
-							"Manipulating modules or views outside of the context thread may cause concurrent exceptions. Don't blame the devs.");
+			Logger.getLogger(AbstractContext.class.getName()).warning(
+					"Manipulating modules or views outside of "
+							+ "the context thread may cause "
+							+ "concurrent exceptions. Don't blame the devs.");
+		}
+	}
+
+	class TickTaskWrapper implements Delayed, Runnable {
+		protected final TickTask task;
+		protected long nextExecutionDate;
+
+		TickTaskWrapper(TickTask task) {
+			this.task = task;
+			resetNextExecutionDate();
+		}
+
+		protected void resetNextExecutionDate() {
+			nextExecutionDate = System.currentTimeMillis()
+					+ TimeUnit.MILLISECONDS.convert(task.getCycleLength()
+							* tickLength, tickLengthUnits);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.lang.Comparable#compareTo(java.lang.Object)
+		 */
+		@Override
+		public int compareTo(Delayed o) {
+			return Long.compare(getDelay(TimeUnit.MILLISECONDS),
+					o.getDelay(TimeUnit.MILLISECONDS));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.util.concurrent.Delayed#getDelay(java.util.concurrent.TimeUnit)
+		 */
+		@Override
+		public long getDelay(TimeUnit unit) {
+			return unit.convert(nextExecutionDate - System.currentTimeMillis(),
+					TimeUnit.MILLISECONDS);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.lang.Runnable#run()
+		 */
+		@Override
+		public void run() {
+			task.run();
 		}
 	}
 }

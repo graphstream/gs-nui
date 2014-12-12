@@ -37,10 +37,13 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.graphstream.nui.AbstractModule;
+import org.graphstream.nui.UIAttributes;
+import org.graphstream.nui.UIAttributes.AttributeType;
 import org.graphstream.nui.UISwapper;
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.UIIndexer;
+import org.graphstream.nui.attributes.AttributeHandler;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.ElementIndex.EdgeIndex;
 import org.graphstream.nui.indexer.ElementIndex.Type;
@@ -57,15 +60,24 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	private static final Logger LOGGER = Logger.getLogger(DefaultDataset.class
 			.getName());
 
+	public static final double DEFAULT_NODE_WEIGHT = 1.0;
+	public static final double DEFAULT_EDGE_WEIGHT = 1.0;
+
 	protected int dim;
 	protected UIBufferReference nodesPoints;
 	protected UIArrayReference<EdgeData> edgesData;
 	protected UIIndexer indexer;
 	protected List<DatasetListener> listeners;
 	protected CoordinatesListener coordinatesListener;
+	protected double defaultNodeWeight = DEFAULT_NODE_WEIGHT;
+	protected double defaultEdgeWeight = DEFAULT_EDGE_WEIGHT;
+	protected UIBufferReference nodesWeight;
+	protected UIBufferReference edgesWeight;
+	protected AttributeHandler weightHandler;
 
 	public DefaultDataset() {
-		super(MODULE_ID, UIIndexer.MODULE_ID, UISwapper.MODULE_ID);
+		super(MODULE_ID, UIIndexer.MODULE_ID, UISwapper.MODULE_ID,
+				UIAttributes.MODULE_ID);
 
 		listeners = new LinkedList<DatasetListener>();
 		coordinatesListener = new CoordinatesListener();
@@ -109,6 +121,32 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 						return new EdgeData();
 					}
 				});
+
+		weightHandler = new AttributeHandler() {
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.graphstream.nui.attributes.AttributeHandler#
+			 * handleAttribute(org.graphstream.nui.indexer.ElementIndex,
+			 * java.lang.String, java.lang.Object)
+			 */
+			@Override
+			public void handleAttribute(ElementIndex index, String attributeId,
+					Object value) {
+				try {
+					setElementWeight(index, Tools.checkAndGetDouble(value));
+				} catch (IllegalArgumentException e) {
+					LOGGER.warning(String.format(
+							"invalid weight value for %s : %s", index, value));
+				}
+			}
+		};
+
+		UIAttributes attributes = (UIAttributes) ctx
+				.getModule(UIAttributes.MODULE_ID);
+
+		attributes.registerUIAttributeHandler(AttributeType.ELEMENT, "weight",
+				weightHandler);
 	}
 
 	/*
@@ -120,6 +158,23 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	public void release() {
 		indexer = null;
 		ctx.getContextProxy().removeAttributeSink(coordinatesListener);
+
+		nodesPoints.release();
+		edgesData.release();
+
+		if (nodesWeight != null)
+			nodesWeight.release();
+		nodesWeight = null;
+
+		if (edgesWeight != null)
+			edgesWeight.release();
+		edgesWeight = null;
+
+		UIAttributes attributes = (UIAttributes) ctx
+				.getModule(UIAttributes.MODULE_ID);
+
+		attributes.unregisterUIAttributeHandler(AttributeType.ELEMENT,
+				"weight", weightHandler);
 
 		super.release();
 	}
@@ -333,6 +388,80 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	@Override
 	public void addDatasetListener(DatasetListener l) {
 		listeners.add(l);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.UIDataset#getElementWeight(org.graphstream.nui.indexer
+	 * .ElementIndex)
+	 */
+	@Override
+	public double getElementWeight(ElementIndex index) {
+		switch (index.getType()) {
+		case EDGE:
+			return edgesWeight == null ? defaultEdgeWeight : edgesWeight
+					.getDouble(index, 0);
+		case NODE:
+			return nodesWeight == null ? defaultNodeWeight : nodesWeight
+					.getDouble(index, 0);
+		default:
+			LOGGER.warning(index.getType().name() + " type don't have a weight");
+			break;
+
+		}
+
+		return 1.0;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.UIDataset#setElementWeight(org.graphstream.nui.indexer
+	 * .ElementIndex, double)
+	 */
+	@Override
+	public void setElementWeight(ElementIndex index, double weight) {
+		switch (index.getType()) {
+		case EDGE:
+			if (edgesWeight == null) {
+				UISwapper swapper = (UISwapper) ctx
+						.getModule(UISwapper.MODULE_ID);
+
+				edgesWeight = swapper.createBuffer(Type.EDGE, 1,
+						UIBufferReference.SIZE_DOUBLE, false, null);
+
+				for (int idx = 0; idx < indexer.getEdgeCount(); idx++)
+					edgesWeight.setDouble(indexer.getEdgeIndex(idx), 0,
+							defaultEdgeWeight);
+			}
+
+			edgesWeight.setDouble(index, 0, weight);
+
+			break;
+		case NODE:
+			if (nodesWeight == null) {
+				UISwapper swapper = (UISwapper) ctx
+						.getModule(UISwapper.MODULE_ID);
+
+				nodesWeight = swapper.createBuffer(Type.NODE, 1,
+						UIBufferReference.SIZE_DOUBLE, false, null);
+
+				for (int idx = 0; idx < indexer.getNodeCount(); idx++)
+					nodesWeight.setDouble(indexer.getNodeIndex(idx), 0,
+							defaultNodeWeight);
+			}
+
+			nodesWeight.setDouble(index, 0, weight);
+
+			break;
+		default:
+			LOGGER.warning(index.getType().name() + " type don't have a weight");
+			break;
+
+		}
 	}
 
 	/*

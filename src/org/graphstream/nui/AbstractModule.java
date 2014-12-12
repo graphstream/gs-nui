@@ -101,8 +101,18 @@ public abstract class AbstractModule implements UIModule {
 		//
 		// Classes have to override this method.
 		//
-		
+
 		Logger.getLogger(getClass().getName()).info(
 				"set attribute \"" + key + "\" to " + value);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIModule#getContext()
+	 */
+	@Override
+	public UIContext getContext() {
+		return ctx;
 	}
 }

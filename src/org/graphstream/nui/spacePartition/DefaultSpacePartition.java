@@ -404,7 +404,7 @@ public class DefaultSpacePartition extends AbstractModule implements
 	}
 
 	@SuppressWarnings("serial")
-	static class DataSetPool extends HashMap<SpaceCell, DefaultDataSet> {
+	class DataSetPool extends HashMap<SpaceCell, DefaultDataSet> {
 		final LinkedList<SpaceCellDataFactory> factories;
 		final LinkedList<DataIndex> indexes;
 
@@ -421,7 +421,7 @@ public class DefaultSpacePartition extends AbstractModule implements
 
 			for (int i = 0; i < factories.size(); i++) {
 				SpaceCellData data = factories.get(i).createNewData(cell);
-				data.compute(cell);
+				data.compute(ctx, cell);
 				dataset.add(data);
 			}
 		}
@@ -433,7 +433,7 @@ public class DefaultSpacePartition extends AbstractModule implements
 				DefaultDataSet dataset = entry.getValue();
 				SpaceCellData data = factory.createNewData(entry.getKey());
 
-				data.compute(entry.getKey());
+				data.compute(ctx, entry.getKey());
 				dataset.add(data);
 			}
 

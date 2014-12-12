@@ -33,9 +33,4 @@ package org.graphstream.nui.layout.force;
 
 public class Spring {
 	protected boolean ignored;
-	
-	public double getWeight() {
-		// TODO
-		return 1.0;
-	}
 }

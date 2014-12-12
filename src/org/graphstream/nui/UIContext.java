@@ -31,6 +31,7 @@
  */
 package org.graphstream.nui;
 
+import org.graphstream.nui.context.TickTask;
 import org.graphstream.stream.Pipe;
 import org.graphstream.stream.Source;
 
@@ -98,6 +99,10 @@ public interface UIContext {
 	 */
 	void invokeOnUIThread(Runnable r) throws InterruptedException;
 
+	void addTickTask(String id, TickTask task);
+
+	void removeTickTask(String id);
+
 	/**
 	 * This context has to be connected to at least one source. This has to be
 	 * done INSIDE the thread of the source, and after the initialization. One
@@ -122,8 +127,8 @@ public interface UIContext {
 	void sync();
 
 	/**
-	 * This context can be released when it is no more in use. All modules will be
-	 * released and all views will be closed.
+	 * This context can be released when it is no more in use. All modules will
+	 * be released and all views will be closed.
 	 * 
 	 */
 	void release();

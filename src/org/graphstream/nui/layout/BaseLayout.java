@@ -40,6 +40,7 @@ import java.util.logging.Logger;
 import org.graphstream.nui.AbstractModule;
 import org.graphstream.nui.ModuleNotFoundException;
 import org.graphstream.nui.UIContext;
+import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.UILayout;
 import org.graphstream.nui.UISpace;
@@ -55,10 +56,10 @@ public class BaseLayout extends AbstractModule implements UILayout {
 	// Join two arrays of String, avoiding repeat.
 	//
 	private static String[] join(String[] a1, String... a2) {
-		if (a1 == null)
+		if (a1 == null || a1.length == 0)
 			return a2;
 
-		if (a2 == null)
+		if (a2 == null || a2.length == 0)
 			return a1;
 
 		HashSet<String> a = new HashSet<String>();
@@ -84,6 +85,8 @@ public class BaseLayout extends AbstractModule implements UILayout {
 
 	protected UISpace space;
 
+	protected UIDataset dataset;
+
 	protected UISpacePartition spacePartition;
 
 	protected LayoutStatistics stats;
@@ -100,7 +103,8 @@ public class BaseLayout extends AbstractModule implements UILayout {
 	protected long randomSeed = Long.MAX_VALUE;
 
 	protected BaseLayout(String... extDeps) {
-		super(MODULE_ID, join(extDeps, UIIndexer.MODULE_ID, UISpace.MODULE_ID));
+		super(MODULE_ID, join(extDeps, UIIndexer.MODULE_ID, UISpace.MODULE_ID,
+				UIDataset.MODULE_ID));
 	}
 
 	/*
@@ -118,6 +122,9 @@ public class BaseLayout extends AbstractModule implements UILayout {
 
 		space = (UISpace) ctx.getModule(UISpace.MODULE_ID);
 		assert space != null;
+
+		dataset = (UIDataset) ctx.getModule(UIDataset.MODULE_ID);
+		assert dataset != null;
 
 		stats = new LayoutStatistics();
 

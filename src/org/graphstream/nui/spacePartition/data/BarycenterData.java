@@ -31,22 +31,82 @@
  */
 package org.graphstream.nui.spacePartition.data;
 
+import org.graphstream.nui.UIContext;
+import org.graphstream.nui.UIDataset;
+import org.graphstream.nui.indexer.ElementIndex;
+import org.graphstream.nui.indexer.ElementIndex.NodeIndex;
 import org.graphstream.nui.spacePartition.SpaceCell;
 import org.graphstream.ui.geom.Point3;
 
 public class BarycenterData implements SpaceCellData {
+	public static final SpaceCellDataFactory FACTORY = new SpaceCellDataFactory() {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.spacePartition.data.SpaceCellDataFactory#
+		 * createNewData(org.graphstream.nui.spacePartition.SpaceCell)
+		 */
+		@Override
+		public SpaceCellData createNewData(SpaceCell cell) {
+			return new BarycenterData();
+		}
+	};
+
 	protected Point3 barycenter;
-	
+	protected double weight;
+	protected double degree;
+
+	public BarycenterData() {
+		barycenter = new Point3();
+		weight = 0;
+		degree = 0;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see
 	 * org.graphstream.nui.spacePartition.data.SpaceCellData#compute(org.graphstream
-	 * .nui.spacePartition.SpaceCell)
+	 * .nui.UIContext, org.graphstream.nui.spacePartition.SpaceCell)
 	 */
 	@Override
-	public void compute(SpaceCell cell) {
-		// TODO Auto-generated method stub
+	public void compute(UIContext ctx, SpaceCell cell) {
+		double x = 0;
+		double y = 0;
+		double z = 0;
+		double[] xyz = new double[3];
 
+		weight = 0;
+
+		UIDataset dataset = (UIDataset) ctx.getModule(UIDataset.MODULE_ID);
+
+		for (ElementIndex index : cell) {
+			dataset.getNodeXYZ(index, xyz);
+
+			x += xyz[0];
+			y += xyz[1];
+			z += xyz[2];
+
+			weight += dataset.getElementWeight(index);
+			degree += ((NodeIndex) index).getDegree();
+		}
+
+		x /= cell.getElementCount();
+		y /= cell.getElementCount();
+		z /= cell.getElementCount();
+
+		barycenter.set(x, y, z);
+	}
+
+	public Point3 getBarycenter() {
+		return barycenter;
+	}
+
+	public double getWeight() {
+		return weight;
+	}
+
+	public double getDegree() {
+		return degree;
 	}
 }

@@ -39,6 +39,7 @@ import java.util.logging.Logger;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.DefaultGraph;
 import org.graphstream.nui.UIContext.ThreadingModel;
+import org.graphstream.nui.context.DefaultContext;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.IndexerListener;
 import org.graphstream.nui.indexer.ElementIndex.Type;
@@ -84,20 +85,20 @@ public class Demo {
 		z.addAttribute("ui.color", 0.5);
 
 		Node y = g.addNode("Y");
-		g.addNode("W");
+		g.addNode("W").addAttribute("ui.weight", 10.0);
 		g.addEdge("ZW", "Z", "W");
-		//g.removeNode("Z");
+		// g.removeNode("Z");
 
 		try {
 			ctx.invokeOnUIThread(new Runnable() {
 				public void run() {
-					mainUIThread(ctx);
+					// mainUIThread(ctx);
 				}
 			});
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}
-		
+
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
@@ -115,6 +116,8 @@ public class Demo {
 		UISwapper buffers = (UISwapper) ctx.getModule(UISwapper.MODULE_ID);
 		UIBufferReference ref = buffers.createBuffer(Type.NODE, 3,
 				Double.SIZE / 8, true, null);
+
+		UIDataset dataset = (UIDataset) ctx.getModule(UIDataset.MODULE_ID);
 
 		print(ref.buffer().asDoubleBuffer());
 
@@ -141,6 +144,9 @@ public class Demo {
 			System.err.printf("%s : 0x%X%n", idx, style.getElementStyle(idx)
 					.getColor());
 		}
+
+		System.err.printf("weight of %s is %f%n", w,
+				dataset.getElementWeight(w));
 	}
 
 	static void print(DoubleBuffer buffer) {

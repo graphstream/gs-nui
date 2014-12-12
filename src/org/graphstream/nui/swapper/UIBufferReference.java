@@ -36,6 +36,12 @@ import java.nio.ByteBuffer;
 import org.graphstream.nui.indexer.ElementIndex;
 
 public interface UIBufferReference {
+	public static final int SIZE_INT = Integer.SIZE / 8;
+	public static final int SIZE_SHORT = Short.SIZE / 8;
+	public static final int SIZE_LONG = Long.SIZE / 8;
+	public static final int SIZE_FLOAT = Float.SIZE / 8;
+	public static final int SIZE_DOUBLE = Double.SIZE / 8;
+
 	ByteBuffer buffer();
 
 	void release();

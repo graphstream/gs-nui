@@ -32,10 +32,13 @@
 package org.graphstream.nui.layout.force.springbox;
 
 import org.graphstream.nui.indexer.ElementIndex;
+import org.graphstream.nui.indexer.ElementIndex.NodeIndex;
 import org.graphstream.nui.layout.force.ForceLayout;
 import org.graphstream.nui.layout.force.Particle;
 import org.graphstream.nui.layout.force.Spring;
 import org.graphstream.nui.spacePartition.SpaceCell;
+import org.graphstream.nui.spacePartition.data.BarycenterData;
+import org.graphstream.ui.geom.Point3;
 import org.graphstream.ui.geom.Vector3;
 
 public class LinLogLayout extends ForceLayout {
@@ -62,6 +65,38 @@ public class LinLogLayout extends ForceLayout {
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see org.graphstream.nui.layout.force.ForceLayout#getRepulsionWeight(org.
+	 * graphstream.nui.indexer.ElementIndex.NodeIndex,
+	 * org.graphstream.nui.indexer.ElementIndex.NodeIndex)
+	 */
+	@Override
+	protected double getRepulsionWeight(NodeIndex source, NodeIndex target) {
+		double degFactor = edgeBased ? source.getDegree() * target.getDegree()
+				: 1;
+
+		return degFactor * dataset.getElementWeight(source)
+				* dataset.getElementWeight(target);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.layout.force.ForceLayout#getRepulsionWeight(org.
+	 * graphstream.nui.indexer.ElementIndex.NodeIndex,
+	 * org.graphstream.nui.spacePartition.SpaceCell)
+	 */
+	@Override
+	protected double getRepulsionWeight(NodeIndex source, SpaceCell target) {
+		BarycenterData data = (BarycenterData) target.getData(barycenterIndex);
+		double degFactor = edgeBased ? source.getDegree() * data.getDegree()
+				: 1;
+
+		return degFactor * dataset.getElementWeight(source) * data.getWeight();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see
 	 * org.graphstream.nui.layout.force.ForceLayout#createParticle(org.graphstream
 	 * .nui.indexer.ElementIndex)
@@ -80,27 +115,27 @@ public class LinLogLayout extends ForceLayout {
 	 */
 	@Override
 	protected Spring createSpring(ElementIndex index) {
-		// TODO Auto-generated method stub
-		return null;
+		return new Spring();
 	}
 
 	class LinLogParticle extends Particle {
+
 		/*
 		 * (non-Javadoc)
 		 * 
 		 * @see
 		 * org.graphstream.nui.layout.force.Particle#attraction(org.graphstream
-		 * .nui.layout.force.Particle, org.graphstream.nui.layout.force.Spring)
+		 * .ui.geom.Point3, double)
 		 */
 		@Override
-		public void attraction(Particle other, Spring spring) {
-			delta.set(other.x() - x(), other.y() - y(), other.z() - z());
+		public void attraction(Point3 p, double weight) {
+			delta.set(p.x - x(), p.y - y(), p.z - z());
 			double len = delta.length();
 
 			if (len > 0) {
 				double factor = 1;
 
-				factor = (Math.pow(len, a - 2)) * spring.getWeight() * aFactor;
+				factor = (Math.pow(len, a - 2)) * weight * aFactor;
 				energies.accumulateEnergy(factor);
 
 				delta.scalarMult(factor);
@@ -113,41 +148,23 @@ public class LinLogLayout extends ForceLayout {
 		 * 
 		 * @see
 		 * org.graphstream.nui.layout.force.Particle#repulsion(org.graphstream
-		 * .nui.layout.force.Particle)
+		 * .ui.geom.Point3, double)
 		 */
 		@Override
-		public void repulsion(Particle other) {
-			delta.set(other.x() - x(), other.y() - y(), other.z() - z());
+		public void repulsion(Point3 p, double weight) {
+			delta.set(p.x - x(), p.y - y(), p.z - z());
 			double len = delta.length();
 
 			if (len > 0) {
-				double degFactor = edgeBased ? degree() * other.degree() : 1;
-				double factor = 1;
+				double factor = -weight * (Math.pow(len, r - 2)) * rFactor;
 
-				factor = -degFactor * (Math.pow(len, r - 2)) * other.weight()
-						* weight() * rFactor;
-
-				if (factor < -maxR) {
+				if (factor < -maxR)
 					factor = -maxR;
-				}
 
 				energies.accumulateEnergy(factor); // TODO check this
 				delta.scalarMult(factor);
 				displacement.add(delta);
 			}
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.layout.force.Particle#repulsion(org.graphstream
-		 * .nui.spacePartition.SpaceCell)
-		 */
-		@Override
-		public void repulsion(SpaceCell baryFriends) {
-			// TODO Auto-generated method stub
-
 		}
 	}
 }

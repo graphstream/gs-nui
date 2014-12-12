@@ -31,17 +31,15 @@
  */
 package org.graphstream.nui.layout.force;
 
-import org.graphstream.nui.spacePartition.SpaceCell;
+import org.graphstream.ui.geom.Point3;
 import org.graphstream.ui.geom.Vector3;
 
 public abstract class Particle {
 	protected Vector3 displacement;
 
-	public abstract void attraction(Particle friend, Spring spring);
+	public abstract void attraction(Point3 p, double weight);
 
-	public abstract void repulsion(Particle notFriend);
-
-	public abstract void repulsion(SpaceCell baryFriends);
+	public abstract void repulsion(Point3 p, double weight);
 
 	public double x() {
 		return 0;

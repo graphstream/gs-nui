@@ -123,7 +123,7 @@ public abstract class BaseSpaceCell implements SpaceCell {
 
 	protected void computeData() {
 		for (SpaceCellData data : datas)
-			data.compute(this);
+			data.compute(spacePartition.getContext(), this);
 
 		changed = false;
 	}
