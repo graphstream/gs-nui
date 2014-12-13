@@ -31,20 +31,33 @@
  */
 package org.graphstream.nui.layout.force;
 
+import java.util.logging.Logger;
+
+import org.graphstream.nui.UIAttributes;
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UISwapper;
+import org.graphstream.nui.UIAttributes.AttributeType;
 import org.graphstream.nui.UISwapper.ValueFactory;
+import org.graphstream.nui.attributes.AttributeHandler;
+import org.graphstream.nui.dataset.DataProvider;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.ElementIndex.EdgeIndex;
 import org.graphstream.nui.indexer.ElementIndex.NodeIndex;
 import org.graphstream.nui.indexer.ElementIndex.Type;
 import org.graphstream.nui.layout.BaseLayout;
+import org.graphstream.nui.space.Bounds;
 import org.graphstream.nui.spacePartition.SpaceCell;
+import org.graphstream.nui.spacePartition.TreeSpaceCell;
+import org.graphstream.nui.spacePartition.TreeSpacePartition;
 import org.graphstream.nui.spacePartition.data.BarycenterData;
 import org.graphstream.nui.spacePartition.data.SpaceCellDataIndex;
 import org.graphstream.nui.swapper.UIArrayReference;
+import org.graphstream.nui.util.Tools;
+import org.graphstream.ui.geom.Point3;
 
 public abstract class ForceLayout extends BaseLayout {
+	private static final Logger LOGGER = Logger.getLogger(ForceLayout.class
+			.getName());
 
 	/**
 	 * Global force strength. This is a factor in [0..1] that is used to scale
@@ -64,6 +77,10 @@ public abstract class ForceLayout extends BaseLayout {
 	protected Energies energies;
 
 	protected SpaceCellDataIndex barycenterIndex;
+
+	protected double barnesHutTheta = .7f;
+
+	protected DataProvider dataProvider = new ParticlesDataProvider();
 
 	protected ForceLayout() {
 		super(UISwapper.MODULE_ID);
@@ -113,8 +130,64 @@ public abstract class ForceLayout extends BaseLayout {
 					}
 				});
 
-		barycenterIndex = spacePartition
-				.addSpaceCellData(BarycenterData.FACTORY);
+		UIAttributes attributes = (UIAttributes) ctx
+				.getModule(UIAttributes.MODULE_ID);
+
+		attributes.registerUIAttributeHandler(AttributeType.NODE, "frozen",
+				new AttributeHandler() {
+					/*
+					 * (non-Javadoc)
+					 * 
+					 * @see org.graphstream.nui.attributes.AttributeHandler#
+					 * handleAttribute(org.graphstream.nui.indexer.ElementIndex,
+					 * java.lang.String, java.lang.Object)
+					 */
+					@Override
+					public void handleAttribute(ElementIndex index,
+							String attributeId, Object value) {
+						particles.get(index, 0).setFrozen(
+								Tools.checkAndGetBoolean(value, true));
+					}
+				});
+
+		attributes.registerUIAttributeHandler(AttributeType.EDGE, "ignored",
+				new AttributeHandler() {
+					/*
+					 * (non-Javadoc)
+					 * 
+					 * @see org.graphstream.nui.attributes.AttributeHandler#
+					 * handleAttribute(org.graphstream.nui.indexer.ElementIndex,
+					 * java.lang.String, java.lang.Object)
+					 */
+					@Override
+					public void handleAttribute(ElementIndex index,
+							String attributeId, Object value) {
+						springs.get(index, 0).setIgnored(
+								Tools.checkAndGetBoolean(value, true));
+					}
+				});
+
+		energies = new Energies();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.layout.BaseLayout#enableSpacePartition(boolean)
+	 */
+	@Override
+	public void enableSpacePartition(boolean on) {
+		if (!on && spacePartition != null && barycenterIndex != null) {
+			spacePartition.removeSpaceCellData(barycenterIndex);
+			barycenterIndex = null;
+		}
+
+		super.enableSpacePartition(on);
+
+		if (spacePartition != null) {
+			barycenterIndex = spacePartition
+					.addSpaceCellData(BarycenterData.FACTORY);
+		}
 	}
 
 	/*
@@ -124,7 +197,9 @@ public abstract class ForceLayout extends BaseLayout {
 	 */
 	@Override
 	public void release() {
-		spacePartition.removeSpaceCellData(barycenterIndex);
+		if (spacePartition != null && barycenterIndex != null)
+			spacePartition.removeSpaceCellData(barycenterIndex);
+
 		springs.release();
 		particles.release();
 
@@ -147,8 +222,174 @@ public abstract class ForceLayout extends BaseLayout {
 		this.stabilizationLimit = value;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.layout.BaseLayout#compute()
+	 */
+	@Override
 	public void compute() {
+		Point3 p1 = new Point3();
+		Point3 p2 = new Point3();
 
+		//
+		// Attraction
+		//
+		for (int i = 0; i < dataset.getEdgeCount(); i++) {
+			EdgeIndex e = indexer.getEdgeIndex(i);
+
+			if (springs.get(e, 0).isIgnored())
+				continue;
+
+			NodeIndex n1 = e.getSource();
+			NodeIndex n2 = e.getTarget();
+			Particle part1 = particles.get(n1, 0);
+			Particle part2 = particles.get(n2, 0);
+
+			dataset.getNodeXYZ(n1, p1);
+			dataset.getNodeXYZ(n2, p2);
+
+			if (!part1.isFrozen())
+				part1.attraction(p2, getAttractionWeight(n1, e));
+
+			if (!e.isDirected() && !part2.isFrozen())
+				particles.get(n2, 0).attraction(p1, getAttractionWeight(n2, e));
+		}
+
+		//
+		// Repulsion
+		//
+		if (enableSpacePartition)
+			computeRepulsionWithSpacePartition();
+		else
+			computeRepulsion();
+
+		double len;
+
+		for (int i = 0; i < indexer.getNodeCount(); i++) {
+			NodeIndex index = indexer.getNodeIndex(i);
+			Particle p = particles.get(index, 0);
+
+			if (p.isFrozen())
+				continue;
+
+			p.displacement.scalarMult(force);
+			len = p.displacement.length();
+
+			if (len > (space.getBounds().getDiagonal() / 2))
+				p.displacement.scalarMult((space.getBounds().getDiagonal() / 2)
+						/ len);
+		}
+
+		energies.storeEnergy();
+	}
+
+	protected void computeRepulsion() {
+		Point3 p1 = new Point3();
+		Point3 p2 = new Point3();
+		double w;
+
+		for (int i = 0; i < dataset.getNodeCount() - 1; i++) {
+			NodeIndex n1 = indexer.getNodeIndex(i);
+			Particle part1 = particles.get(n1, 0);
+
+			dataset.getNodeXYZ(n1, p1);
+
+			for (int j = i + 1; j < dataset.getNodeCount(); j++) {
+				NodeIndex n2 = indexer.getNodeIndex(j);
+				Particle part2 = particles.get(n2, 0);
+
+				dataset.getNodeXYZ(n2, p2);
+
+				if (!n1.isConnectedTo(n2)) {
+					w = getRepulsionWeight(n1, n2);
+
+					if (!part1.isFrozen())
+						particles.get(n1, 0).repulsion(p2, w);
+
+					if (!part2.isFrozen())
+						particles.get(n2, 0).repulsion(p1, w);
+				}
+			}
+		}
+	}
+
+	protected void computeRepulsionWithSpacePartition() {
+		if (spacePartition instanceof TreeSpacePartition) {
+			TreeSpacePartition tree = (TreeSpacePartition) spacePartition;
+
+			Point3 p1 = new Point3();
+			Point3 p2 = new Point3();
+
+			for (int i = 0; i < dataset.getNodeCount(); i++) {
+				NodeIndex n1 = indexer.getNodeIndex(i);
+				Particle part1 = particles.get(n1, 0);
+
+				dataset.getNodeXYZ(n1, p1);
+
+				if (!part1.isFrozen())
+					computeRepulsionRecursive(n1, p1, p2, tree.getRootCell());
+			}
+		} else {
+			LOGGER.warning("can only use a tree space partition");
+			computeRepulsion();
+		}
+	}
+
+	protected void computeRepulsionRecursive(NodeIndex n1, Point3 p1,
+			Point3 p2, TreeSpaceCell cell) {
+		//
+		// Cell is close enough
+		//
+		if (intersection(p1, cell)) {
+			//
+			// Cell is a leaf
+			//
+			if (cell.getChildrenCount() == 0) {
+				for (ElementIndex n2 : cell) {
+					dataset.getNodeXYZ(n2, p2);
+
+					particles.get(n1, 0).repulsion(p2,
+							getRepulsionWeight(n1, (NodeIndex) n2));
+				}
+			}
+			//
+			// Not a leaf, check children
+			//
+			else {
+				for (int i = 0; i < cell.getChildrenCount(); i++)
+					computeRepulsionRecursive(n1, p1, p2, cell.getChild(i));
+			}
+		}
+		//
+		// Using barycenter data
+		//
+		else {
+			if (cell != spacePartition.getSpaceCell(n1)) {
+				BarycenterData barycenter = (BarycenterData) cell
+						.getData(barycenterIndex);
+				double dist = p1.distance(barycenter.getBarycenter());
+
+				if (cell.getChildrenCount() > 0
+						&& (cell.getBoundary().getDiagonal() / dist) > barnesHutTheta) {
+					for (int i = 0; i < cell.getChildrenCount(); i++)
+						computeRepulsionRecursive(n1, p1, p2, cell.getChild(i));
+				} else if (barycenter.getWeight() != 0) {
+					particles.get(n1, 0).repulsion(barycenter.getBarycenter(),
+							getRepulsionWeight(n1, cell, barycenter));
+				}
+			}
+		}
+	}
+
+	@Override
+	protected DataProvider getDataProvider() {
+		return dataProvider;
+	}
+
+	@Override
+	protected boolean publishNeeded() {
+		return true;
 	}
 
 	protected double getAttractionWeight(NodeIndex source, EdgeIndex target) {
@@ -159,12 +400,39 @@ public abstract class ForceLayout extends BaseLayout {
 		return dataset.getElementWeight(target);
 	}
 
-	protected double getRepulsionWeight(NodeIndex source, SpaceCell target) {
-		BarycenterData data = (BarycenterData) target.getData(barycenterIndex);
+	protected double getRepulsionWeight(NodeIndex source, SpaceCell target,
+			BarycenterData data) {
 		return data.getWeight();
 	}
 
 	protected abstract Particle createParticle(ElementIndex index);
 
 	protected abstract Spring createSpring(ElementIndex index);
+
+	class ParticlesDataProvider implements DataProvider {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.graphstream.nui.dataset.DataProvider#getNodeXYZ(org.graphstream
+		 * .nui.indexer.ElementIndex, double[])
+		 */
+		@Override
+		public void getNodeXYZ(ElementIndex index, double[] xyz) {
+			Particle p = particles.get(index, 0);
+			Bounds b = space.getBounds();
+			Point3 h = b.getHighestPoint();
+			Point3 l = b.getLowestPoint();
+
+			dataset.getNodeXYZ(index, xyz);
+
+			if (!p.isFrozen()) {
+				xyz[0] += Math.max(Math.min(p.displacement.x(), h.x), l.x);
+				xyz[1] += Math.max(Math.min(p.displacement.y(), h.y), l.y);
+
+				if (space.is3D())
+					xyz[2] += Math.max(Math.min(p.displacement.z(), h.z), l.z);
+			}
+		}
+	}
 }

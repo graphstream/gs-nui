@@ -118,4 +118,12 @@ public class Tools {
 
 		throw new IllegalArgumentException();
 	}
+
+	public static boolean checkAndGetBoolean(Object value, boolean nullIsTrue)
+			throws IllegalArgumentException {
+		if (value == null)
+			return nullIsTrue;
+
+		return checkAndGetBoolean(value);
+	}
 }

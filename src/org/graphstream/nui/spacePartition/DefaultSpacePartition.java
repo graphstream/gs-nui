@@ -368,6 +368,23 @@ public class DefaultSpacePartition extends AbstractModule implements
 		LOGGER.info(String.format("%s in %s%n", nodeIndex, sc));
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.dataset.DatasetListener#allNodesMoved()
+	 */
+	@Override
+	public void allNodesMoved() {
+		double[] xyz = new double[3];
+
+		for (int idx = 0; idx < indexer.getNodeCount(); idx++) {
+			ElementIndex index = indexer.getNodeIndex(idx);
+			dataset.getNodeXYZ(index, xyz);
+
+			nodeMoved(index, xyz[0], xyz[1], xyz[2]);
+		}
+	}
+
 	static class DataIndex implements SpaceCellDataIndex {
 		int index;
 
@@ -427,7 +444,10 @@ public class DefaultSpacePartition extends AbstractModule implements
 		}
 
 		DataIndex add(SpaceCellDataFactory factory) {
-			DataIndex index = new DataIndex(size());
+			DataIndex index = new DataIndex(indexes.size());
+
+			factories.addLast(factory);
+			indexes.addLast(index);
 
 			for (Map.Entry<SpaceCell, DefaultDataSet> entry : entrySet()) {
 				DefaultDataSet dataset = entry.getValue();

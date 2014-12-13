@@ -36,6 +36,7 @@ import org.graphstream.ui.geom.Point3;
 public class Bounds {
 	protected final Point3 lowestPoint;
 	protected final Point3 highestPoint;
+	protected double diagonal;
 
 	public Bounds() {
 		lowestPoint = new Point3();
@@ -71,6 +72,10 @@ public class Bounds {
 		fireBoundsUpdated();
 	}
 
+	public double getDiagonal() {
+		return diagonal;
+	}
+
 	public void set(double lx, double ly, double lz, double hx, double hy,
 			double hz) {
 		lowestPoint.set(lx, ly, lz);
@@ -89,7 +94,7 @@ public class Bounds {
 	}
 
 	protected void fireBoundsUpdated() {
-
+		diagonal = lowestPoint.distance(highestPoint);
 	}
 
 	/*

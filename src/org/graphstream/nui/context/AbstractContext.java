@@ -90,9 +90,9 @@ public abstract class AbstractContext implements UIContext {
 
 	protected DelayQueue<TickTaskWrapper> tasksQueue;
 
-	protected long tickLength;
+	protected long tickLength = 1000 / 30;
 
-	protected TimeUnit tickLengthUnits;
+	protected TimeUnit tickLengthUnits = TimeUnit.MILLISECONDS;
 
 	//
 	// Lock used to manage the waitForInitialization method.
@@ -145,6 +145,7 @@ public abstract class AbstractContext implements UIContext {
 
 		tickLength = 1000 / 30;
 		tickLengthUnits = TimeUnit.MILLISECONDS;
+		tasks = new HashMap<String, TickTaskWrapper>();
 		tasksQueue = new DelayQueue<TickTaskWrapper>();
 
 		try {

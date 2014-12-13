@@ -46,6 +46,8 @@ import org.graphstream.graph.implementations.AdjacencyListNode;
 import org.graphstream.nui.AbstractModule;
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIIndexer;
+import org.graphstream.nui.indexer.ElementIndex.EdgeIndex;
+import org.graphstream.nui.indexer.ElementIndex.NodeIndex;
 
 public class DefaultIndexer extends AbstractModule implements UIIndexer {
 	protected final List<IndexerListener> listeners;
@@ -129,7 +131,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer {
 	 * @see org.graphstream.nui.UIIndexer#getNodeIndex(java.lang.String)
 	 */
 	@Override
-	public ElementIndex getNodeIndex(String nodeId) {
+	public NodeIndex getNodeIndex(String nodeId) {
 		return struct.getNode(nodeId);
 	}
 
@@ -139,7 +141,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer {
 	 * @see org.graphstream.nui.UIIndexer#getEdgeIndex(java.lang.String)
 	 */
 	@Override
-	public ElementIndex getEdgeIndex(String edgeId) {
+	public EdgeIndex getEdgeIndex(String edgeId) {
 		return struct.getEdge(edgeId);
 	}
 
@@ -160,7 +162,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer {
 	 * @see org.graphstream.nui.UIIndexer#getNodeIndex(int)
 	 */
 	@Override
-	public ElementIndex getNodeIndex(int nodeIndex) {
+	public NodeIndex getNodeIndex(int nodeIndex) {
 		return struct.getNode(nodeIndex);
 	}
 
@@ -170,7 +172,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer {
 	 * @see org.graphstream.nui.UIIndexer#getEdgeIndex(int)
 	 */
 	@Override
-	public ElementIndex getEdgeIndex(int edgeIndex) {
+	public EdgeIndex getEdgeIndex(int edgeIndex) {
 		return struct.getEdge(edgeIndex);
 	}
 
@@ -355,7 +357,7 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer {
 		@Override
 		protected void addEdgeCallback(AbstractEdge edge) {
 			super.addEdgeCallback(edge);
-			
+
 			fireElementAdded((_EdgeIndex) edge, edge.getSourceNode(),
 					edge.getTargetNode(), edge.isDirected());
 		}
@@ -491,6 +493,30 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer {
 		public EdgeIndex getEdgeIndex(int i) {
 			return (EdgeIndex) edges[i];
 		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.graphstream.nui.indexer.ElementIndex.NodeIndex#isConnectedTo(
+		 * org.graphstream.nui.indexer.ElementIndex.NodeIndex)
+		 */
+		@Override
+		public boolean isConnectedTo(NodeIndex n) {
+			return getConnectionTo(n) != null;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.graphstream.nui.indexer.ElementIndex.NodeIndex#getConnectionTo
+		 * (org.graphstream.nui.indexer.ElementIndex.NodeIndex)
+		 */
+		@Override
+		public EdgeIndex getConnectionTo(NodeIndex n) {
+			return getEdgeBetween((Node) n);
+		}
 	}
 
 	private class _EdgeIndex extends AbstractEdge implements
@@ -537,8 +563,8 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer {
 		 * @see org.graphstream.nui.indexer.ElementIndex.EdgeIndex#getSource()
 		 */
 		@Override
-		public ElementIndex getSource() {
-			return (ElementIndex) source;
+		public NodeIndex getSource() {
+			return (NodeIndex) source;
 		}
 
 		/*
@@ -547,8 +573,8 @@ public class DefaultIndexer extends AbstractModule implements UIIndexer {
 		 * @see org.graphstream.nui.indexer.ElementIndex.EdgeIndex#getTarget()
 		 */
 		@Override
-		public ElementIndex getTarget() {
-			return (ElementIndex) target;
+		public NodeIndex getTarget() {
+			return (NodeIndex) target;
 		}
 
 		/*

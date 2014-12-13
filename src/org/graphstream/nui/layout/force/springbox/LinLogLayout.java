@@ -60,7 +60,7 @@ public class LinLogLayout extends ForceLayout {
 
 	protected double r = -1.2;
 
-	protected Vector3 delta;
+	protected Vector3 delta = new Vector3();
 
 	/*
 	 * (non-Javadoc)
@@ -83,11 +83,12 @@ public class LinLogLayout extends ForceLayout {
 	 * 
 	 * @see org.graphstream.nui.layout.force.ForceLayout#getRepulsionWeight(org.
 	 * graphstream.nui.indexer.ElementIndex.NodeIndex,
-	 * org.graphstream.nui.spacePartition.SpaceCell)
+	 * org.graphstream.nui.spacePartition.SpaceCell,
+	 * org.graphstream.nui.spacePartition.data.BarycenterData)
 	 */
 	@Override
-	protected double getRepulsionWeight(NodeIndex source, SpaceCell target) {
-		BarycenterData data = (BarycenterData) target.getData(barycenterIndex);
+	protected double getRepulsionWeight(NodeIndex source, SpaceCell target,
+			BarycenterData data) {
 		double degFactor = edgeBased ? source.getDegree() * data.getDegree()
 				: 1;
 

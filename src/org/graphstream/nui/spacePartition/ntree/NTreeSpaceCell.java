@@ -92,13 +92,8 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 			return this;
 		}
 
-		if (neighbourhood == null) {
+		if (neighbourhood == null)
 			subdivide();
-			unregister();
-
-			for (int i = 0; i < neighbourhood.length; i++)
-				neighbourhood[i].register();
-		}
 
 		for (int i = 0; i < neighbourhood.length; i++) {
 			SpaceCell sc = neighbourhood[i].insert(e, x, y, z);
@@ -179,8 +174,10 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 				&& getElementCount() < spacePartition.getMaxElementsPerCell() / 2) {
 			elements.clear();
 
-			for (int i = 0; i < neighbourhood.length; i++)
+			for (int i = 0; i < neighbourhood.length; i++) {
 				elements.addAll(neighbourhood[i].elements);
+				neighbourhood[i].unregister();
+			}
 
 			neighbourhood = null;
 			register();
@@ -196,11 +193,12 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 	protected void computeData() {
 		if (neighbourhood == null)
 			elementsCount = elements.size();
+		else {
+			elementsCount = 0;
 
-		elementsCount = 0;
-
-		for (int i = 0; i < neighbourhood.length; i++)
-			elementsCount += neighbourhood[i].getElementCount();
+			for (int i = 0; i < neighbourhood.length; i++)
+				elementsCount += neighbourhood[i].getElementCount();
+		}
 
 		super.computeData();
 	}

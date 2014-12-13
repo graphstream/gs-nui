@@ -32,6 +32,8 @@
 package org.graphstream.nui;
 
 import org.graphstream.nui.indexer.ElementIndex;
+import org.graphstream.nui.indexer.ElementIndex.EdgeIndex;
+import org.graphstream.nui.indexer.ElementIndex.NodeIndex;
 import org.graphstream.nui.indexer.IndexerListener;
 
 /**
@@ -60,14 +62,14 @@ public interface UIIndexer extends UIModule {
 	 * @param nodeId
 	 * @return
 	 */
-	ElementIndex getNodeIndex(String nodeId);
+	NodeIndex getNodeIndex(String nodeId);
 
 	/**
 	 * 
 	 * @param nodeIndex
 	 * @return null if index is out of bounds
 	 */
-	ElementIndex getNodeIndex(int nodeIndex);
+	NodeIndex getNodeIndex(int nodeIndex);
 
 	/**
 	 * Get the count of edges indexed in this indexer.
@@ -81,14 +83,14 @@ public interface UIIndexer extends UIModule {
 	 * @param edgeId
 	 * @return
 	 */
-	ElementIndex getEdgeIndex(String edgeId);
+	EdgeIndex getEdgeIndex(String edgeId);
 
 	/**
 	 * 
 	 * @param edgeIndex
 	 * @return
 	 */
-	ElementIndex getEdgeIndex(int edgeIndex);
+	EdgeIndex getEdgeIndex(int edgeIndex);
 
 	/**
 	 * Get the count of sprites indexed in this indexer.

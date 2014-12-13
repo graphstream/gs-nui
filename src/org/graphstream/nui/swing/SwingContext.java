@@ -94,6 +94,12 @@ public class SwingContext extends AbstractContext {
 	 */
 	@Override
 	public void invokeOnUIThread(final Runnable r) throws InterruptedException {
+		if (SwingUtilities.isEventDispatchThread()) {
+			sync();
+			r.run();
+			return;
+		}
+
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {
 				public void run() {

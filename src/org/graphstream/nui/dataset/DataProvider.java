@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 - 2013
+ * Copyright 2006 - 2014
  *     Stefan Balev     <stefan.balev@graphstream-project.org>
  *     Julien Baudry    <julien.baudry@graphstream-project.org>
  *     Antoine Dutot    <antoine.dutot@graphstream-project.org>
@@ -29,66 +29,35 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.layout.force.springbox;
+package org.graphstream.nui.dataset;
 
 import org.graphstream.nui.indexer.ElementIndex;
-import org.graphstream.nui.indexer.ElementIndex.EdgeIndex;
-import org.graphstream.ui.geom.Vector3;
 
-/**
- * Edge representation.
- * 
- * <p>
- * This is mainly used to store data about an edge, all the computation is done
- * in the node particle.
- * </p>
- */
-public class EdgeSpring {
-	/**
-	 * The edge identifier.
-	 */
-	public final EdgeIndex index;
+public interface DataProvider {
+	void getNodeXYZ(ElementIndex index, double[] xyz);
 
-	/**
-	 * Edge weight.
-	 */
-	public double weight = 1f;
+	public static class ArrayProvider implements DataProvider {
+		protected final double[] array;
+		protected final int dim;
 
-	/**
-	 * The attraction force on this edge.
-	 */
-	public Vector3 spring = new Vector3();
+		public ArrayProvider(double[] array, int dim) {
+			this.array = array;
 
-	/**
-	 * Make this edge ignored by the layout algorithm ?.
-	 */
-	public boolean ignored = false;
+			assert dim > 0 && dim < 4;
+			this.dim = dim;
+		}
 
-	/**
-	 * The edge attraction energy.
-	 */
-	public double attE;
-
-	/**
-	 * New edge between two given nodes.
-	 * 
-	 * @param index
-	 *            The edge identifier.
-	 */
-	public EdgeSpring(EdgeIndex index) {
-		this.index = index;
-	}
-
-	/**
-	 * Considering the two nodes of the edge, return the one that was not given
-	 * as argument.
-	 * 
-	 * @param node
-	 *            One of the nodes of the edge.
-	 * @return The other node.
-	 */
-	public ElementIndex getOpposite(ElementIndex node) {
-		return index.getSource() == node ? index.getTarget() : index
-				.getSource();
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.graphstream.nui.dataset.DataProvider#getNodeXYZ(org.graphstream
+		 * .nui.indexer.ElementIndex, double[])
+		 */
+		@Override
+		public void getNodeXYZ(ElementIndex index, double[] xyz) {
+			for (int i = 0; i < dim; i++)
+				xyz[i] = array[index.index() * dim + i];
+		}
 	}
 }

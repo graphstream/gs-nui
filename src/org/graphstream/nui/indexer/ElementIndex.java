@@ -52,9 +52,9 @@ public interface ElementIndex {
 	Type getType();
 
 	public static interface EdgeIndex extends ElementIndex {
-		ElementIndex getSource();
+		NodeIndex getSource();
 
-		ElementIndex getTarget();
+		NodeIndex getTarget();
 
 		boolean isDirected();
 	}
@@ -63,5 +63,9 @@ public interface ElementIndex {
 		int getDegree();
 
 		EdgeIndex getEdgeIndex(int i);
+
+		boolean isConnectedTo(NodeIndex n);
+
+		EdgeIndex getConnectionTo(NodeIndex n);
 	}
 }

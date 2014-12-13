@@ -31,12 +31,21 @@
  */
 package org.graphstream.nui.context;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DefaultContext extends AbstractContext {
+	private static final Logger LOGGER = Logger.getLogger(DefaultContext.class
+			.getName());
+
 	protected ScheduledExecutorService executor;
+	protected ScheduledFuture<?> tickerFuture;
 	protected Runnable ticker = new Runnable() {
 		/*
 		 * (non-Javadoc)
@@ -53,12 +62,31 @@ public class DefaultContext extends AbstractContext {
 	 * (non-Javadoc)
 	 * 
 	 * @see
+	 * org.graphstream.nui.context.AbstractContext#init(org.graphstream.nui.
+	 * UIContext.ThreadingModel)
+	 */
+	@Override
+	public void init(ThreadingModel threadingModel) {
+		executor = Executors.newScheduledThreadPool(1);
+		super.init(threadingModel);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
 	 * org.graphstream.nui.context.AbstractContext#invokeOnUIThread(java.lang
 	 * .Runnable)
 	 */
 	@Override
 	public void invokeOnUIThread(Runnable r) throws InterruptedException {
-		r.run();
+		Future<?> f = executor.submit(r);
+
+		try {
+			f.get();
+		} catch (ExecutionException e) {
+			LOGGER.log(Level.SEVERE, "failed to execute task", e);
+		}
 	}
 
 	/*
@@ -68,7 +96,7 @@ public class DefaultContext extends AbstractContext {
 	 */
 	@Override
 	protected void internalInit() {
-		createExecutor();
+		resetTicker();
 	}
 
 	/*
@@ -78,7 +106,16 @@ public class DefaultContext extends AbstractContext {
 	 */
 	@Override
 	protected void internalRelease() {
+		tickerFuture.cancel(true);
 		executor.shutdownNow();
+
+		try {
+			executor.awaitTermination(2, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			if (!executor.isShutdown())
+				LOGGER.log(Level.SEVERE, "fail to shutdown executor", e);
+		}
+
 		executor = null;
 	}
 
@@ -93,12 +130,15 @@ public class DefaultContext extends AbstractContext {
 		super.setTickLength(tickLength, unit);
 
 		ScheduledExecutorService oldExecutor = executor;
-		createExecutor();
+		resetTicker();
 		oldExecutor.shutdown();
 	}
 
-	protected void createExecutor() {
-		executor = Executors.newScheduledThreadPool(1);
-		executor.scheduleAtFixedRate(ticker, 100, tickLength, tickLengthUnits);
+	protected void resetTicker() {
+		if (tickerFuture != null)
+			tickerFuture.cancel(false);
+
+		tickerFuture = executor.scheduleAtFixedRate(ticker, 0, tickLength,
+				tickLengthUnits);
 	}
 }

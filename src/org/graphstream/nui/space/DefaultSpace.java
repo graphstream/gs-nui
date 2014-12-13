@@ -314,6 +314,31 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 		@Override
 		public void nodeMoved(ElementIndex nodeIndex, double x, double y,
 				double z) {
+			if (check(nodeIndex, x, y, z))
+				fireSpaceUpdated();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.dataset.DatasetListener#allNodesMoved()
+		 */
+		@Override
+		public void allNodesMoved() {
+			double[] xyz = new double[3];
+			boolean changed = false;
+
+			for (int idx = 0; idx < indexer.getNodeCount(); idx++) {
+				ElementIndex index = indexer.getNodeIndex(idx);
+				changed = changed || check(index, xyz[0], xyz[1], xyz[2]);
+			}
+
+			if (changed)
+				fireSpaceUpdated();
+		}
+
+		protected boolean check(ElementIndex nodeIndex, double x, double y,
+				double z) {
 			boolean changed = false;
 
 			switch (mode) {
@@ -393,8 +418,7 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 				break;
 			}
 
-			if (changed)
-				fireSpaceUpdated();
+			return changed;
 		}
 	}
 

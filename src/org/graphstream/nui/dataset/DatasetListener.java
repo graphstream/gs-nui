@@ -35,4 +35,6 @@ import org.graphstream.nui.indexer.ElementIndex;
 
 public interface DatasetListener {
 	void nodeMoved(ElementIndex nodeIndex, double x, double y, double z);
+
+	void allNodesMoved();
 }

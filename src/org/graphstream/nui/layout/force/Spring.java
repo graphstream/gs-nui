@@ -32,5 +32,13 @@
 package org.graphstream.nui.layout.force;
 
 public class Spring {
-	protected boolean ignored;
+	protected boolean ignored = false;
+
+	public void setIgnored(boolean ignored) {
+		this.ignored = ignored;
+	}
+
+	public boolean isIgnored() {
+		return ignored;
+	}
 }

@@ -33,6 +33,7 @@ package org.graphstream.nui.spacePartition;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+//import java.util.logging.Logger;
 
 import org.graphstream.nui.UISpacePartition;
 import org.graphstream.nui.indexer.ElementIndex;
@@ -42,6 +43,9 @@ import org.graphstream.nui.spacePartition.data.SpaceCellDataIndex;
 import org.graphstream.nui.spacePartition.data.SpaceCellDataSet;
 
 public abstract class BaseSpaceCell implements SpaceCell {
+	// private static final Logger LOGGER = Logger.getLogger(BaseSpaceCell.class
+	// .getName());
+
 	protected final LinkedList<ElementIndex> elements;
 	protected final Bounds boundary;
 	protected final UISpacePartition spacePartition;
@@ -52,6 +56,8 @@ public abstract class BaseSpaceCell implements SpaceCell {
 		this.spacePartition = spacePartition;
 		this.boundary = boundary;
 		this.elements = new LinkedList<ElementIndex>();
+
+		register();
 	}
 
 	/*

@@ -43,6 +43,7 @@ import org.graphstream.nui.context.DefaultContext;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.IndexerListener;
 import org.graphstream.nui.indexer.ElementIndex.Type;
+import org.graphstream.nui.layout.force.springbox.LinLogLayout;
 import org.graphstream.nui.swapper.UIBufferReference;
 import org.graphstream.nui.swing.SwingContext;
 
@@ -53,7 +54,7 @@ public class Demo {
 		final Logger log = Logger.getAnonymousLogger();
 
 		DefaultGraph g = new DefaultGraph("g");
-		final UIContext ctx = new SwingContext();// UIFactory.getDefaultFactory().createContext();
+		final UIContext ctx = new DefaultContext();// UIFactory.getDefaultFactory().createContext();
 
 		ctx.init(ThreadingModel.SOURCE_IN_ANOTHER_THREAD);
 
@@ -65,6 +66,7 @@ public class Demo {
 						ctx.loadModule(UIDataset.MODULE_ID);
 						ctx.loadModule(UISpace.MODULE_ID);
 						ctx.loadModule(UIStyle.MODULE_ID);
+						ctx.loadModule(UILayout.MODULE_ID);
 					} catch (InstantiationException | ModuleNotFoundException e) {
 						log.log(Level.SEVERE, "Can not load modules", e);
 					}

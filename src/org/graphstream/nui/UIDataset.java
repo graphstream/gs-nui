@@ -33,6 +33,7 @@ package org.graphstream.nui;
 
 import java.nio.DoubleBuffer;
 
+import org.graphstream.nui.dataset.DataProvider;
 import org.graphstream.nui.dataset.DatasetListener;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.ui.geom.Point3;
@@ -139,6 +140,8 @@ public interface UIDataset extends UIModule {
 	 */
 	double[] getNodeXYZ(ElementIndex nodexIndex, double[] xyz);
 
+	Point3 getNodeXYZ(ElementIndex nodeIndex, Point3 xyz);
+
 	/**
 	 * Get all the coordinates of all nodes in the buffer object. The main
 	 * application of this is to use the buffer in a view like an opengl one.
@@ -186,6 +189,14 @@ public interface UIDataset extends UIModule {
 	 *            array containing the coordinates
 	 */
 	void setNodeXYZ(ElementIndex nodexIndex, double[] xyz);
+
+	/**
+	 * Set the coordinates of all nodes in a one call method. This allows to
+	 * improve the event production.
+	 * 
+	 * @param dataProvider
+	 */
+	void setNodesXYZ(DataProvider dataProvider);
 
 	/**
 	 * Allows to retrieve the source node of an edge.

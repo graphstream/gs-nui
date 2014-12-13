@@ -35,11 +35,20 @@ import org.graphstream.ui.geom.Point3;
 import org.graphstream.ui.geom.Vector3;
 
 public abstract class Particle {
-	protected Vector3 displacement;
+	protected Vector3 displacement = new Vector3();
+	protected boolean frozen = false;
 
 	public abstract void attraction(Point3 p, double weight);
 
 	public abstract void repulsion(Point3 p, double weight);
+
+	public void setFrozen(boolean frozen) {
+		this.frozen = frozen;
+	}
+
+	public boolean isFrozen() {
+		return frozen;
+	}
 
 	public double x() {
 		return 0;

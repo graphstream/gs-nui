@@ -259,6 +259,27 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see
+	 * org.graphstream.nui.UIDataset#getNodeXYZ(org.graphstream.nui.indexer.
+	 * ElementIndex, org.graphstream.ui.geom.Point3)
+	 */
+	@Override
+	public Point3 getNodeXYZ(ElementIndex nodeIndex, Point3 xyz) {
+		if (xyz == null)
+			xyz = new Point3();
+
+		xyz.x = nodesPoints.getDouble(nodeIndex, 0);
+		xyz.y = nodesPoints.getDouble(nodeIndex, 1);
+
+		if (dim > 1)
+			xyz.z = nodesPoints.getDouble(nodeIndex, 2);
+
+		return xyz;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.graphstream.nui.UIDataset#getNodesXYZ()
 	 */
 	@Override
@@ -312,6 +333,21 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 			nodesPoints.setDouble(nodeIndex, i, xyz[i]);
 
 		fireNodeMoved(nodeIndex);
+	}
+
+	@Override
+	public void setNodesXYZ(DataProvider dataProvider) {
+		double[] xyz = new double[3];
+
+		for (int idx = 0; idx < indexer.getNodeCount(); idx++) {
+			ElementIndex index = indexer.getNodeIndex(idx);
+			dataProvider.getNodeXYZ(index, xyz);
+
+			for (int i = 0; i < Math.min(xyz.length, dim); i++)
+				nodesPoints.setDouble(index, i, xyz[i]);
+		}
+
+		fireAllNodesMoved();
 	}
 
 	/*
@@ -509,12 +545,16 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 		double y = getNodeY(nodeIndex);
 		double z = getNodeZ(nodeIndex);
 
-		Logger.getGlobal().info(
-				"node \"" + nodeIndex + "\" moved to (" + x + "," + y + "," + z
-						+ ")");
+		LOGGER.info("node \"" + nodeIndex + "\" moved to (" + x + "," + y + ","
+				+ z + ")");
 
 		for (DatasetListener l : listeners)
 			l.nodeMoved(nodeIndex, x, y, z);
+	}
+
+	protected void fireAllNodesMoved() {
+		for (DatasetListener l : listeners)
+			l.allNodesMoved();
 	}
 
 	protected void fireEdgePointsChanged(ElementIndex edgeIndex) {

@@ -50,6 +50,7 @@ import org.graphstream.graph.implementations.DefaultGraph;
 import org.graphstream.nui.attributes.DefaultAttributes;
 import org.graphstream.nui.dataset.DefaultDataset;
 import org.graphstream.nui.indexer.DefaultIndexer;
+import org.graphstream.nui.layout.force.springbox.LinLogLayout;
 import org.graphstream.nui.space.DefaultSpace;
 import org.graphstream.nui.spacePartition.DefaultSpacePartition;
 import org.graphstream.nui.style.base.BaseStyle;
@@ -117,6 +118,7 @@ public class UIModules {
 			registerModule(DefaultSpace.class);
 			registerModule(BaseStyle.class);
 			registerModule(DefaultSpacePartition.class);
+			registerModule(LinLogLayout.class);
 		} catch (RegisterException e) {
 			/*
 			 * This should not happens because lovely devs check and test their

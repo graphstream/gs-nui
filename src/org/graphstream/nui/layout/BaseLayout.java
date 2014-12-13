@@ -45,13 +45,18 @@ import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.UILayout;
 import org.graphstream.nui.UISpace;
 import org.graphstream.nui.UISpacePartition;
+import org.graphstream.nui.context.TickTask;
+import org.graphstream.nui.dataset.DataProvider;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.ElementIterator;
 import org.graphstream.nui.indexer.ElementIndex.Type;
+import org.graphstream.nui.space.Bounds;
 import org.graphstream.nui.spacePartition.NeighbourhoodIterator;
+import org.graphstream.nui.spacePartition.SpaceCell;
 import org.graphstream.nui.util.Tools;
+import org.graphstream.ui.geom.Point3;
 
-public class BaseLayout extends AbstractModule implements UILayout {
+public abstract class BaseLayout extends AbstractModule implements UILayout {
 	//
 	// Join two arrays of String, avoiding repeat.
 	//
@@ -95,6 +100,8 @@ public class BaseLayout extends AbstractModule implements UILayout {
 
 	protected double viewZone;
 
+	protected Point3 viewZoneRadius;
+
 	/**
 	 * Random number generator.
 	 */
@@ -132,6 +139,22 @@ public class BaseLayout extends AbstractModule implements UILayout {
 			random = new Random(System.currentTimeMillis());
 		else
 			random = new Random(randomSeed);
+
+		viewZoneRadius = new Point3();
+
+		enableSpacePartition(true);
+		ctx.addTickTask("layout", new LayoutComputation());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.AbstractModule#release()
+	 */
+	@Override
+	public void release() {
+		ctx.removeTickTask("layout");
+		super.release();
 	}
 
 	/*
@@ -178,6 +201,12 @@ public class BaseLayout extends AbstractModule implements UILayout {
 		}
 	}
 
+	public abstract void compute();
+
+	protected abstract boolean publishNeeded();
+
+	protected abstract DataProvider getDataProvider();
+
 	public void enableSpacePartition(boolean on) {
 		if (on && !enableSpacePartition) {
 			try {
@@ -198,11 +227,53 @@ public class BaseLayout extends AbstractModule implements UILayout {
 		}
 	}
 
+	protected void computeViewZoneRadius() {
+		Bounds bounds = spacePartition.getSpace().getBounds();
+		Point3 lo = bounds.getLowestPoint();
+		Point3 hi = bounds.getHighestPoint();
+
+		viewZoneRadius.set((hi.x - lo.x) * viewZone, (hi.y - lo.y) * viewZone,
+				(hi.z - lo.z) * viewZone);
+	}
+
 	protected Iterator<ElementIndex> getNeighbourhood(ElementIndex source) {
 		if (!enableSpacePartition)
 			return ElementIterator.iterateOn(indexer, Type.NODE);
 
 		return new NeighbourhoodIterator(spacePartition, source, viewZone);
+	}
+
+	protected boolean intersection(Point3 p, SpaceCell cell) {
+		Point3 lo = cell.getBoundary().getLowestPoint();
+		Point3 hi = cell.getBoundary().getLowestPoint();
+
+		double x1 = lo.x;
+		double x2 = hi.x;
+		double X1 = p.x - viewZoneRadius.x;
+		double X2 = p.x + viewZoneRadius.x;
+
+		if (X2 < x1 || X1 > x2)
+			return false;
+
+		double y1 = lo.y;
+		double y2 = hi.y;
+		double Y1 = p.y - viewZoneRadius.y;
+		double Y2 = p.y + viewZoneRadius.y;
+
+		if (Y2 < y1 || Y1 > y2)
+			return false;
+
+		if (spacePartition.getSpace().is3D()) {
+			double z1 = lo.z;
+			double z2 = hi.z;
+			double Z1 = p.z - viewZoneRadius.z;
+			double Z2 = p.z + viewZoneRadius.z;
+
+			if (Z2 < z1 || Z1 > z2)
+				return false;
+		}
+
+		return true;
 	}
 
 	protected double randomXInsideBounds() {
@@ -224,5 +295,43 @@ public class BaseLayout extends AbstractModule implements UILayout {
 		double hz = space.getBounds().getHighestPoint().z;
 
 		return lz + random.nextDouble() * (hz - lz);
+	}
+
+	class LayoutComputation implements TickTask {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.lang.Runnable#run()
+		 */
+		@Override
+		public void run() {
+			if (enableSpacePartition)
+				computeViewZoneRadius();
+
+			compute();
+
+			if (publishNeeded())
+				dataset.setNodesXYZ(getDataProvider());
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.context.TickTask#getCycleLength()
+		 */
+		@Override
+		public int getCycleLength() {
+			return 1;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.context.TickTask#isPeriodic()
+		 */
+		@Override
+		public boolean isPeriodic() {
+			return true;
+		}
 	}
 }
