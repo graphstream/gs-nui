@@ -277,7 +277,7 @@ public class DefaultSpacePartition extends AbstractModule implements
 		cells.add(cell);
 		datasets.add(cell);
 
-		LOGGER.info(String.format("new space cell %s", cell));
+		//LOGGER.info(String.format("new space cell %s", cell));
 	}
 
 	/*
@@ -363,9 +363,12 @@ public class DefaultSpacePartition extends AbstractModule implements
 		if (sc == null) {
 			sc = root.insert(nodeIndex, x, y, z);
 			nodeCell.set(nodeIndex, 0, sc);
+			// LOGGER.info(String.format("%s in %s", nodeIndex, sc));
+			// /assert sc != null;
+			if (sc == null)
+				LOGGER.severe(String.format("WTF? %s %f;%f;%f",
+						root.getBoundary(), x, y, z));
 		}
-
-		LOGGER.info(String.format("%s in %s%n", nodeIndex, sc));
 	}
 
 	/*

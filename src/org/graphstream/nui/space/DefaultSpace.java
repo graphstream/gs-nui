@@ -85,9 +85,9 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 	public void init(UIContext ctx) {
 		super.init(ctx);
 
-		bounds.set(-1, -1, -1, 1, 1, 1);
+		bounds.set(-100, -100, 0, 100, 100, 0);
 		is3D = false;
-		mode = Mode.GROWING;
+		mode = Mode.FIXED;
 
 		indexer = (UIIndexer) ctx.getModule(UIIndexer.MODULE_ID);
 		dataset = (UIDataset) ctx.getModule(UIDataset.MODULE_ID);
@@ -418,6 +418,9 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 				break;
 			}
 
+			if (changed)
+				bounds.computeDiagonal();
+
 			return changed;
 		}
 	}
@@ -446,6 +449,7 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 		 */
 		@Override
 		protected void fireBoundsUpdated() {
+			super.fireBoundsUpdated();
 			fireSpaceUpdated();
 		}
 	}

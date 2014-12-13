@@ -48,6 +48,7 @@ public class Bounds {
 
 		this.lowestPoint.copy(lo);
 		this.highestPoint.copy(hi);
+		fireBoundsUpdated();
 	}
 
 	public Bounds(Bounds clone) {
@@ -90,11 +91,15 @@ public class Bounds {
 	}
 
 	public boolean contains(double x, double y, double z) {
-		return contains(x, y) && z >= lowestPoint.z && z >= highestPoint.z;
+		return contains(x, y) && z >= lowestPoint.z && z <= highestPoint.z;
+	}
+
+	public void computeDiagonal() {
+		diagonal = highestPoint.distance(lowestPoint);
 	}
 
 	protected void fireBoundsUpdated() {
-		diagonal = lowestPoint.distance(highestPoint);
+		computeDiagonal();
 	}
 
 	/*

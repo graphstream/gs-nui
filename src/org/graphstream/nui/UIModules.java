@@ -50,11 +50,12 @@ import org.graphstream.graph.implementations.DefaultGraph;
 import org.graphstream.nui.attributes.DefaultAttributes;
 import org.graphstream.nui.dataset.DefaultDataset;
 import org.graphstream.nui.indexer.DefaultIndexer;
-import org.graphstream.nui.layout.force.springbox.LinLogLayout;
+import org.graphstream.nui.layout.DefaultLayout;
 import org.graphstream.nui.space.DefaultSpace;
 import org.graphstream.nui.spacePartition.DefaultSpacePartition;
 import org.graphstream.nui.style.base.BaseStyle;
 import org.graphstream.nui.swapper.DefaultSwapper;
+import org.graphstream.nui.util.DefaultRandom;
 
 public class UIModules {
 	private static final Logger LOGGER = Logger.getLogger(UIModules.class
@@ -118,7 +119,8 @@ public class UIModules {
 			registerModule(DefaultSpace.class);
 			registerModule(BaseStyle.class);
 			registerModule(DefaultSpacePartition.class);
-			registerModule(LinLogLayout.class);
+			registerModule(DefaultLayout.class);
+			registerModule(DefaultRandom.class);
 		} catch (RegisterException e) {
 			/*
 			 * This should not happens because lovely devs check and test their

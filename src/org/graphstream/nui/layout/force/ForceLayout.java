@@ -35,6 +35,7 @@ import java.util.logging.Logger;
 
 import org.graphstream.nui.UIAttributes;
 import org.graphstream.nui.UIContext;
+import org.graphstream.nui.UILayout;
 import org.graphstream.nui.UISwapper;
 import org.graphstream.nui.UIAttributes.AttributeType;
 import org.graphstream.nui.UISwapper.ValueFactory;
@@ -44,7 +45,7 @@ import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.ElementIndex.EdgeIndex;
 import org.graphstream.nui.indexer.ElementIndex.NodeIndex;
 import org.graphstream.nui.indexer.ElementIndex.Type;
-import org.graphstream.nui.layout.BaseLayout;
+import org.graphstream.nui.layout.LayoutAlgorithmBase;
 import org.graphstream.nui.space.Bounds;
 import org.graphstream.nui.spacePartition.SpaceCell;
 import org.graphstream.nui.spacePartition.TreeSpaceCell;
@@ -55,7 +56,7 @@ import org.graphstream.nui.swapper.UIArrayReference;
 import org.graphstream.nui.util.Tools;
 import org.graphstream.ui.geom.Point3;
 
-public abstract class ForceLayout extends BaseLayout {
+public abstract class ForceLayout extends LayoutAlgorithmBase {
 	private static final Logger LOGGER = Logger.getLogger(ForceLayout.class
 			.getName());
 
@@ -63,7 +64,7 @@ public abstract class ForceLayout extends BaseLayout {
 	 * Global force strength. This is a factor in [0..1] that is used to scale
 	 * all computed displacements.
 	 */
-	protected double force = 1f;
+	protected double force = 0.5;
 
 	/**
 	 * The stabilization limit of this algorithm.
@@ -80,10 +81,11 @@ public abstract class ForceLayout extends BaseLayout {
 
 	protected double barnesHutTheta = .7f;
 
-	protected DataProvider dataProvider = new ParticlesDataProvider();
+	protected Point3[] boundaryPoints;
+
+	protected double boundaryWeight = 0.5;
 
 	protected ForceLayout() {
-		super(UISwapper.MODULE_ID);
 	}
 
 	/*
@@ -93,8 +95,8 @@ public abstract class ForceLayout extends BaseLayout {
 	 * org.graphstream.nui.layout.BaseLayout#init(org.graphstream.nui.UIContext)
 	 */
 	@Override
-	public void init(UIContext ctx) {
-		super.init(ctx);
+	public void init(UIContext ctx, UILayout layout) {
+		super.init(ctx, layout);
 
 		UISwapper swapper = (UISwapper) ctx.getModule(UISwapper.MODULE_ID);
 		assert swapper != null;
@@ -111,7 +113,8 @@ public abstract class ForceLayout extends BaseLayout {
 					@Override
 					public Particle createValue(ElementIndex index,
 							int component) {
-						return ForceLayout.this.createParticle(index);
+						return ForceLayout.this
+								.createParticle((NodeIndex) index);
 					}
 				});
 
@@ -168,6 +171,8 @@ public abstract class ForceLayout extends BaseLayout {
 				});
 
 		energies = new Energies();
+		dataProvider = new ParticlesDataProvider();
+		computeBoundaryPoints();
 	}
 
 	/*
@@ -229,8 +234,18 @@ public abstract class ForceLayout extends BaseLayout {
 	 */
 	@Override
 	public void compute() {
+		preComputation();
+
 		Point3 p1 = new Point3();
 		Point3 p2 = new Point3();
+
+		//
+		// Repulsion
+		//
+		if (enableSpacePartition && viewZone > 0)
+			computeRepulsionWithSpacePartition();
+		else
+			computeRepulsion();
 
 		//
 		// Attraction
@@ -250,35 +265,29 @@ public abstract class ForceLayout extends BaseLayout {
 			dataset.getNodeXYZ(n2, p2);
 
 			if (!part1.isFrozen())
-				part1.attraction(p2, getAttractionWeight(n1, e));
+				part1.attraction(p1, p2, getAttractionWeight(n1, e));
 
-			if (!e.isDirected() && !part2.isFrozen())
-				particles.get(n2, 0).attraction(p1, getAttractionWeight(n2, e));
+			if (!part2.isFrozen())
+				part2.attraction(p2, p1, getAttractionWeight(n2, e));
 		}
-
-		//
-		// Repulsion
-		//
-		if (enableSpacePartition)
-			computeRepulsionWithSpacePartition();
-		else
-			computeRepulsion();
-
-		double len;
 
 		for (int i = 0; i < indexer.getNodeCount(); i++) {
 			NodeIndex index = indexer.getNodeIndex(i);
 			Particle p = particles.get(index, 0);
+			dataset.getNodeXYZ(index, p1);
 
 			if (p.isFrozen())
 				continue;
 
-			p.displacement.scalarMult(force);
-			len = p.displacement.length();
+			for (int j = 0; j < boundaryPoints.length; j++)
+				p.repulsion(p1, boundaryPoints[j], boundaryWeight);
 
-			if (len > (space.getBounds().getDiagonal() / 2))
-				p.displacement.scalarMult((space.getBounds().getDiagonal() / 2)
-						/ len);
+			p.displacement.normalize();
+			p.displacement.scalarMult(force);
+
+			//if (len > (space.getBounds().getDiagonal() / 2))
+			//	p.displacement.scalarMult((space.getBounds().getDiagonal() / 2)
+			//			/ len);
 		}
 
 		energies.storeEnergy();
@@ -305,10 +314,10 @@ public abstract class ForceLayout extends BaseLayout {
 					w = getRepulsionWeight(n1, n2);
 
 					if (!part1.isFrozen())
-						particles.get(n1, 0).repulsion(p2, w);
+						particles.get(n1, 0).repulsion(p1, p2, w);
 
 					if (!part2.isFrozen())
-						particles.get(n2, 0).repulsion(p1, w);
+						particles.get(n2, 0).repulsion(p2, p1, w);
 				}
 			}
 		}
@@ -349,7 +358,7 @@ public abstract class ForceLayout extends BaseLayout {
 				for (ElementIndex n2 : cell) {
 					dataset.getNodeXYZ(n2, p2);
 
-					particles.get(n1, 0).repulsion(p2,
+					particles.get(n1, 0).repulsion(p1, p2,
 							getRepulsionWeight(n1, (NodeIndex) n2));
 				}
 			}
@@ -375,21 +384,72 @@ public abstract class ForceLayout extends BaseLayout {
 					for (int i = 0; i < cell.getChildrenCount(); i++)
 						computeRepulsionRecursive(n1, p1, p2, cell.getChild(i));
 				} else if (barycenter.getWeight() != 0) {
-					particles.get(n1, 0).repulsion(barycenter.getBarycenter(),
+					particles.get(n1, 0).repulsion(p1,
+							barycenter.getBarycenter(),
 							getRepulsionWeight(n1, cell, barycenter));
 				}
 			}
 		}
 	}
 
-	@Override
-	protected DataProvider getDataProvider() {
-		return dataProvider;
+	protected void preComputation() {
+		computeViewZoneRadius();
 	}
 
-	@Override
-	protected boolean publishNeeded() {
-		return true;
+	protected void computeBoundaryPoints() {
+		Point3[] b = new Point3[space.is3D() ? 24 : 8];
+		Point3 l = space.getBounds().getLowestPoint();
+		Point3 h = space.getBounds().getHighestPoint();
+		double cx, cy;
+		int i = 0;
+
+		cx = (h.x + l.x) / 2;
+		cy = (h.y + l.y) / 2;
+
+		if (space.is3D()) {
+			double cz = (h.z + l.z) / 2;
+
+			b[i++] = new Point3(l.x, l.y, l.z);
+			b[i++] = new Point3(cx, l.y, l.z);
+			b[i++] = new Point3(h.x, l.y, l.z);
+			b[i++] = new Point3(l.x, cy, l.z);
+			b[i++] = new Point3(cx, cy, l.z);
+			b[i++] = new Point3(h.x, cy, l.z);
+			b[i++] = new Point3(l.x, h.y, l.z);
+			b[i++] = new Point3(cx, h.y, l.z);
+			b[i++] = new Point3(h.x, h.y, l.z);
+
+			b[i++] = new Point3(l.x, l.y, cz);
+			b[i++] = new Point3(cx, l.y, cz);
+			b[i++] = new Point3(h.x, l.y, cz);
+			b[i++] = new Point3(l.x, cy, cz);
+			b[i++] = new Point3(h.x, cy, cz);
+			b[i++] = new Point3(l.x, h.y, cz);
+			b[i++] = new Point3(cx, h.y, cz);
+			b[i++] = new Point3(h.x, h.y, cz);
+
+			b[i++] = new Point3(l.x, l.y, h.z);
+			b[i++] = new Point3(cx, l.y, h.z);
+			b[i++] = new Point3(h.x, l.y, h.z);
+			b[i++] = new Point3(l.x, cy, h.z);
+			b[i++] = new Point3(cx, cy, h.z);
+			b[i++] = new Point3(h.x, cy, h.z);
+			b[i++] = new Point3(l.x, h.y, h.z);
+			b[i++] = new Point3(cx, h.y, h.z);
+			b[i++] = new Point3(h.x, h.y, h.z);
+
+		} else {
+			b[i++] = new Point3(l.x, l.y);
+			b[i++] = new Point3(cx, l.y);
+			b[i++] = new Point3(h.x, l.y);
+			b[i++] = new Point3(l.x, cy);
+			b[i++] = new Point3(h.x, cy);
+			b[i++] = new Point3(l.x, h.y);
+			b[i++] = new Point3(cx, h.y);
+			b[i++] = new Point3(h.x, h.y);
+		}
+
+		boundaryPoints = b;
 	}
 
 	protected double getAttractionWeight(NodeIndex source, EdgeIndex target) {
@@ -405,7 +465,7 @@ public abstract class ForceLayout extends BaseLayout {
 		return data.getWeight();
 	}
 
-	protected abstract Particle createParticle(ElementIndex index);
+	protected abstract Particle createParticle(NodeIndex index);
 
 	protected abstract Spring createSpring(ElementIndex index);
 
@@ -427,12 +487,22 @@ public abstract class ForceLayout extends BaseLayout {
 			dataset.getNodeXYZ(index, xyz);
 
 			if (!p.isFrozen()) {
-				xyz[0] += Math.max(Math.min(p.displacement.x(), h.x), l.x);
-				xyz[1] += Math.max(Math.min(p.displacement.y(), h.y), l.y);
+				// System.err.printf("pub %s %s%n", index, p.displacement);
+
+				xyz[0] = check(xyz[0] + p.displacement.x(), l.x, h.x);
+				xyz[1] = check(xyz[1] + p.displacement.y(), l.y, h.y);
 
 				if (space.is3D())
-					xyz[2] += Math.max(Math.min(p.displacement.z(), h.z), l.z);
+					xyz[2] = check(xyz[2] + p.displacement.z(), l.z, h.z);
 			}
 		}
+
+		protected double check(double v, double min, double max) {
+			return Math.max(Math.min(v, max), min);
+		}
+	}
+
+	class ParticleInternal {
+
 	}
 }

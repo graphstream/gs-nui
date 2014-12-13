@@ -29,30 +29,11 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.layout.force;
+package org.graphstream.nui.layout;
 
-import org.graphstream.nui.indexer.ElementIndex.NodeIndex;
-import org.graphstream.ui.geom.Point3;
-import org.graphstream.ui.geom.Vector3;
-
-public abstract class Particle {
-	protected Vector3 displacement = new Vector3();
-	protected boolean frozen = false;
-	protected final NodeIndex index;
-
-	protected Particle(NodeIndex index) {
-		this.index = index;
-	}
-
-	public abstract void attraction(Point3 p1, Point3 p2, double weight);
-
-	public abstract void repulsion(Point3 p1, Point3 p2, double weight);
-
-	public void setFrozen(boolean frozen) {
-		this.frozen = frozen;
-	}
-
-	public boolean isFrozen() {
-		return frozen;
+@SuppressWarnings("serial")
+public class NoSuchLayoutAlgorithmException extends Exception {
+	public NoSuchLayoutAlgorithmException(String name) {
+		super(name);
 	}
 }

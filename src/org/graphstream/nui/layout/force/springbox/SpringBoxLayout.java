@@ -36,66 +36,26 @@ import org.graphstream.nui.indexer.ElementIndex.NodeIndex;
 import org.graphstream.nui.layout.force.ForceLayout;
 import org.graphstream.nui.layout.force.Particle;
 import org.graphstream.nui.layout.force.Spring;
-import org.graphstream.nui.spacePartition.SpaceCell;
-import org.graphstream.nui.spacePartition.data.BarycenterData;
 import org.graphstream.ui.geom.Point3;
 import org.graphstream.ui.geom.Vector3;
 
-public class LinLogLayout extends ForceLayout {
-	public static final String LAYOUT_NAME = "linlog";
+public class SpringBoxLayout extends ForceLayout {
+	public static final String LAYOUT_NAME = "springbox";
+
+	protected double k = 1;
+
+	protected double C = 1;
+	/**
+	 * Default attraction.
+	 */
+	protected double K1 = 0.06f; // 0.3 ??
 
 	/**
-	 * Default general attraction factor.
+	 * Default repulsion.
 	 */
-	protected double aFactor = 1f;
-
-	/**
-	 * Default general repulsion factor.
-	 */
-	protected double rFactor = 1f;
-
-	protected boolean edgeBased = true;
-
-	protected double maxR = 0.5;
-
-	protected double a = 0;
-
-	protected double r = -1.2;
+	protected double K2 = 0.024f; // 0.12 ??
 
 	protected Vector3 delta = new Vector3();
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.layout.force.ForceLayout#getRepulsionWeight(org.
-	 * graphstream.nui.indexer.ElementIndex.NodeIndex,
-	 * org.graphstream.nui.indexer.ElementIndex.NodeIndex)
-	 */
-	@Override
-	protected double getRepulsionWeight(NodeIndex source, NodeIndex target) {
-		double degFactor = edgeBased ? source.getDegree() * target.getDegree()
-				: 1;
-
-		return degFactor * dataset.getElementWeight(source)
-				* dataset.getElementWeight(target);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.layout.force.ForceLayout#getRepulsionWeight(org.
-	 * graphstream.nui.indexer.ElementIndex.NodeIndex,
-	 * org.graphstream.nui.spacePartition.SpaceCell,
-	 * org.graphstream.nui.spacePartition.data.BarycenterData)
-	 */
-	@Override
-	protected double getRepulsionWeight(NodeIndex source, SpaceCell target,
-			BarycenterData data) {
-		double degFactor = edgeBased ? source.getDegree() * data.getDegree()
-				: 1;
-
-		return degFactor * dataset.getElementWeight(source) * data.getWeight();
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -106,7 +66,7 @@ public class LinLogLayout extends ForceLayout {
 	 */
 	@Override
 	protected Particle createParticle(NodeIndex index) {
-		return new LinLogParticle(index);
+		return new SpringBoxParticle(index);
 	}
 
 	/*
@@ -121,8 +81,15 @@ public class LinLogLayout extends ForceLayout {
 		return new Spring();
 	}
 
-	class LinLogParticle extends Particle {
-		public LinLogParticle(NodeIndex index) {
+	protected void preComputation() {
+		super.preComputation();
+		k = C
+				* Math.sqrt(space.getBounds().getDiagonal()
+						/ dataset.getNodeCount());
+	}
+
+	class SpringBoxParticle extends Particle {
+		public SpringBoxParticle(NodeIndex index) {
 			super(index);
 		}
 
@@ -136,17 +103,20 @@ public class LinLogLayout extends ForceLayout {
 		@Override
 		public void attraction(Point3 p1, Point3 p2, double weight) {
 			delta.set(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
-			double len = delta.length();
+			double len = delta.normalize();
 
-			if (len > 0) {
-				double factor = 1;
+			double k = SpringBoxLayout.this.k * weight;
 
-				factor = (Math.pow(len, a - 2)) * weight * aFactor;
-				energies.accumulateEnergy(factor);
+			double factor = len * len / k;// K1 * (len - k);
+			factor = factor * (1f / (index.getDegree() * 0.1f));
 
-				delta.scalarMult(factor);
-				displacement.add(delta);
-			}
+			energies.accumulateEnergy(factor);
+
+			delta.scalarMult(factor);
+			displacement.add(delta);
+
+			// System.err.printf("> [%.2f;%.2f] -- [%.2f;%.2f] : [%.2f;%.2f]%n",
+			// p1.x, p1.y, p2.x, p2.y, delta.x(), delta.y());
 		}
 
 		/*
@@ -159,17 +129,22 @@ public class LinLogLayout extends ForceLayout {
 		@Override
 		public void repulsion(Point3 p1, Point3 p2, double weight) {
 			delta.set(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
-			double len = delta.length();
+			double len = delta.normalize();
 
 			if (len > 0) {
-				double factor = -weight * (Math.pow(len, r - 2)) * rFactor;
 
-				if (factor < -maxR)
-					factor = -maxR;
+				// if (len < k)
+				// len = k;
+				double factor = weight * k * k / len;
+				// len != 0 ? ((K2 / (len * len)) * weight) : 0.00001;
 
 				energies.accumulateEnergy(factor); // TODO check this
-				delta.scalarMult(factor);
+				delta.scalarMult(-factor);
 				displacement.add(delta);
+
+				// System.err.printf(
+				// "< [%.2f;%.2f] -- [%.2f;%.2f] : [%.2f;%.2f]%n", x(),
+				// y(), p.x, p.y, delta.x(), delta.y());
 			}
 		}
 	}

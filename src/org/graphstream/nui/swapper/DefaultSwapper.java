@@ -122,12 +122,14 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * org.graphstream.nui.UIBuffers#createBuffer(org.graphstream.nui.indexer
-	 * .ElementIndex.Type, int, int, int, int, boolean)
+	 * org.graphstream.nui.UISwapper#createBuffer(org.graphstream.nui.indexer
+	 * .ElementIndex.Type, int, int, boolean, java.nio.ByteOrder,
+	 * org.graphstream.nui.UISwapper.CreationTrigger)
 	 */
 	@Override
 	public UIBufferReference createBuffer(Type type, int components,
-			int componentSize, boolean direct, ByteOrder order) {
+			int componentSize, boolean direct, ByteOrder order,
+			CreationTrigger onNewElement) {
 		int initialSize, growingSize;
 
 		switch (type) {
@@ -143,7 +145,7 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 
 		DefaultBufferReference ref = new DefaultBufferReference(type,
 				initialSize, growingSize, components, componentSize, direct,
-				order);
+				order, onNewElement);
 
 		if (!buffers.containsKey(type))
 			buffers.put(type, new LinkedList<Swappable>());
@@ -228,6 +230,10 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 			this.componentCount = componentCount;
 		}
 
+		public int getComponentsCount() {
+			return componentCount;
+		}
+
 		@Override
 		public void release() {
 			buffers.get(type).remove(this);
@@ -269,17 +275,21 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 		final int componentSize;
 		final ByteOrder order;
 		final int cc;
+		final CreationTrigger onNewElement;
+		int size;
 
 		DefaultBufferReference(final Type type, final int initialSize,
 				final int growingSize, final int componentCount,
 				final int componentSize, final boolean direct,
-				final ByteOrder order) {
+				final ByteOrder order, final CreationTrigger onNewElement) {
 			super(type, initialSize, growingSize, componentCount);
 
 			this.componentSize = componentSize;
 			this.direct = direct;
 			this.order = order == null ? ByteOrder.nativeOrder() : order;
 			this.cc = componentCount * componentSize;
+			this.onNewElement = onNewElement;
+			this.size = 0;
 
 			init();
 		}
@@ -383,7 +393,31 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 		 */
 		@Override
 		public void initDefaultValues() {
+			int elementCount = getElementCount();
 
+			if (onNewElement != null)
+				for (int i = size; i < elementCount; i++) {
+					ElementIndex index;
+
+					switch (type) {
+					case NODE:
+						index = indexer.getNodeIndex(i);
+						break;
+					case EDGE:
+						index = indexer.getEdgeIndex(i);
+						break;
+					case SPRITE:
+						index = indexer.getSpriteIndex(i);
+						break;
+					default:
+						index = indexer.getGraphIndex();
+						break;
+					}
+
+					onNewElement.newBufferElement(this, index);
+				}
+
+			size = elementCount;
 		}
 
 		/*

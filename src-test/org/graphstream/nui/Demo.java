@@ -32,10 +32,13 @@
 package org.graphstream.nui;
 
 import java.nio.DoubleBuffer;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.graphstream.algorithm.generator.BarabasiAlbertGenerator;
+import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.DefaultGraph;
 import org.graphstream.nui.UIContext.ThreadingModel;
@@ -53,7 +56,7 @@ public class Demo {
 	public static void main(String[] args) {
 		final Logger log = Logger.getAnonymousLogger();
 
-		DefaultGraph g = new DefaultGraph("g");
+		final DefaultGraph g = new DefaultGraph("g");
 		final UIContext ctx = new DefaultContext();// UIFactory.getDefaultFactory().createContext();
 
 		ctx.init(ThreadingModel.SOURCE_IN_ANOTHER_THREAD);
@@ -79,27 +82,25 @@ public class Demo {
 
 		ctx.connect(g);
 
-		g.addAttribute(
-				"ui.stylesheet",
-				"graph { fill-color: red; } node { fill-mode: dyn-plain; fill-color: green, blue; z-index:1; } node#W { fill-color: blue; z-index:10; }");
+		// g.addAttribute(
+		// "ui.stylesheet",
+		// "graph { fill-color: red; } node { fill-mode: dyn-plain; fill-color: green, blue; z-index:1; } node#W { fill-color: blue; z-index:10; }");
 
-		Node z = g.addNode("Z");
-		z.addAttribute("ui.color", 0.5);
+		BarabasiAlbertGenerator gen = new BarabasiAlbertGenerator();
+		gen.addSink(g);
 
-		Node y = g.addNode("Y");
-		g.addNode("W").addAttribute("ui.weight", 10.0);
-		g.addEdge("ZW", "Z", "W");
-		// g.removeNode("Z");
+		gen.begin();
+		for (int i = 0; i < 100; i++)
+			gen.nextEvents();
+		gen.end();
+		gen.removeSink(g);
 
-		try {
-			ctx.invokeOnUIThread(new Runnable() {
-				public void run() {
-					// mainUIThread(ctx);
-				}
-			});
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
-		}
+		/*
+		 * g.addNode("A"); g.addNode("B"); g.addNode("C"); g.addNode("D");
+		 * g.addNode("E"); g.addEdge("AB", "A", "B"); g.addEdge("AC", "A", "C");
+		 * g.addEdge("BC", "B", "C"); g.addEdge("AD", "A", "D"); g.addEdge("DE",
+		 * "D", "E");
+		 */
 
 		try {
 			Thread.sleep(1000);
@@ -107,7 +108,45 @@ public class Demo {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		ctx.release();
+
+		ctx.disconnect(g);
+		g.display(false);
+
+		while (true) {
+			try {
+				ctx.invokeOnUIThread(new Runnable() {
+					public void run() {
+						getCoordinates(ctx, g);
+					}
+				});
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+
+			try {
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		// ctx.release();
+
+	}
+
+	static void getCoordinates(UIContext ctx, Graph g) {
+		UIIndexer indexer = (UIIndexer) ctx.getModule(UIIndexer.MODULE_ID);
+		UIDataset dataset = (UIDataset) ctx.getModule(UIDataset.MODULE_ID);
+		double[] xyz = new double[3];
+
+		for (int idx = 0; idx < indexer.getNodeCount(); idx++) {
+			ElementIndex nodeIndex = indexer.getNodeIndex(idx);
+			dataset.getNodeXYZ(nodeIndex, xyz);
+			g.getNode(nodeIndex.id()).addAttribute("xyz", xyz[0], xyz[1],
+					xyz[2]);
+			// System.err.printf("%s @ %s%n", nodeIndex, Arrays.toString(xyz));
+		}
 	}
 
 	static void mainUIThread(UIContext ctx) {
@@ -117,7 +156,7 @@ public class Demo {
 
 		UISwapper buffers = (UISwapper) ctx.getModule(UISwapper.MODULE_ID);
 		UIBufferReference ref = buffers.createBuffer(Type.NODE, 3,
-				Double.SIZE / 8, true, null);
+				Double.SIZE / 8, true, null, null);
 
 		UIDataset dataset = (UIDataset) ctx.getModule(UIDataset.MODULE_ID);
 

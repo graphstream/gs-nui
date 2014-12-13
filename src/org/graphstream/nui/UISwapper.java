@@ -72,15 +72,21 @@ public interface UISwapper extends UIModule {
 	 *            set if the buffer should be direct or not
 	 * @param order
 	 *            byte order of the buffer
+	 * @param onNewElement
 	 * @return a reference to the new registered buffer
 	 */
 	UIBufferReference createBuffer(ElementIndex.Type type, int components,
-			int componentSize, boolean direct, ByteOrder order);
+			int componentSize, boolean direct, ByteOrder order,
+			CreationTrigger onNewElement);
 
 	<T> UIArrayReference<T> createArray(ElementIndex.Type type, int components,
 			Class<T> valueType, ValueFactory<T> valueFactory);
 
 	public static interface ValueFactory<T> {
 		T createValue(ElementIndex index, int component);
+	}
+
+	public static interface CreationTrigger {
+		void newBufferElement(UIBufferReference buffer, ElementIndex index);
 	}
 }

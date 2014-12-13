@@ -62,6 +62,11 @@ import org.graphstream.stream.thread.ThreadProxyPipe;
 public abstract class AbstractContext implements UIContext {
 	private static final Logger LOGGER = Logger.getLogger(AbstractContext.class
 			.getName());
+
+	public static final long DEFAULT_TICK_LENGTH = 1000 / 30;
+
+	public static final TimeUnit DEFAULT_TICK_LENGTH_UNIT = TimeUnit.MILLISECONDS;
+
 	/**
 	 * The UI thread used to initialize this context.
 	 */
@@ -90,9 +95,9 @@ public abstract class AbstractContext implements UIContext {
 
 	protected DelayQueue<TickTaskWrapper> tasksQueue;
 
-	protected long tickLength = 1000 / 30;
+	protected long tickLength = DEFAULT_TICK_LENGTH;
 
-	protected TimeUnit tickLengthUnits = TimeUnit.MILLISECONDS;
+	protected TimeUnit tickLengthUnits = DEFAULT_TICK_LENGTH_UNIT;
 
 	//
 	// Lock used to manage the waitForInitialization method.
@@ -143,8 +148,8 @@ public abstract class AbstractContext implements UIContext {
 			break;
 		}
 
-		tickLength = 1000 / 30;
-		tickLengthUnits = TimeUnit.MILLISECONDS;
+		tickLength = DEFAULT_TICK_LENGTH;
+		tickLengthUnits = DEFAULT_TICK_LENGTH_UNIT;
 		tasks = new HashMap<String, TickTaskWrapper>();
 		tasksQueue = new DelayQueue<TickTaskWrapper>();
 

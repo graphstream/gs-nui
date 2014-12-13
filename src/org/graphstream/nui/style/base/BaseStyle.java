@@ -161,7 +161,7 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 				});
 
 		nodeColors = swapper.createBuffer(Type.NODE, 1, Integer.SIZE / 8, true,
-				null);
+				null, null);
 
 		edgeDatas = swapper.createArray(Type.EDGE, 1, BaseElementStyle.class,
 				new ValueFactory<BaseElementStyle>() {
@@ -181,7 +181,7 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 				});
 
 		edgeColors = swapper.createBuffer(Type.EDGE, 1, Integer.SIZE / 8, true,
-				null);
+				null, null);
 
 		UIAttributes attributes = (UIAttributes) ctx
 				.getModule(UIAttributes.MODULE_ID);

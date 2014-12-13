@@ -29,30 +29,78 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.layout.force;
+package org.graphstream.nui.util;
 
-import org.graphstream.nui.indexer.ElementIndex.NodeIndex;
-import org.graphstream.ui.geom.Point3;
-import org.graphstream.ui.geom.Vector3;
+import java.util.Random;
+import java.util.logging.Logger;
 
-public abstract class Particle {
-	protected Vector3 displacement = new Vector3();
-	protected boolean frozen = false;
-	protected final NodeIndex index;
+import org.graphstream.nui.AbstractModule;
+import org.graphstream.nui.UIContext;
+import org.graphstream.nui.UIRandom;
 
-	protected Particle(NodeIndex index) {
-		this.index = index;
+public class DefaultRandom extends AbstractModule implements UIRandom {
+	private static final Logger LOGGER = Logger.getLogger(DefaultRandom.class
+			.getName());
+
+	public static final String ATTRIBUTE_RANDOM_SEED = "randomSeed";
+
+	protected Random random;
+
+	protected long randomSeed = Long.MAX_VALUE;
+
+	public DefaultRandom() {
+		super(MODULE_ID);
 	}
 
-	public abstract void attraction(Point3 p1, Point3 p2, double weight);
-
-	public abstract void repulsion(Point3 p1, Point3 p2, double weight);
-
-	public void setFrozen(boolean frozen) {
-		this.frozen = frozen;
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIRandom#getRandom()
+	 */
+	@Override
+	public Random getRandom() {
+		return random;
 	}
 
-	public boolean isFrozen() {
-		return frozen;
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.AbstractModule#init(org.graphstream.nui.UIContext)
+	 */
+	@Override
+	public void init(UIContext ctx) {
+		super.init(ctx);
+
+		if (randomSeed == Long.MAX_VALUE)
+			random = new Random(System.currentTimeMillis());
+		else
+			random = new Random(randomSeed);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.AbstractModule#setAttribute(java.lang.String,
+	 * java.lang.Object)
+	 */
+	@Override
+	public void setAttribute(String key, Object value) {
+		super.setAttribute(key, value);
+
+		switch (key) {
+		case ATTRIBUTE_RANDOM_SEED:
+			try {
+				randomSeed = Tools.checkAndGetLong(value);
+				random = new Random(randomSeed);
+			} catch (IllegalArgumentException e) {
+				LOGGER.warning(String.format("Illegal value for %s.%s : %s",
+						MODULE_ID, ATTRIBUTE_RANDOM_SEED, value));
+			}
+
+			break;
+		default:
+			break;
+		}
 	}
 }

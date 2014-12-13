@@ -39,10 +39,13 @@ import java.util.logging.Logger;
 import org.graphstream.nui.AbstractModule;
 import org.graphstream.nui.UIAttributes;
 import org.graphstream.nui.UIAttributes.AttributeType;
+import org.graphstream.nui.UIRandom;
+import org.graphstream.nui.UISpace;
 import org.graphstream.nui.UISwapper;
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.UIIndexer;
+import org.graphstream.nui.UISwapper.CreationTrigger;
 import org.graphstream.nui.attributes.AttributeHandler;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.ElementIndex.EdgeIndex;
@@ -73,11 +76,15 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	protected double defaultEdgeWeight = DEFAULT_EDGE_WEIGHT;
 	protected UIBufferReference nodesWeight;
 	protected UIBufferReference edgesWeight;
+	protected CreationTrigger onNewNode;
 	protected AttributeHandler weightHandler;
+	protected DataProvider defaultDataProvider;
+	protected UISpace space;
+	protected UIRandom random;
 
 	public DefaultDataset() {
 		super(MODULE_ID, UIIndexer.MODULE_ID, UISwapper.MODULE_ID,
-				UIAttributes.MODULE_ID);
+				UIAttributes.MODULE_ID, UISpace.MODULE_ID, UIRandom.MODULE_ID);
 
 		listeners = new LinkedList<DatasetListener>();
 		coordinatesListener = new CoordinatesListener();
@@ -99,12 +106,41 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 		indexer = (UIIndexer) ctx.getModule("indexer");
 		assert indexer != null;
 
+		space = (UISpace) ctx.getModule(UISpace.MODULE_ID);
+		assert space != null;
+
+		random = (UIRandom) ctx.getModule(UIRandom.MODULE_ID);
+		assert random != null;
+
 		ctx.getContextProxy().addAttributeSink(coordinatesListener);
 
 		dim = 3;
 
-		nodesPoints = swapper.createBuffer(Type.NODE, dim, Double.SIZE / 8,
-				true, null);
+		defaultDataProvider = new RandomDataProvider();
+
+		onNewNode = new CreationTrigger() {
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see org.graphstream.nui.UISwapper.CreationTrigger#
+			 * newBufferElement (org.graphstream.nui.swapper.UIBufferReference,
+			 * org.graphstream.nui.indexer.ElementIndex)
+			 */
+			@Override
+			public void newBufferElement(UIBufferReference buffer,
+					ElementIndex index) {
+				if (defaultDataProvider != null) {
+					double[] xyz = new double[3];
+					defaultDataProvider.getNodeXYZ(index, xyz);
+
+					for (int i = 0; i < buffer.getComponentsCount(); i++)
+						buffer.setDouble(index, i, xyz[i]);
+				}
+			}
+		};
+
+		nodesPoints = swapper.createBuffer(Type.NODE, dim,
+				UIBufferReference.SIZE_DOUBLE, true, null, onNewNode);
 
 		edgesData = swapper.createArray(Type.EDGE, 1, EdgeData.class,
 				new UISwapper.ValueFactory<EdgeData>() {
@@ -350,6 +386,11 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 		fireAllNodesMoved();
 	}
 
+	@Override
+	public void setDefaultNodeDataProvider(DataProvider defaultData) {
+		this.defaultDataProvider = defaultData;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -467,11 +508,23 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 						.getModule(UISwapper.MODULE_ID);
 
 				edgesWeight = swapper.createBuffer(Type.EDGE, 1,
-						UIBufferReference.SIZE_DOUBLE, false, null);
-
-				for (int idx = 0; idx < indexer.getEdgeCount(); idx++)
-					edgesWeight.setDouble(indexer.getEdgeIndex(idx), 0,
-							defaultEdgeWeight);
+						UIBufferReference.SIZE_DOUBLE, false, null,
+						new CreationTrigger() {
+							/*
+							 * (non-Javadoc)
+							 * 
+							 * @see
+							 * org.graphstream.nui.UISwapper.CreationTrigger
+							 * #newBufferElement
+							 * (org.graphstream.nui.swapper.UIBufferReference,
+							 * org.graphstream.nui.indexer.ElementIndex)
+							 */
+							@Override
+							public void newBufferElement(
+									UIBufferReference buffer, ElementIndex index) {
+								buffer.setDouble(index, 0, defaultEdgeWeight);
+							}
+						});
 			}
 
 			edgesWeight.setDouble(index, 0, weight);
@@ -483,11 +536,23 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 						.getModule(UISwapper.MODULE_ID);
 
 				nodesWeight = swapper.createBuffer(Type.NODE, 1,
-						UIBufferReference.SIZE_DOUBLE, false, null);
-
-				for (int idx = 0; idx < indexer.getNodeCount(); idx++)
-					nodesWeight.setDouble(indexer.getNodeIndex(idx), 0,
-							defaultNodeWeight);
+						UIBufferReference.SIZE_DOUBLE, false, null,
+						new CreationTrigger() {
+							/*
+							 * (non-Javadoc)
+							 * 
+							 * @see
+							 * org.graphstream.nui.UISwapper.CreationTrigger
+							 * #newBufferElement
+							 * (org.graphstream.nui.swapper.UIBufferReference,
+							 * org.graphstream.nui.indexer.ElementIndex)
+							 */
+							@Override
+							public void newBufferElement(
+									UIBufferReference buffer, ElementIndex index) {
+								buffer.setDouble(index, 0, defaultNodeWeight);
+							}
+						});
 			}
 
 			nodesWeight.setDouble(index, 0, weight);
@@ -524,7 +589,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 
 		UISwapper swapper = (UISwapper) ctx.getModule(UISwapper.MODULE_ID);
 		UIBufferReference tmp = swapper.createBuffer(Type.NODE, dim,
-				Double.SIZE / 8, true, null);
+				Double.SIZE / 8, true, null, onNewNode);
 
 		for (int i = 0; i < indexer.getNodeCount(); i++) {
 			ElementIndex index = indexer.getNodeIndex(i);
@@ -654,6 +719,43 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 
 		EdgeData() {
 			points = null;
+		}
+	}
+
+	class RandomDataProvider implements DataProvider {
+		protected double randomXInsideBounds() {
+			double lx = space.getBounds().getLowestPoint().x;
+			double hx = space.getBounds().getHighestPoint().x;
+
+			return lx + random.getRandom().nextDouble() * (hx - lx);
+		}
+
+		protected double randomYInsideBounds() {
+			double ly = space.getBounds().getLowestPoint().y;
+			double hy = space.getBounds().getHighestPoint().y;
+
+			return ly + random.getRandom().nextDouble() * (hy - ly);
+		}
+
+		protected double randomZInsideBounds() {
+			double lz = space.getBounds().getLowestPoint().z;
+			double hz = space.getBounds().getHighestPoint().z;
+
+			return lz + random.getRandom().nextDouble() * (hz - lz);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.graphstream.nui.dataset.DataProvider#getNodeXYZ(org.graphstream
+		 * .nui.indexer.ElementIndex, double[])
+		 */
+		@Override
+		public void getNodeXYZ(ElementIndex index, double[] xyz) {
+			xyz[0] = randomXInsideBounds();
+			xyz[1] = randomYInsideBounds();
+			xyz[2] = space.is3D() ? randomZInsideBounds() : 0;
 		}
 	}
 }

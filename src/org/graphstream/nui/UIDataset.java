@@ -199,6 +199,14 @@ public interface UIDataset extends UIModule {
 	void setNodesXYZ(DataProvider dataProvider);
 
 	/**
+	 * Set the data provider who provides the default coordinates for new nodes.
+	 * 
+	 * @param defaultData
+	 *            default data provider
+	 */
+	void setDefaultNodeDataProvider(DataProvider defaultData);
+
+	/**
 	 * Allows to retrieve the source node of an edge.
 	 * 
 	 * @param edgeIndex

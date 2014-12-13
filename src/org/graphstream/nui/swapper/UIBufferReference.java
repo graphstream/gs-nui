@@ -46,6 +46,8 @@ public interface UIBufferReference {
 
 	void release();
 
+	int getComponentsCount();
+
 	byte getByte(ElementIndex index, int component);
 
 	void setByte(ElementIndex index, int component, byte b);
