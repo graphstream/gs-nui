@@ -475,8 +475,7 @@ public abstract class AbstractContext implements UIContext {
 		checkThread();
 
 		if (views.containsKey(view.getViewId())) {
-			Logger.getLogger(AbstractContext.class.getName()).warning(
-					"view already exists");
+			LOGGER.warning("view already exists");
 		} else {
 			views.put(view.getViewId(), view);
 			view.init(this);

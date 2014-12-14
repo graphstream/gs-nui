@@ -29,98 +29,47 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.swing;
+package org.graphstream.nui.views.camera;
 
-import java.util.List;
+import org.graphstream.ui.geom.Point3;
 
-import javax.swing.JFrame;
+public abstract class BaseCamera3D extends BaseCamera implements UICamera3D {
 
-import org.graphstream.nui.UIContext;
-import org.graphstream.nui.UIView;
-import org.graphstream.nui.UIViewer;
-import org.graphstream.nui.views.swing.SwingView;
+	protected Point3 eye;
+	protected double viewportDepth;
+	protected ProjectionType projectionType;
 
-public class SwingViewer implements UIViewer {
-	protected JFrame frame;
-	protected UIContext ctx;
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#init(org.graphstream.nui.UIContext)
-	 */
-	@Override
-	public void init(UIContext ctx) {
-		this.ctx = ctx;
-		this.frame = new JFrame();
-		this.frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-
-		for (UIView view : ctx.getViews()) {
-			if (view instanceof SwingView) {
-
-			}
-		}
+	protected BaseCamera3D() {
+		eye = new Point3();
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.UIViewer#release()
+	 * @see org.graphstream.nui.views.UICamera#getEyePosition()
 	 */
 	@Override
-	public void release() {
-		// TODO Auto-generated method stub
-
+	public Point3 getEyePosition() {
+		return eye;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.UIViewer#getContext()
+	 * @see org.graphstream.nui.views.camera.UICamera3D#getViewportDepth()
 	 */
 	@Override
-	public UIContext getContext() {
-		return ctx;
+	public double getViewportDepth() {
+		return viewportDepth;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.UIViewer#open()
+	 * @see org.graphstream.nui.views.camera.UICamera3D#getProjectionType()
 	 */
 	@Override
-	public void open() {
-		frame.setVisible(true);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#close()
-	 */
-	@Override
-	public void close() {
-		frame.setVisible(false);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#resize(int, int)
-	 */
-	@Override
-	public void resize(int width, int height) {
-		frame.setSize(width, height);
-		frame.pack();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#isCompatibleWith()
-	 */
-	@Override
-	public List<Class<? extends UIView>> isCompatibleWith() {
-		return null;
+	public ProjectionType getProjectionType() {
+		return projectionType;
 	}
 }

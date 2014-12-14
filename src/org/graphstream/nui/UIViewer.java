@@ -32,9 +32,17 @@
 package org.graphstream.nui;
 
 public interface UIViewer {
-	void init();
+	void init(UIContext ctx);
+
+	void release();
 
 	UIContext getContext();
 
+	void open();
+
 	void close();
+
+	void resize(int width, int height);
+
+	Iterable<Class<? extends UIView>> isCompatibleWith();
 }

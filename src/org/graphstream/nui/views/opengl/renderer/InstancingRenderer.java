@@ -29,98 +29,10 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.swing;
+package org.graphstream.nui.views.opengl.renderer;
 
-import java.util.List;
+import org.graphstream.nui.views.opengl.OpenGLRenderer;
 
-import javax.swing.JFrame;
+public class InstancingRenderer implements OpenGLRenderer {
 
-import org.graphstream.nui.UIContext;
-import org.graphstream.nui.UIView;
-import org.graphstream.nui.UIViewer;
-import org.graphstream.nui.views.swing.SwingView;
-
-public class SwingViewer implements UIViewer {
-	protected JFrame frame;
-	protected UIContext ctx;
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#init(org.graphstream.nui.UIContext)
-	 */
-	@Override
-	public void init(UIContext ctx) {
-		this.ctx = ctx;
-		this.frame = new JFrame();
-		this.frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-
-		for (UIView view : ctx.getViews()) {
-			if (view instanceof SwingView) {
-
-			}
-		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#release()
-	 */
-	@Override
-	public void release() {
-		// TODO Auto-generated method stub
-
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#getContext()
-	 */
-	@Override
-	public UIContext getContext() {
-		return ctx;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#open()
-	 */
-	@Override
-	public void open() {
-		frame.setVisible(true);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#close()
-	 */
-	@Override
-	public void close() {
-		frame.setVisible(false);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#resize(int, int)
-	 */
-	@Override
-	public void resize(int width, int height) {
-		frame.setSize(width, height);
-		frame.pack();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#isCompatibleWith()
-	 */
-	@Override
-	public List<Class<? extends UIView>> isCompatibleWith() {
-		return null;
-	}
 }

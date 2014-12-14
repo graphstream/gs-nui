@@ -31,43 +31,34 @@
  */
 package org.graphstream.nui.views.swing;
 
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.UIStyle;
-import org.graphstream.nui.views.UICamera;
-import org.graphstream.nui.views.UIController;
+import org.graphstream.nui.views.BaseGraphRenderer;
 import org.graphstream.nui.views.UIGraphRenderer;
 
-public class SwingGraphRenderer implements UIGraphRenderer, SwingView {
+public class SwingGraphRenderer extends BaseGraphRenderer implements
+		UIGraphRenderer, SwingView {
 	public static final String VIEW_ID = "swing-graph-renderer";
 	private static int VIEW_COUNT = 0;
 
-	protected final String id;
-	protected UIContext ctx;
+	private static String newViewId() {
+		return String.format("%s-%d", VIEW_ID, VIEW_COUNT++);
+	}
+
 	protected UIDataset dataset;
 	protected UIStyle style;
 	protected UIIndexer indexer;
 
-	protected UICamera camera;
-	protected UIController controller;
-
 	protected SwingGraphCanvas canvas;
 
 	public SwingGraphRenderer() {
-		id = String.format("%s-%d", VIEW_ID, VIEW_COUNT++);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIView#getViewId()
-	 */
-	@Override
-	public String getViewId() {
-		return id;
+		// TODO: set camera and controller
+		super(newViewId(), null, null);
 	}
 
 	/*
@@ -77,12 +68,17 @@ public class SwingGraphRenderer implements UIGraphRenderer, SwingView {
 	 */
 	@Override
 	public void init(UIContext ctx) {
-		this.ctx = ctx;
+		super.init(ctx);
 
 		indexer = (UIIndexer) ctx.getModule(UIIndexer.MODULE_ID);
 		dataset = (UIDataset) ctx.getModule(UIDataset.MODULE_ID);
 		style = (UIStyle) ctx.getModule(UIStyle.MODULE_ID);
 		canvas = new SwingGraphCanvas(camera, indexer, dataset, style);
+
+		JFrame frame = new JFrame();
+		frame.add(canvas);
+		frame.pack();
+		frame.setVisible(true);
 	}
 
 	/*
@@ -105,25 +101,4 @@ public class SwingGraphRenderer implements UIGraphRenderer, SwingView {
 	public JPanel getSwingPanel() {
 		return canvas;
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.views.UIGraphRenderer#getCamera()
-	 */
-	@Override
-	public UICamera getCamera() {
-		return camera;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.views.UIGraphRenderer#getController()
-	 */
-	@Override
-	public UIController getController() {
-		return controller;
-	}
-
 }

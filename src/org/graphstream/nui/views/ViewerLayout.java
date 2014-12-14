@@ -29,98 +29,46 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.swing;
+package org.graphstream.nui.views;
 
+import java.util.LinkedList;
 import java.util.List;
 
-import javax.swing.JFrame;
-
-import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIView;
-import org.graphstream.nui.UIViewer;
-import org.graphstream.nui.views.swing.SwingView;
 
-public class SwingViewer implements UIViewer {
-	protected JFrame frame;
-	protected UIContext ctx;
+public class ViewerLayout {
+	protected List<Layer> layers;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#init(org.graphstream.nui.UIContext)
-	 */
-	@Override
-	public void init(UIContext ctx) {
-		this.ctx = ctx;
-		this.frame = new JFrame();
-		this.frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+	public ViewerLayout() {
+		layers = new LinkedList<Layer>();
+	}
 
-		for (UIView view : ctx.getViews()) {
-			if (view instanceof SwingView) {
+	public Iterable<Layer> getLayers() {
+		return layers;
+	}
 
-			}
+	public Layer createNewLayer(int hdiv, int vdiv) {
+		Layer l = new Layer(hdiv, vdiv);
+		layers.add(l);
+
+		return l;
+	}
+
+	public static class Layer {
+		protected final int hdiv;
+		protected final int vdiv;
+
+		protected boolean visible;
+
+		public Layer(int hdiv, int vdiv) {
+			this.hdiv = hdiv;
+			this.vdiv = vdiv;
+			this.visible = true;
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#release()
-	 */
-	@Override
-	public void release() {
-		// TODO Auto-generated method stub
-
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#getContext()
-	 */
-	@Override
-	public UIContext getContext() {
-		return ctx;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#open()
-	 */
-	@Override
-	public void open() {
-		frame.setVisible(true);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#close()
-	 */
-	@Override
-	public void close() {
-		frame.setVisible(false);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#resize(int, int)
-	 */
-	@Override
-	public void resize(int width, int height) {
-		frame.setSize(width, height);
-		frame.pack();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#isCompatibleWith()
-	 */
-	@Override
-	public List<Class<? extends UIView>> isCompatibleWith() {
-		return null;
+	public static class LayerComponent {
+		protected UIView view;
+		protected ViewConstraints constraints;
 	}
 }

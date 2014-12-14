@@ -29,98 +29,99 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.swing;
+package org.graphstream.nui.views.camera;
 
-import java.util.List;
+import org.graphstream.nui.views.UICamera;
+import org.graphstream.ui.geom.Point3;
 
-import javax.swing.JFrame;
+public abstract class BaseCamera implements UICamera {
+	protected int displayWidth;
+	protected int displayHeight;
 
-import org.graphstream.nui.UIContext;
-import org.graphstream.nui.UIView;
-import org.graphstream.nui.UIViewer;
-import org.graphstream.nui.views.swing.SwingView;
+	protected Point3 viewportOrigin;
+	protected double viewportWidth;
+	protected double viewportHeight;
 
-public class SwingViewer implements UIViewer {
-	protected JFrame frame;
-	protected UIContext ctx;
+	protected CameraTransform transform;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#init(org.graphstream.nui.UIContext)
-	 */
-	@Override
-	public void init(UIContext ctx) {
-		this.ctx = ctx;
-		this.frame = new JFrame();
-		this.frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-
-		for (UIView view : ctx.getViews()) {
-			if (view instanceof SwingView) {
-
-			}
-		}
+	protected BaseCamera() {
+		viewportOrigin = new Point3();
+		transform = createTransform();
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.UIViewer#release()
+	 * @see org.graphstream.nui.views.UICamera#getViewportOrigin()
 	 */
 	@Override
-	public void release() {
-		// TODO Auto-generated method stub
-
+	public Point3 getViewportOrigin() {
+		return viewportOrigin;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.UIViewer#getContext()
+	 * @see org.graphstream.nui.views.UICamera#getViewportWidth()
 	 */
 	@Override
-	public UIContext getContext() {
-		return ctx;
+	public double getViewportWidth() {
+		return viewportWidth;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.UIViewer#open()
+	 * @see org.graphstream.nui.views.UICamera#getViewportHeight()
 	 */
 	@Override
-	public void open() {
-		frame.setVisible(true);
+	public double getViewportHeight() {
+		return viewportHeight;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.UIViewer#close()
+	 * @see org.graphstream.nui.views.UICamera#getDisplayWidth()
 	 */
 	@Override
-	public void close() {
-		frame.setVisible(false);
+	public int getDisplayWidth() {
+		return displayWidth;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.UIViewer#resize(int, int)
+	 * @see org.graphstream.nui.views.UICamera#getDisplayHeight()
 	 */
 	@Override
-	public void resize(int width, int height) {
-		frame.setSize(width, height);
-		frame.pack();
+	public int getDisplayHeight() {
+		return displayHeight;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.UIViewer#isCompatibleWith()
+	 * @see
+	 * org.graphstream.nui.views.UICamera#convert(org.graphstream.ui.geom.Point3
+	 * , org.graphstream.ui.geom.Point3,
+	 * org.graphstream.nui.views.UICamera.ConvertType)
 	 */
 	@Override
-	public List<Class<? extends UIView>> isCompatibleWith() {
-		return null;
+	public void convert(Point3 source, Point3 target, ConvertType type) {
+		transform.convert(source, target, type);
+	}
+
+	protected abstract CameraTransform createTransform();
+
+	protected void resizeDisplay(int width, int height) {
+		displayWidth = width;
+		displayHeight = height;
+		transform.init(this);
+	}
+
+	protected void setViewportOrigin(Point3 origin) {
+		viewportOrigin.copy(origin);
+		transform.init(this);
 	}
 }

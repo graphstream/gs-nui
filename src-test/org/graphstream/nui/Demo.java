@@ -49,6 +49,7 @@ import org.graphstream.nui.indexer.ElementIndex.Type;
 import org.graphstream.nui.layout.force.springbox.LinLogLayout;
 import org.graphstream.nui.swapper.UIBufferReference;
 import org.graphstream.nui.swing.SwingContext;
+import org.graphstream.nui.views.swing.SwingGraphRenderer;
 
 @SuppressWarnings("unused")
 public class Demo {
@@ -101,7 +102,15 @@ public class Demo {
 		 * g.addEdge("BC", "B", "C"); g.addEdge("AD", "A", "D"); g.addEdge("DE",
 		 * "D", "E");
 		 */
-
+		try {
+			ctx.invokeOnUIThread(new Runnable() {
+				public void run() {
+					ctx.addView(new SwingGraphRenderer());
+				}
+			});
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
@@ -109,27 +118,27 @@ public class Demo {
 			e.printStackTrace();
 		}
 
-		ctx.disconnect(g);
-		g.display(false);
-
-		while (true) {
-			try {
-				ctx.invokeOnUIThread(new Runnable() {
-					public void run() {
-						getCoordinates(ctx, g);
-					}
-				});
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
-			}
-
-			try {
-				Thread.sleep(50);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+		//ctx.disconnect(g);
+		// g.display(false);
+		//
+		// while (true) {
+		// try {
+		// ctx.invokeOnUIThread(new Runnable() {
+		// public void run() {
+		// getCoordinates(ctx, g);
+		// }
+		// });
+		// } catch (InterruptedException e1) {
+		// e1.printStackTrace();
+		// }
+		//
+		// try {
+		// Thread.sleep(50);
+		// } catch (InterruptedException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+		// }
 
 		// ctx.release();
 

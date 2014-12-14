@@ -29,98 +29,86 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.swing;
+package org.graphstream.nui.views.swing;
 
-import java.util.List;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 
-import javax.swing.JFrame;
+import javax.swing.JComponent;
 
-import org.graphstream.nui.UIContext;
-import org.graphstream.nui.UIView;
-import org.graphstream.nui.UIViewer;
-import org.graphstream.nui.views.swing.SwingView;
+import org.graphstream.nui.views.camera.BaseCamera;
+import org.graphstream.nui.views.camera.CameraTransform;
 
-public class SwingViewer implements UIViewer {
-	protected JFrame frame;
-	protected UIContext ctx;
+public class SwingCamera extends BaseCamera {
+	protected JComponent renderingSurface;
+	protected Listener listener;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#init(org.graphstream.nui.UIContext)
-	 */
-	@Override
-	public void init(UIContext ctx) {
-		this.ctx = ctx;
-		this.frame = new JFrame();
-		this.frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+	public SwingCamera(JComponent renderingSurface) {
+		this.renderingSurface = renderingSurface;
+		this.listener = new Listener();
 
-		for (UIView view : ctx.getViews()) {
-			if (view instanceof SwingView) {
-
-			}
-		}
+		renderingSurface.addComponentListener(listener);
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.UIViewer#release()
+	 * @see org.graphstream.nui.views.camera.BaseCamera#createTransform()
 	 */
 	@Override
-	public void release() {
+	protected CameraTransform createTransform() {
 		// TODO Auto-generated method stub
-
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#getContext()
-	 */
-	@Override
-	public UIContext getContext() {
-		return ctx;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#open()
-	 */
-	@Override
-	public void open() {
-		frame.setVisible(true);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#close()
-	 */
-	@Override
-	public void close() {
-		frame.setVisible(false);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#resize(int, int)
-	 */
-	@Override
-	public void resize(int width, int height) {
-		frame.setSize(width, height);
-		frame.pack();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#isCompatibleWith()
-	 */
-	@Override
-	public List<Class<? extends UIView>> isCompatibleWith() {
 		return null;
+	}
+
+	class Listener implements ComponentListener {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.ComponentListener#componentResized(java.awt.event.
+		 * ComponentEvent)
+		 */
+		@Override
+		public void componentResized(ComponentEvent e) {
+			resizeDisplay(renderingSurface.getWidth(),
+					renderingSurface.getHeight());
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.awt.event.ComponentListener#componentMoved(java.awt.event.
+		 * ComponentEvent)
+		 */
+		@Override
+		public void componentMoved(ComponentEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.awt.event.ComponentListener#componentShown(java.awt.event.
+		 * ComponentEvent)
+		 */
+		@Override
+		public void componentShown(ComponentEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.awt.event.ComponentListener#componentHidden(java.awt.event.
+		 * ComponentEvent)
+		 */
+		@Override
+		public void componentHidden(ComponentEvent e) {
+			// TODO Auto-generated method stub
+
+		}
 	}
 }

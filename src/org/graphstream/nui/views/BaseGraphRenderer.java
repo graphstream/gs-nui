@@ -29,46 +29,31 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.swing;
-
-import java.util.List;
-
-import javax.swing.JFrame;
+package org.graphstream.nui.views;
 
 import org.graphstream.nui.UIContext;
-import org.graphstream.nui.UIView;
-import org.graphstream.nui.UIViewer;
-import org.graphstream.nui.views.swing.SwingView;
 
-public class SwingViewer implements UIViewer {
-	protected JFrame frame;
-	protected UIContext ctx;
+public class BaseGraphRenderer extends BaseView implements UIGraphRenderer {
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#init(org.graphstream.nui.UIContext)
-	 */
-	@Override
-	public void init(UIContext ctx) {
-		this.ctx = ctx;
-		this.frame = new JFrame();
-		this.frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+	protected UICamera camera;
+	protected UIController controller;
 
-		for (UIView view : ctx.getViews()) {
-			if (view instanceof SwingView) {
+	protected BaseGraphRenderer(String viewId, UICamera camera,
+			UIController controller) {
+		super(viewId);
 
-			}
-		}
+		this.camera = camera;
+		this.controller = controller;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#release()
-	 */
 	@Override
-	public void release() {
+	public void init(UIContext ctx) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void close() {
 		// TODO Auto-generated method stub
 
 	}
@@ -76,51 +61,20 @@ public class SwingViewer implements UIViewer {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.UIViewer#getContext()
+	 * @see org.graphstream.nui.views.UIGraphRenderer#getCamera()
 	 */
 	@Override
-	public UIContext getContext() {
-		return ctx;
+	public UICamera getCamera() {
+		return camera;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.UIViewer#open()
+	 * @see org.graphstream.nui.views.UIGraphRenderer#getController()
 	 */
 	@Override
-	public void open() {
-		frame.setVisible(true);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#close()
-	 */
-	@Override
-	public void close() {
-		frame.setVisible(false);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#resize(int, int)
-	 */
-	@Override
-	public void resize(int width, int height) {
-		frame.setSize(width, height);
-		frame.pack();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIViewer#isCompatibleWith()
-	 */
-	@Override
-	public List<Class<? extends UIView>> isCompatibleWith() {
-		return null;
+	public UIController getController() {
+		return controller;
 	}
 }
