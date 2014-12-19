@@ -33,7 +33,8 @@ package org.graphstream.nui.views.camera;
 
 import org.graphstream.ui.geom.Point3;
 
-public abstract class BaseCamera3D extends BaseCamera implements UICamera3D {
+public abstract class BaseCamera3D<T extends CameraTransform> extends
+		BaseCamera<T> implements UICamera3D {
 
 	protected Point3 eye;
 	protected double viewportDepth;
@@ -71,5 +72,17 @@ public abstract class BaseCamera3D extends BaseCamera implements UICamera3D {
 	@Override
 	public ProjectionType getProjectionType() {
 		return projectionType;
+	}
+
+	@Override
+	protected void setViewport(Point3 lo, Point3 hi) {
+		viewportOrigin.set((lo.x + hi.x) / 2, (lo.y + hi.y) / 2,
+				(lo.z + hi.z) / 2);
+
+		viewportWidth = hi.x - lo.x;
+		viewportHeight = hi.y - lo.y;
+		viewportDepth = hi.z - lo.z;
+
+		transform.init(this);
 	}
 }

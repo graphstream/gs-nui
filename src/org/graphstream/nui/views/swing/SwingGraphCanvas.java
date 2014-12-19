@@ -43,13 +43,14 @@ import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.UIStyle;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.style.ElementStyle;
-import org.graphstream.nui.views.UICamera;
+import org.graphstream.nui.style.GroupStyle;
+import org.graphstream.nui.style.StyleListener;
 import org.graphstream.nui.views.swing.renderer.BackgroundRenderer;
 
-public class SwingGraphCanvas extends JPanel {
+public class SwingGraphCanvas extends JPanel implements StyleListener {
 	private static final long serialVersionUID = 2570462198303271151L;
 
-	protected UICamera camera;
+	protected AWTCamera camera;
 
 	protected UIDataset dataset;
 	protected UIStyle style;
@@ -63,13 +64,14 @@ public class SwingGraphCanvas extends JPanel {
 	protected SwingElementRenderer edgeRenderer;
 	protected SwingElementRenderer spriteRenderer;
 
-	public SwingGraphCanvas(UICamera camera, UIIndexer indexer,
+	public SwingGraphCanvas(AWTCamera camera, UIIndexer indexer,
 			UIDataset dataset, UIStyle style) {
 		this.camera = camera;
 
 		this.indexer = indexer;
 		this.dataset = dataset;
 		this.style = style;
+		style.addStyleListener(this);
 
 		backgroundRenderer = getDefaultBackgroundRenderer();
 	}
@@ -84,6 +86,7 @@ public class SwingGraphCanvas extends JPanel {
 		Graphics2D g2d = (Graphics2D) g;
 
 		setupGraphics(g2d);
+		camera.pushTransform(g2d);
 
 		renderBackground(g2d, style.getGraphStyle());
 		renderElements(g2d);
@@ -161,5 +164,18 @@ public class SwingGraphCanvas extends JPanel {
 				renderer.render(g, camera, dataset, eStyle);
 			}
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.style.StyleListener#elementStyleUpdated(org.graphstream
+	 * .nui.indexer.ElementIndex, org.graphstream.nui.style.GroupStyle)
+	 */
+	@Override
+	public void elementStyleUpdated(ElementIndex index, GroupStyle style) {
+		// TODO Auto-generated method stub
+
 	}
 }

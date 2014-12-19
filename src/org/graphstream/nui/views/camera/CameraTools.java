@@ -29,15 +29,14 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.views;
+package org.graphstream.nui.views.camera;
 
-import org.graphstream.nui.UIView;
-import org.graphstream.ui.geom.Point3;
+import org.graphstream.ui.geom.Vector3;
 
-public interface UIGraphRenderer extends UIView {
-	UICamera getCamera();
-
-	UIController getController();
-
-	void setViewport(Point3 center, double... dims);
+public class CameraTools {
+	public static Vector3 computeUpVector(UICamera3D camera) {
+		Vector3 up = new Vector3();
+		// TODO
+		return up;
+	}
 }

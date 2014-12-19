@@ -205,6 +205,9 @@ public abstract class AbstractContext implements UIContext {
 			if (ttw.task.isPeriodic())
 				tasksQueue.add(ttw);
 		}
+
+		for (UIView view : views.values())
+			view.update();
 	}
 
 	/*

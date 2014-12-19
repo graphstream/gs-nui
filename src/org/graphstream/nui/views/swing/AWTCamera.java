@@ -29,15 +29,12 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.views;
+package org.graphstream.nui.views.swing;
 
-import org.graphstream.nui.UIView;
-import org.graphstream.ui.geom.Point3;
+import java.awt.Graphics2D;
 
-public interface UIGraphRenderer extends UIView {
-	UICamera getCamera();
+import org.graphstream.nui.views.UICamera;
 
-	UIController getController();
-
-	void setViewport(Point3 center, double... dims);
+public interface AWTCamera extends UICamera {
+	void pushTransform(Graphics2D g);
 }

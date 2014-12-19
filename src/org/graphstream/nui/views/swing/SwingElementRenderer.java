@@ -35,9 +35,12 @@ import java.awt.Graphics2D;
 
 import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.style.ElementStyle;
+import org.graphstream.nui.style.GroupStyle;
 import org.graphstream.nui.views.UICamera;
 
 public interface SwingElementRenderer {
+	void init(GroupStyle style);
+
 	/**
 	 * 
 	 * @param g

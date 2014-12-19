@@ -31,23 +31,31 @@
  */
 package org.graphstream.nui.views.swing;
 
+import java.awt.Graphics2D;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 
 import javax.swing.JComponent;
 
 import org.graphstream.nui.views.camera.BaseCamera;
-import org.graphstream.nui.views.camera.CameraTransform;
+import org.graphstream.nui.views.camera.CameraTransform2D;
 
-public class SwingCamera extends BaseCamera {
+public class SwingCamera extends BaseCamera<AWTTransform> implements AWTCamera {
 	protected JComponent renderingSurface;
 	protected Listener listener;
 
-	public SwingCamera(JComponent renderingSurface) {
-		this.renderingSurface = renderingSurface;
+	public SwingCamera() {
 		this.listener = new Listener();
+	}
 
+	public void setRenderingSurface(JComponent component) {
+		if (renderingSurface != null)
+			renderingSurface.removeComponentListener(listener);
+
+		renderingSurface = component;
 		renderingSurface.addComponentListener(listener);
+
+		resizeDisplay(renderingSurface.getWidth(), renderingSurface.getHeight());
 	}
 
 	/*
@@ -56,9 +64,21 @@ public class SwingCamera extends BaseCamera {
 	 * @see org.graphstream.nui.views.camera.BaseCamera#createTransform()
 	 */
 	@Override
-	protected CameraTransform createTransform() {
-		// TODO Auto-generated method stub
-		return null;
+	protected AWTTransform createTransform() {
+		return new CameraTransform2D();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.views.swing.AWTCamera#pushTransform(java.awt.Graphics
+	 * )
+	 */
+	@Override
+	public void pushTransform(Graphics2D g) {
+		checkChanged();
+		g.getTransform().concatenate(transform.getAWTTransform());
 	}
 
 	class Listener implements ComponentListener {
@@ -83,8 +103,6 @@ public class SwingCamera extends BaseCamera {
 		 */
 		@Override
 		public void componentMoved(ComponentEvent e) {
-			// TODO Auto-generated method stub
-
 		}
 
 		/*
@@ -95,8 +113,6 @@ public class SwingCamera extends BaseCamera {
 		 */
 		@Override
 		public void componentShown(ComponentEvent e) {
-			// TODO Auto-generated method stub
-
 		}
 
 		/*
@@ -107,8 +123,6 @@ public class SwingCamera extends BaseCamera {
 		 */
 		@Override
 		public void componentHidden(ComponentEvent e) {
-			// TODO Auto-generated method stub
-
 		}
 	}
 }

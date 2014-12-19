@@ -31,6 +31,7 @@
  */
 package org.graphstream.nui.views;
 
+import org.graphstream.nui.UIContext;
 import org.graphstream.ui.geom.Point3;
 
 /**
@@ -51,6 +52,10 @@ public interface UICamera {
 	public static enum ConvertType {
 		PX_TO_GU, GU_TO_PX
 	}
+
+	void init(UIContext ctx);
+
+	void release();
 
 	/**
 	 * The center of the viewport which is a point in the node space. So the

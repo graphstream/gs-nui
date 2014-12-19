@@ -33,8 +33,10 @@ package org.graphstream.nui;
 
 public interface UIView {
 	String getViewId();
-	
+
 	void init(UIContext ctx);
-	
+
+	void update();
+
 	void close();
 }

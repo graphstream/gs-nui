@@ -39,9 +39,10 @@ import java.util.logging.Logger;
 
 import org.graphstream.nui.views.UICamera;
 import org.graphstream.nui.views.UICamera.ConvertType;
+import org.graphstream.nui.views.swing.AWTTransform;
 import org.graphstream.ui.geom.Point3;
 
-public class CameraTransform2D implements CameraTransform {
+public class CameraTransform2D implements AWTTransform {
 	private static final Logger LOGGER = Logger
 			.getLogger(CameraTransform2D.class.getName());
 
@@ -114,5 +115,15 @@ public class CameraTransform2D implements CameraTransform {
 
 		target.x = p2.x;
 		target.y = p2.y;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.views.swing.AWTTransform#getAWTTransform()
+	 */
+	@Override
+	public AffineTransform getAWTTransform() {
+		return tx;
 	}
 }

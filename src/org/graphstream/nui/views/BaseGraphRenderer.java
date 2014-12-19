@@ -33,28 +33,38 @@ package org.graphstream.nui.views;
 
 import org.graphstream.nui.UIContext;
 
-public class BaseGraphRenderer extends BaseView implements UIGraphRenderer {
+public abstract class BaseGraphRenderer<U extends UICamera, V extends UIController>
+		extends BaseView implements UIGraphRenderer {
 
-	protected UICamera camera;
-	protected UIController controller;
+	protected U camera;
+	protected V controller;
 
-	protected BaseGraphRenderer(String viewId, UICamera camera,
-			UIController controller) {
+	protected BaseGraphRenderer(String viewId, U camera, V controller) {
 		super(viewId);
 
 		this.camera = camera;
 		this.controller = controller;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.views.BaseView#init(org.graphstream.nui.UIContext)
+	 */
 	@Override
 	public void init(UIContext ctx) {
-		// TODO Auto-generated method stub
-
+		super.init(ctx);
+		camera.init(ctx);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIView#close()
+	 */
 	@Override
 	public void close() {
-		// TODO Auto-generated method stub
 
 	}
 

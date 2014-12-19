@@ -47,6 +47,8 @@ public interface UICamera3D extends UICamera {
 	 */
 	Point3 getEyePosition();
 
+	double getCameraRotation();
+
 	/**
 	 * The depth of the viewport of this camera.
 	 * 

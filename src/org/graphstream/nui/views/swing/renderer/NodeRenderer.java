@@ -32,6 +32,7 @@
 package org.graphstream.nui.views.swing.renderer;
 
 import java.awt.Graphics2D;
+import java.awt.Shape;
 
 import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.style.ElementStyle;
@@ -41,6 +42,19 @@ import org.graphstream.nui.views.swing.SwingElementRenderer;
 
 public class NodeRenderer implements SwingElementRenderer {
 	protected GroupStyle setupStyle;
+	protected Shape shape;
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.views.swing.SwingElementRenderer#init(org.graphstream
+	 * .nui.style.GroupStyle)
+	 */
+	@Override
+	public void init(GroupStyle style) {
+
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -56,11 +70,14 @@ public class NodeRenderer implements SwingElementRenderer {
 		if (setupStyle != elementStyle)
 			setup(g, elementStyle);
 
-		
+		// double x = dataset.getNodeX(elementStyle.index());
+		// double y = dataset.getNodeY(elementStyle.index());
+
+		g.fill(shape);
 	}
 
 	protected void setup(Graphics2D g, ElementStyle elementStyle) {
 		setupStyle = elementStyle.getGroupStyle();
-
+		g.setColor(setupStyle.getFillColor(0));
 	}
 }

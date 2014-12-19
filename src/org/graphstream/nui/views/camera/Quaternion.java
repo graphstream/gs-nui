@@ -29,15 +29,78 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.views;
+package org.graphstream.nui.views.camera;
 
-import org.graphstream.nui.UIView;
-import org.graphstream.ui.geom.Point3;
+import org.graphstream.ui.geom.Vector3;
 
-public interface UIGraphRenderer extends UIView {
-	UICamera getCamera();
+public class Quaternion {
+	protected double x, y, z, w;
 
-	UIController getController();
+	public Quaternion(double w, Vector3 v) {
+		this(w, v.x(), v.y(), v.z());
+	}
 
-	void setViewport(Point3 center, double... dims);
+	public Quaternion(double w, double x, double y, double z) {
+		this.w = w;
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+
+	public double x() {
+		return x;
+	}
+
+	public double y() {
+		return y;
+	}
+
+	public double z() {
+		return z;
+	}
+
+	public double w() {
+		return w;
+	}
+
+	public double length() {
+		return Math.sqrt(x * x + y * y + z * z + w * w);
+	}
+
+	public double normalize() {
+		double l = length();
+
+		x /= l;
+		y /= l;
+		z /= l;
+		w /= l;
+
+		return l;
+	}
+
+	public Quaternion getConjugate() {
+		return new Quaternion(w, -x, -y, -z);
+	}
+
+	public Quaternion multiplyBy(Quaternion q2) {
+		double mx = w * q2.x + x * q2.w + y * q2.z - z * q2.y;
+		double my = w * q2.y - x * q2.z + y * q2.w + z * q2.x;
+		double mz = w * q2.z + x * q2.y - y * q2.x + z * q2.w;
+		double mw = w * q2.w - x * q2.x - y * q2.y - z * q2.z;
+
+		return new Quaternion(mw, mx, my, mz);
+	}
+
+	public static void rotate(Vector3 view, double angle, Vector3 up) {
+		double sin = Math.sin(angle / 2);
+		double cos = Math.cos(angle / 2);
+
+		Quaternion v = new Quaternion(0, view);
+		Quaternion q = new Quaternion(cos, up.x() * sin, up.y() * sin, up.z()
+				* sin);
+
+		Quaternion r = q.multiplyBy(v).multiplyBy(q.getConjugate());
+
+		view.set(r.x, r.y, r.z);
+	}
 }

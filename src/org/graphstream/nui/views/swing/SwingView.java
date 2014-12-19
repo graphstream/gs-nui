@@ -31,10 +31,10 @@
  */
 package org.graphstream.nui.views.swing;
 
-import javax.swing.JPanel;
+import java.awt.Component;
 
 import org.graphstream.nui.UIView;
 
 public interface SwingView extends UIView {
-	JPanel getSwingPanel();
+	Component getSwingComponent();
 }

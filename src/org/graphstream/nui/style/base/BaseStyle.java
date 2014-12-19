@@ -1032,10 +1032,10 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 			//
 			if (z1 == z2) {
 				//
-				// If types are equals, we can use id comparison.
+				// If types are equals, we can use index comparison.
 				//
 				if (t1 == t2)
-					return o1.index.id().compareTo(o2.index.id());
+					return Integer.compare(o1.index.index(), o2.index.index());
 				//
 				// Else we just use the ordinal of the type as order.
 				//

@@ -29,84 +29,38 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.views.swing;
+package org.graphstream.nui.views.opengl.renderer;
 
 import java.awt.Component;
-import java.awt.Dimension;
 
-import javax.swing.JFrame;
+import javax.media.opengl.GL;
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLEventListener;
+import javax.media.opengl.GLProfile;
+import javax.media.opengl.awt.GLCanvas;
 
 import org.graphstream.nui.UIContext;
-import org.graphstream.nui.UIDataset;
-import org.graphstream.nui.UIIndexer;
-import org.graphstream.nui.UIStyle;
 import org.graphstream.nui.views.BaseGraphRenderer;
 import org.graphstream.nui.views.UIController;
-import org.graphstream.nui.views.UIGraphRenderer;
+import org.graphstream.nui.views.opengl.OpenGLCamera;
+import org.graphstream.nui.views.opengl.OpenGLRenderer;
+import org.graphstream.nui.views.swing.SwingView;
 import org.graphstream.ui.geom.Point3;
 
-public class SwingGraphRenderer extends
-		BaseGraphRenderer<SwingCamera, UIController> implements
-		UIGraphRenderer, SwingView {
-	public static final String VIEW_ID = "swing-graph-renderer";
-	private static int VIEW_COUNT = 0;
-
-	private static String newViewId() {
-		return String.format("%s-%d", VIEW_ID, VIEW_COUNT++);
+public abstract class BaseOpenGLRenderer extends
+		BaseGraphRenderer<OpenGLCamera, UIController> implements
+		OpenGLRenderer, GLEventListener, SwingView {
+	static {
+		GLProfile.initSingleton();
 	}
 
-	protected UIDataset dataset;
-	protected UIStyle style;
-	protected UIIndexer indexer;
+	protected GLProfile profile;
+	protected GLCapabilities capabilities;
+	protected GLCanvas canvas;
 
-	protected SwingGraphCanvas canvas;
-
-	public SwingGraphRenderer() {
-		// TODO: set camera and controller
-		super(newViewId(), new SwingCamera(), null);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIView#init(org.graphstream.nui.UIContext)
-	 */
-	@Override
-	public void init(UIContext ctx) {
-		super.init(ctx);
-
-		indexer = (UIIndexer) ctx.getModule(UIIndexer.MODULE_ID);
-		dataset = (UIDataset) ctx.getModule(UIDataset.MODULE_ID);
-		style = (UIStyle) ctx.getModule(UIStyle.MODULE_ID);
-		canvas = new SwingGraphCanvas(camera, indexer, dataset, style);
-		camera.setRenderingSurface(canvas);
-		canvas.setPreferredSize(new Dimension(640, 480));
-
-		JFrame frame = new JFrame();
-		frame.add(canvas);
-		frame.pack();
-		frame.setVisible(true);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIView#update()
-	 */
-	@Override
-	public void update() {
-		canvas.repaint();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.UIView#close()
-	 */
-	@Override
-	public void close() {
-		// TODO Auto-generated method stub
-
+	protected BaseOpenGLRenderer(String viewId, OpenGLCamera camera,
+			UIController controller) {
+		super(viewId, camera, controller);
 	}
 
 	/*
@@ -118,16 +72,53 @@ public class SwingGraphRenderer extends
 	 */
 	@Override
 	public void setViewport(Point3 center, double... dims) {
+		// TODO Auto-generated method stub
 
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.views.swing.SwingView#getSwingPanel()
+	 * @see
+	 * org.graphstream.nui.views.BaseGraphRenderer#init(org.graphstream.nui.
+	 * UIContext)
+	 */
+	@Override
+	public void init(UIContext ctx) {
+		super.init(ctx);
+
+		profile = GLProfile.getDefault();
+		capabilities = new GLCapabilities(profile);
+		canvas = new GLCanvas(capabilities);
+
+		canvas.addGLEventListener(this);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIView#close()
+	 */
+	@Override
+	public void close() {
+		canvas.removeGLEventListener(this);
+		canvas.destroy();
+		canvas = null;
+		profile = null;
+		capabilities = null;
+
+		super.close();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.views.swing.SwingView#getSwingComponent()
 	 */
 	@Override
 	public Component getSwingComponent() {
 		return canvas;
 	}
+
+	protected abstract boolean checkCompatibility(GL gl);
 }

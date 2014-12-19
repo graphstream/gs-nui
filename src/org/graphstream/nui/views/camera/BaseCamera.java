@@ -31,10 +31,14 @@
  */
 package org.graphstream.nui.views.camera;
 
+import org.graphstream.nui.UIContext;
+import org.graphstream.nui.UISpace;
 import org.graphstream.nui.views.UICamera;
 import org.graphstream.ui.geom.Point3;
 
-public abstract class BaseCamera implements UICamera {
+public abstract class BaseCamera<T extends CameraTransform> implements UICamera {
+	protected UIContext ctx;
+
 	protected int displayWidth;
 	protected int displayHeight;
 
@@ -42,11 +46,38 @@ public abstract class BaseCamera implements UICamera {
 	protected double viewportWidth;
 	protected double viewportHeight;
 
-	protected CameraTransform transform;
+	protected T transform;
+
+	protected boolean changed;
 
 	protected BaseCamera() {
 		viewportOrigin = new Point3();
 		transform = createTransform();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.views.UICamera#init(org.graphstream.nui.UIContext)
+	 */
+	@Override
+	public void init(UIContext ctx) {
+		this.ctx = ctx;
+
+		UISpace space = (UISpace) ctx.getModule(UISpace.MODULE_ID);
+		setViewport(space.getBounds().getLowestPoint(), space.getBounds()
+				.getHighestPoint());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.views.UICamera#release()
+	 */
+	@Override
+	public void release() {
+
 	}
 
 	/*
@@ -109,19 +140,31 @@ public abstract class BaseCamera implements UICamera {
 	 */
 	@Override
 	public void convert(Point3 source, Point3 target, ConvertType type) {
+		checkChanged();
 		transform.convert(source, target, type);
 	}
 
-	protected abstract CameraTransform createTransform();
+	protected abstract T createTransform();
 
 	protected void resizeDisplay(int width, int height) {
 		displayWidth = width;
 		displayHeight = height;
-		transform.init(this);
+
+		changed = true;
 	}
 
-	protected void setViewportOrigin(Point3 origin) {
-		viewportOrigin.copy(origin);
-		transform.init(this);
+	protected void setViewport(Point3 lo, Point3 hi) {
+		viewportOrigin.set((lo.x + hi.x) / 2, (lo.y + hi.y) / 2);
+		viewportWidth = hi.x - lo.x;
+		viewportHeight = hi.y - lo.y;
+
+		changed = true;
+	}
+
+	protected void checkChanged() {
+		if (changed) {
+			transform.init(this);
+			changed = false;
+		}
 	}
 }
