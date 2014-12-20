@@ -32,7 +32,6 @@
 package org.graphstream.nui.views.camera;
 
 import org.graphstream.nui.geom.Matrix4x4;
-import org.graphstream.nui.geom.Matrix4x4.Coefficients;
 import org.graphstream.nui.geom.Vector4;
 import org.graphstream.ui.geom.Point3;
 import org.graphstream.ui.geom.Vector3;
@@ -52,18 +51,18 @@ public class CameraTools {
 
 		Matrix4x4 r = new Matrix4x4(1.0);
 
-		r.set(Coefficients.R0_C0, s.x());
-		r.set(Coefficients.R1_C0, s.y());
-		r.set(Coefficients.R2_C0, s.z());
-		r.set(Coefficients.R0_C1, u.x());
-		r.set(Coefficients.R1_C1, u.y());
-		r.set(Coefficients.R2_C1, u.z());
-		r.set(Coefficients.R0_C2, -f.x());
-		r.set(Coefficients.R1_C2, -f.y());
-		r.set(Coefficients.R2_C2, -f.z());
-		r.set(Coefficients.R3_C0, -s.dotProduct(eye.x, eye.y, eye.z));
-		r.set(Coefficients.R3_C1, -u.dotProduct(eye.x, eye.y, eye.z));
-		r.set(Coefficients.R3_C2, f.dotProduct(eye.x, eye.y, eye.z));
+		r.set(0, 0, s.x());
+		r.set(1, 0, s.y());
+		r.set(2, 0, s.z());
+		r.set(0, 1, u.x());
+		r.set(1, 1, u.y());
+		r.set(2, 1, u.z());
+		r.set(0, 2, -f.x());
+		r.set(1, 2, -f.y());
+		r.set(2, 2, -f.z());
+		r.set(3, 0, -s.dotProduct(eye.x, eye.y, eye.z));
+		r.set(3, 1, -u.dotProduct(eye.x, eye.y, eye.z));
+		r.set(3, 2, f.dotProduct(eye.x, eye.y, eye.z));
 
 		return r;
 	}
@@ -72,12 +71,12 @@ public class CameraTools {
 			double top, double zNear, double zFar) {
 		Matrix4x4 r = new Matrix4x4(1.0);
 
-		r.set(Coefficients.R0_C0, 2.0 / (right - left));
-		r.set(Coefficients.R1_C1, 2.0 / (top - bottom));
-		r.set(Coefficients.R2_C2, -2.0 / (zFar - zNear));
-		r.set(Coefficients.R3_C0, -(right + left) / (right - left));
-		r.set(Coefficients.R3_C1, -(top + bottom) / (top - bottom));
-		r.set(Coefficients.R3_C2, -(zFar + zNear) / (zFar - zNear));
+		r.set(0, 0, 2.0 / (right - left));
+		r.set(1, 1, 2.0 / (top - bottom));
+		r.set(2, 2, -2.0 / (zFar - zNear));
+		r.set(3, 0, -(right + left) / (right - left));
+		r.set(3, 1, -(top + bottom) / (top - bottom));
+		r.set(3, 2, -(zFar + zNear) / (zFar - zNear));
 
 		return r;
 	}
@@ -86,26 +85,26 @@ public class CameraTools {
 			double top) {
 		Matrix4x4 r = new Matrix4x4(1.0);
 
-		r.set(Coefficients.R0_C0, 2.0 / (right - left));
-		r.set(Coefficients.R1_C1, 2.0 / (top - bottom));
-		r.set(Coefficients.R2_C2, -1.0);
-		r.set(Coefficients.R3_C0, -(right + left) / (right - left));
-		r.set(Coefficients.R3_C1, -(top + bottom) / (top - bottom));
+		r.set(0, 0, 2.0 / (right - left));
+		r.set(1, 1, 2.0 / (top - bottom));
+		r.set(2, 2, -1.0);
+		r.set(3, 0, -(right + left) / (right - left));
+		r.set(3, 1, -(top + bottom) / (top - bottom));
 
 		return r;
 	}
 
-	public static Matrix4x4 frustrum(double left, double right, double bottom,
+	public static Matrix4x4 frustum(double left, double right, double bottom,
 			double top, double near, double far) {
 		Matrix4x4 r = new Matrix4x4();
 
-		r.set(Coefficients.R0_C0, (2.0 * near) / (right - left));
-		r.set(Coefficients.R1_C1, (2.0 * near) / (top - bottom));
-		r.set(Coefficients.R2_C0, (right + left) / (right - left));
-		r.set(Coefficients.R2_C1, (top + bottom) / (top - bottom));
-		r.set(Coefficients.R2_C2, -(far + near) / (far - near));
-		r.set(Coefficients.R2_C3, -1.0);
-		r.set(Coefficients.R3_C2, -(2.0 * far * near) / (far - near));
+		r.set(0, 0, (2.0 * near) / (right - left));
+		r.set(1, 1, (2.0 * near) / (top - bottom));
+		r.set(2, 0, (right + left) / (right - left));
+		r.set(2, 1, (top + bottom) / (top - bottom));
+		r.set(2, 2, -(far + near) / (far - near));
+		r.set(2, 3, -1.0);
+		r.set(3, 2, -(2.0 * far * near) / (far - near));
 
 		return r;
 	}
@@ -117,11 +116,11 @@ public class CameraTools {
 		double tanHalfFovy = Math.tan(fovy / 2.0);
 		Matrix4x4 r = new Matrix4x4();
 
-		r.set(Coefficients.R0_C0, 1.0 / (aspect * tanHalfFovy));
-		r.set(Coefficients.R1_C1, 1.0 / (tanHalfFovy));
-		r.set(Coefficients.R2_C2, -(zFar + zNear) / (zFar - zNear));
-		r.set(Coefficients.R2_C3, -1.0);
-		r.set(Coefficients.R3_C2, -(2.0 * zFar * zNear) / (zFar - zNear));
+		r.set(0, 0, 1.0 / (aspect * tanHalfFovy));
+		r.set(1, 1, 1.0 / (tanHalfFovy));
+		r.set(2, 2, -(zFar + zNear) / (zFar - zNear));
+		r.set(2, 3, -1.0);
+		r.set(3, 2, -(2.0 * zFar * zNear) / (zFar - zNear));
 
 		return r;
 	}
@@ -138,9 +137,10 @@ public class CameraTools {
 
 		target.x = tmp.x() * viewport[2] + viewport[0];
 		target.y = tmp.y() * viewport[3] + viewport[1];
+		target.z = tmp.z();
 	}
 
-	public static void unproject(Point3 source, Point3 target,
+	public static void unProject(Point3 source, Point3 target,
 			Matrix4x4 invMVP, double[] viewport) {
 		Vector4 tmp = new Vector4(source, 1.0);
 

@@ -146,4 +146,15 @@ public class Tools {
 			}
 		}
 	}
+
+	public static boolean fuzzyEquals(double[] a, double[] b, double epsilon) {
+		if (a.length != b.length)
+			return false;
+
+		for (int i = 0; i < a.length; i++)
+			if (!fuzzyEquals(a[i], b[i], epsilon))
+				return false;
+
+		return true;
+	}
 }

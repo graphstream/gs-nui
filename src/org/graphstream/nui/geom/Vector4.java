@@ -33,10 +33,13 @@ package org.graphstream.nui.geom;
 
 import java.util.Arrays;
 
+import org.graphstream.nui.util.Tools;
 import org.graphstream.ui.geom.Point3;
 import org.graphstream.ui.geom.Vector3;
 
 public class Vector4 extends Vector3 {
+	private static final long serialVersionUID = -297541924337145047L;
+
 	public Vector4() {
 		data = new double[4];
 		Arrays.fill(data, 0);
@@ -55,6 +58,11 @@ public class Vector4 extends Vector3 {
 		data = new double[] { x, y, z, w };
 	}
 
+	public Vector4(double[] data) {
+		assert data.length == 4;
+		this.data = data;
+	}
+
 	public double w() {
 		return data[3];
 	}
@@ -68,6 +76,19 @@ public class Vector4 extends Vector3 {
 				* v.data[2], data[3] * v.data[3]);
 	}
 
+	public Vector4 mult(Matrix4x4 right) {
+		double[] r = new double[4];
+		double[] a = right.data;
+		double[] b = data;
+
+		r[0] = b[0] * a[0] + b[1] * a[1] + b[2] * a[2] + b[3] * a[3];
+		r[1] = b[0] * a[4] + b[1] * a[5] + b[2] * a[6] + b[3] * a[7];
+		r[2] = b[0] * a[8] + b[1] * a[9] + b[2] * a[10] + b[3] * a[11];
+		r[3] = b[0] * a[12] + b[1] * a[13] + b[2] * a[14] + b[3] * a[15];
+
+		return new Vector4(r);
+	}
+
 	public Vector4 sub(Vector4 v) {
 		return new Vector4(data[0] - v.data[0], data[1] - v.data[1], data[2]
 				- v.data[2], data[3] - v.data[3]);
@@ -76,5 +97,23 @@ public class Vector4 extends Vector3 {
 	public Vector4 add(Vector4 v) {
 		return new Vector4(data[0] + v.data[0], data[1] + v.data[1], data[2]
 				+ v.data[2], data[3] + v.data[3]);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Vector4) {
+			Vector4 mat = (Vector4) obj;
+			return Arrays.equals(data, mat.data);
+		}
+
+		return false;
+	}
+
+	public boolean fuzzyEquals(Vector4 mat, double epsilon) {
+		for (int i = 0; i < 4; i++)
+			if (!Tools.fuzzyEquals(data[i], mat.data[i], epsilon))
+				return false;
+
+		return true;
 	}
 }

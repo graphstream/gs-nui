@@ -47,7 +47,7 @@ public class Matrix4x4 {
 
 	public Matrix4x4(double diagonal) {
 		data = new double[16];
-		diagonal(0.0);
+		diagonal(diagonal);
 	}
 
 	public Matrix4x4(Matrix4x4 clone) {
@@ -102,18 +102,18 @@ public class Matrix4x4 {
 
 	public Matrix4x4 mult(Matrix4x4 right) {
 		double[] r = new double[16];
-		double[] b = right.data;
 		double[] a = data;
+		double[] b = right.data;
 
 		r[0] = b[0] * a[0] + b[1] * a[4] + b[2] * a[8] + b[3] * a[12];
 		r[1] = b[0] * a[1] + b[1] * a[5] + b[2] * a[9] + b[3] * a[13];
 		r[2] = b[0] * a[2] + b[1] * a[6] + b[2] * a[10] + b[3] * a[14];
 		r[3] = b[0] * a[3] + b[1] * a[7] + b[2] * a[11] + b[3] * a[15];
 
-		r[4] = b[4] * a[0] + b[5] * a[4] + b[7] * a[8] + b[8] * a[12];
-		r[5] = b[4] * a[1] + b[5] * a[5] + b[7] * a[9] + b[8] * a[13];
-		r[6] = b[4] * a[2] + b[5] * a[6] + b[7] * a[10] + b[8] * a[14];
-		r[7] = b[4] * a[3] + b[5] * a[7] + b[7] * a[11] + b[8] * a[15];
+		r[4] = b[4] * a[0] + b[5] * a[4] + b[6] * a[8] + b[7] * a[12];
+		r[5] = b[4] * a[1] + b[5] * a[5] + b[6] * a[9] + b[7] * a[13];
+		r[6] = b[4] * a[2] + b[5] * a[6] + b[6] * a[10] + b[7] * a[14];
+		r[7] = b[4] * a[3] + b[5] * a[7] + b[6] * a[11] + b[7] * a[15];
 
 		r[8] = b[8] * a[0] + b[9] * a[4] + b[10] * a[8] + b[11] * a[12];
 		r[9] = b[8] * a[1] + b[9] * a[5] + b[10] * a[9] + b[11] * a[13];
@@ -129,9 +129,16 @@ public class Matrix4x4 {
 	}
 
 	public Vector4 mult(Vector4 right) {
-		Vector4 r = new Vector4();
-		// TODO
-		return r;
+		double[] r = new double[4];
+		double[] a = data;
+		double[] b = right.data;
+
+		r[0] = b[0] * a[0] + b[1] * a[4] + b[2] * a[8] + b[3] * a[12];
+		r[1] = b[0] * a[1] + b[1] * a[5] + b[2] * a[9] + b[3] * a[13];
+		r[2] = b[0] * a[2] + b[1] * a[6] + b[2] * a[10] + b[3] * a[14];
+		r[3] = b[0] * a[3] + b[1] * a[7] + b[2] * a[11] + b[3] * a[15];
+
+		return new Vector4(r);
 	}
 
 	public void scalarAdd(double scalar) {
@@ -155,63 +162,73 @@ public class Matrix4x4 {
 	}
 
 	public Matrix4x4 inverse() {
-		double Coef00 = get(2, 2) * get(3, 3) - get(3, 2) * get(2, 3);
-		double Coef02 = get(1, 2) * get(3, 3) - get(3, 2) * get(1, 3);
-		double Coef03 = get(1, 2) * get(2, 3) - get(2, 2) * get(1, 3);
+		double c00 = get(2, 2) * get(3, 3) - get(3, 2) * get(2, 3);
+		double c02 = get(1, 2) * get(3, 3) - get(3, 2) * get(1, 3);
+		double c03 = get(1, 2) * get(2, 3) - get(2, 2) * get(1, 3);
 
-		double Coef04 = get(2, 1) * get(3, 3) - get(3, 1) * get(2, 3);
-		double Coef06 = get(1, 1) * get(3, 3) - get(3, 1) * get(1, 3);
-		double Coef07 = get(1, 1) * get(2, 3) - get(2, 1) * get(1, 3);
+		double c04 = get(2, 1) * get(3, 3) - get(3, 1) * get(2, 3);
+		double c06 = get(1, 1) * get(3, 3) - get(3, 1) * get(1, 3);
+		double c07 = get(1, 1) * get(2, 3) - get(2, 1) * get(1, 3);
 
-		double Coef08 = get(2, 1) * get(3, 2) - get(3, 1) * get(2, 2);
-		double Coef10 = get(1, 1) * get(3, 2) - get(3, 1) * get(1, 2);
-		double Coef11 = get(1, 1) * get(2, 2) - get(2, 1) * get(1, 2);
+		double c08 = get(2, 1) * get(3, 2) - get(3, 1) * get(2, 2);
+		double c10 = get(1, 1) * get(3, 2) - get(3, 1) * get(1, 2);
+		double c11 = get(1, 1) * get(2, 2) - get(2, 1) * get(1, 2);
 
-		double Coef12 = get(2, 0) * get(3, 3) - get(3, 0) * get(2, 3);
-		double Coef14 = get(1, 0) * get(3, 3) - get(3, 0) * get(1, 3);
-		double Coef15 = get(1, 0) * get(2, 3) - get(2, 0) * get(1, 3);
+		double c12 = get(2, 0) * get(3, 3) - get(3, 0) * get(2, 3);
+		double c14 = get(1, 0) * get(3, 3) - get(3, 0) * get(1, 3);
+		double c15 = get(1, 0) * get(2, 3) - get(2, 0) * get(1, 3);
 
-		double Coef16 = get(2, 0) * get(3, 2) - get(3, 0) * get(2, 2);
-		double Coef18 = get(1, 0) * get(3, 2) - get(3, 0) * get(1, 2);
-		double Coef19 = get(1, 0) * get(2, 2) - get(2, 0) * get(1, 2);
+		double c16 = get(2, 0) * get(3, 2) - get(3, 0) * get(2, 2);
+		double c18 = get(1, 0) * get(3, 2) - get(3, 0) * get(1, 2);
+		double c19 = get(1, 0) * get(2, 2) - get(2, 0) * get(1, 2);
 
-		double Coef20 = get(2, 0) * get(3, 1) - get(3, 0) * get(2, 1);
-		double Coef22 = get(1, 0) * get(3, 1) - get(3, 0) * get(1, 1);
-		double Coef23 = get(1, 0) * get(2, 1) - get(2, 0) * get(1, 1);
+		double c20 = get(2, 0) * get(3, 1) - get(3, 0) * get(2, 1);
+		double c22 = get(1, 0) * get(3, 1) - get(3, 0) * get(1, 1);
+		double c23 = get(1, 0) * get(2, 1) - get(2, 0) * get(1, 1);
 
-		Vector4 Fac0 = new Vector4(Coef00, Coef00, Coef02, Coef03);
-		Vector4 Fac1 = new Vector4(Coef04, Coef04, Coef06, Coef07);
-		Vector4 Fac2 = new Vector4(Coef08, Coef08, Coef10, Coef11);
-		Vector4 Fac3 = new Vector4(Coef12, Coef12, Coef14, Coef15);
-		Vector4 Fac4 = new Vector4(Coef16, Coef16, Coef18, Coef19);
-		Vector4 Fac5 = new Vector4(Coef20, Coef20, Coef22, Coef23);
+		Vector4 fac0 = new Vector4(c00, c00, c02, c03);
+		Vector4 fac1 = new Vector4(c04, c04, c06, c07);
+		Vector4 fac2 = new Vector4(c08, c08, c10, c11);
+		Vector4 fac3 = new Vector4(c12, c12, c14, c15);
+		Vector4 fac4 = new Vector4(c16, c16, c18, c19);
+		Vector4 fac5 = new Vector4(c20, c20, c22, c23);
 
-		Vector4 Vec0 = new Vector4(get(1, 0), get(0, 0), get(0, 0), get(0, 0));
-		Vector4 Vec1 = new Vector4(get(1, 1), get(0, 1), get(0, 1), get(0, 1));
-		Vector4 Vec2 = new Vector4(get(1, 2), get(0, 2), get(0, 2), get(0, 2));
-		Vector4 Vec3 = new Vector4(get(1, 3), get(0, 3), get(0, 3), get(0, 3));
+		Vector4 vec0 = new Vector4(get(1, 0), get(0, 0), get(0, 0), get(0, 0));
+		Vector4 vec1 = new Vector4(get(1, 1), get(0, 1), get(0, 1), get(0, 1));
+		Vector4 vec2 = new Vector4(get(1, 2), get(0, 2), get(0, 2), get(0, 2));
+		Vector4 vec3 = new Vector4(get(1, 3), get(0, 3), get(0, 3), get(0, 3));
 
-		Vector4 Inv0 = Vec1.mult(Fac0).sub(Vec2.mult(Fac1))
-				.add(Vec3.mult(Fac2));
-		Vector4 Inv1 = Vec0.mult(Fac0).sub(Vec2.mult(Fac3))
-				.add(Vec3.mult(Fac4));
-		Vector4 Inv2 = Vec0.mult(Fac1).sub(Vec1.mult(Fac3))
-				.add(Vec3.mult(Fac5));
-		Vector4 Inv3 = Vec0.mult(Fac2).sub(Vec1.mult(Fac4))
-				.add(Vec2.mult(Fac5));
+		Vector4 inv0 = vec1.mult(fac0).sub(vec2.mult(fac1))
+				.add(vec3.mult(fac2));
+		Vector4 inv1 = vec0.mult(fac0).sub(vec2.mult(fac3))
+				.add(vec3.mult(fac4));
+		Vector4 inv2 = vec0.mult(fac1).sub(vec1.mult(fac3))
+				.add(vec3.mult(fac5));
+		Vector4 inv3 = vec0.mult(fac2).sub(vec1.mult(fac4))
+				.add(vec2.mult(fac5));
 
-		Vector4 SignA = new Vector4(+1, -1, +1, -1);
-		Vector4 SignB = new Vector4(-1, +1, -1, +1);
+		Vector4 signA = new Vector4(+1, -1, +1, -1);
+		Vector4 signB = new Vector4(-1, +1, -1, +1);
 
-		Matrix4x4 Inverse = new Matrix4x4(Inv0.mult(SignA), Inv1.mult(SignB),
-				Inv2.mult(SignA), Inv3.mult(SignB));
+		Matrix4x4 inverse = new Matrix4x4(inv0.mult(signA), inv1.mult(signB),
+				inv2.mult(signA), inv3.mult(signB));
 
-		Vector4 Row0 = Inverse.getRow(0);
-		Vector4 Dot0 = getColumn(0).mult(Row0);
-		double Dot1 = (Dot0.x() + Dot0.y()) + (Dot0.z() + Dot0.w());
-		Inverse.scalarDiv(Dot1);
+		Vector4 row0 = inverse.getRow(0);
+		Vector4 dot0 = getColumn(0).mult(row0);
+		double dot1 = (dot0.x() + dot0.y()) + (dot0.z() + dot0.w());
+		inverse.scalarDiv(dot1);
 
-		return Inverse;
+		return inverse;
+	}
+
+	public Matrix4x4 transpose() {
+		Matrix4x4 t = new Matrix4x4();
+
+		for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 4; j++)
+				t.set(i, j, get(j, i));
+
+		return t;
 	}
 
 	@Override
@@ -224,7 +241,7 @@ public class Matrix4x4 {
 		return false;
 	}
 
-	public boolean equals(Matrix4x4 mat, double epsilon) {
+	public boolean fuzzyEquals(Matrix4x4 mat, double epsilon) {
 		for (int i = 0; i < 16; i++)
 			if (!Tools.fuzzyEquals(data[i], mat.data[i], epsilon))
 				return false;

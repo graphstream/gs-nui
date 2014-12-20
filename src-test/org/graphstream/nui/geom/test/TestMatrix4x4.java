@@ -31,111 +31,97 @@
  */
 package org.graphstream.nui.geom.test;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Locale;
-import java.util.Scanner;
-import java.util.logging.Logger;
-
 import org.graphstream.nui.geom.Matrix4x4;
-import org.graphstream.nui.util.Tools;
+import org.graphstream.nui.geom.Vector4;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
-public class TestMatrix4x4 {
-	private static final Logger LOGGER = Logger.getLogger(TestMatrix4x4.class
-			.getName());
-
-	public static final double EPSILON = 1E-4;
-	public static final double EPSILON_2 = 1E-3;
-	public static final double EPSILON_3 = 5E-1;
+public class TestMatrix4x4 extends UseSamples {
+	@Before
+	public void prepare() {
+		samples.put("inverse", new Sample("glm-inverse.data"));
+		samples.put("mult", new Sample("glm-mult.data"));
+		samples.put("vmult", new Sample("glm-vmult.data"));
+	}
 
 	@Test
 	public void testInverse() {
-		InputStream data = getClass().getResourceAsStream("glm-inverse.data");
+		Sample s = samples.get("inverse");
 
-		if (data == null)
-			Assert.fail("'glm-inverse.data' not found");
+		while (s.hasNext()) {
+			s.startSample();
 
-		Scanner sc = new Scanner(data);
-		sc.useLocale(Locale.ROOT);
-		int sample = 0;
-		int needEpsilon2 = 0;
-		int needEpsilon3 = 0;
-		int needEpsilon2E = 0;
-		int needEpsilon3E = 0;
-
-		while (sc.hasNextDouble()) {
-			sample++;
-
-			double[] matData = new double[] { sc.nextDouble(), sc.nextDouble(),
-					sc.nextDouble(), sc.nextDouble(), sc.nextDouble(),
-					sc.nextDouble(), sc.nextDouble(), sc.nextDouble(),
-					sc.nextDouble(), sc.nextDouble(), sc.nextDouble(),
-					sc.nextDouble(), sc.nextDouble(), sc.nextDouble(),
-					sc.nextDouble(), sc.nextDouble() };
-
-			double[] invData = new double[] { sc.nextDouble(), sc.nextDouble(),
-					sc.nextDouble(), sc.nextDouble(), sc.nextDouble(),
-					sc.nextDouble(), sc.nextDouble(), sc.nextDouble(),
-					sc.nextDouble(), sc.nextDouble(), sc.nextDouble(),
-					sc.nextDouble(), sc.nextDouble(), sc.nextDouble(),
-					sc.nextDouble(), sc.nextDouble() };
-
-			Matrix4x4 mat = new Matrix4x4(matData);
+			Matrix4x4 mat = s.nextMatrix();
+			Matrix4x4 expectedInv = s.nextMatrix();
 			Matrix4x4 inv = mat.inverse();
-			Matrix4x4 expectedInv = new Matrix4x4(invData);
 
-			double[] invData2 = inv.getRawData();
-
-			if (!inv.equals(expectedInv, EPSILON)) {
-				if (!inv.equals(expectedInv, EPSILON_2)) {
-					Assert.assertTrue(inv.equals(expectedInv, EPSILON_3));
-					needEpsilon3++;
-					needEpsilon3E += fuzzyElements(invData, invData2, EPSILON_2);
-				} else {
-					needEpsilon2++;
-					needEpsilon2E += fuzzyElements(invData, invData2, EPSILON);
-				}
-			}
+			s.check(inv, expectedInv);
 		}
 
-		LOGGER.info(String
-				.format(Locale.ROOT,
-						"%d samples analyzed with EPSILON=%.2e, %.2f%% of them needs EPSILON=%.2e (%.2f%% of the components), %.2f%% of them needs EPSILON=%.2e (%.2f%% of the components)",
-						sample, EPSILON, 100 * (double) needEpsilon2
-								/ (double) sample, EPSILON_2, 100
-								* (double) needEpsilon2E / (16.0 * sample), 100
-								* (double) needEpsilon3 / (double) sample,
-						EPSILON_3, 100 * (double) needEpsilon3E
-								/ (16.0 * sample)));
+		s.finalCheck(6, 1, 1, 0.5);
+	}
 
-		/*
-		 * There will be some difference in the results, but we want them as
-		 * close of possible and we try to limit the number of floating compare
-		 * needing a larger epsilon.
-		 */
-		Assert.assertTrue(needEpsilon2 < 0.06 * sample);
-		Assert.assertTrue(needEpsilon3 < 0.01 * sample);
-		Assert.assertTrue((double) needEpsilon2E / (16.0 * sample) < 0.01);
-		Assert.assertTrue((double) needEpsilon3E / (16.0 * sample) < 0.005);
+	@Test
+	public void testMult() {
+		Sample s = samples.get("mult");
 
-		sc.close();
+		while (s.hasNext()) {
+			s.startSample();
 
-		try {
-			data.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+			Matrix4x4 m1 = s.nextMatrix();
+			Matrix4x4 m2 = s.nextMatrix();
+			Matrix4x4 m1m2Expected = s.nextMatrix();
+			Matrix4x4 m2m1Expected = s.nextMatrix();
+			Matrix4x4 m1m2 = m1.mult(m2);
+			Matrix4x4 m2m1 = m2.mult(m1);
+
+			s.check(m1m2, m1m2Expected);
+			s.check(m2m1, m2m1Expected);
+		}
+
+		s.finalCheck(6, 1, 1, 0.5);
+	}
+
+	@Test
+	public void testVMult() {
+		Sample s = samples.get("vmult");
+
+		while (s.hasNext()) {
+			s.startSample();
+
+			Matrix4x4 m = s.nextMatrix();
+			Vector4 v = s.nextVector4();
+			Vector4 mvExpected = s.nextVector4();
+			Vector4 vmExpected = s.nextVector4();
+			Vector4 mv = m.mult(v);
+			Vector4 vm = v.mult(m);
+
+			s.check(mv, mvExpected);
+			s.check(vm, vmExpected);
+		}
+
+		s.finalCheck(2, 0.5, 0.1, 0.01);
+	}
+
+	@Test
+	public void testTranspose() {
+		for (int i = 0; i < 100; i++) {
+			Matrix4x4 m = new Matrix4x4(new double[] { nextRandom(),
+					nextRandom(), nextRandom(), nextRandom(), nextRandom(),
+					nextRandom(), nextRandom(), nextRandom(), nextRandom(),
+					nextRandom(), nextRandom(), nextRandom(), nextRandom(),
+					nextRandom(), nextRandom(), nextRandom() });
+			Matrix4x4 t = m.transpose();
+
+			for (int c = 0; c < 4; c++)
+				for (int r = 0; r < 4; r++)
+					Assert.assertArrayEquals(new double[] { m.get(c, r) },
+							new double[] { t.get(r, c) }, Double.MIN_NORMAL);
 		}
 	}
 
-	protected int fuzzyElements(double[] a, double[] b, double epsilon) {
-		int c = 0;
-
-		for (int i = 0; i < a.length; i++)
-			if (!Tools.fuzzyEquals(a[i], b[i], epsilon))
-				c++;
-
-		return c;
+	protected double nextRandom() {
+		return 128.0 * Math.random() - 64.0;
 	}
 }
