@@ -126,4 +126,24 @@ public class Tools {
 
 		return checkAndGetBoolean(value);
 	}
+
+	//
+	// http://floating-point-gui.de/errors/comparison/
+	//
+	public static boolean fuzzyEquals(double a, double b, double epsilon) {
+		if (a == b)
+			return true;
+		else {
+			final double diff = Math.abs(a - b);
+
+			if (a == 0 || b == 0 || diff < Double.MIN_NORMAL)
+				return diff < (epsilon * Double.MIN_NORMAL);
+			else {
+				final double absA = Math.abs(a);
+				final double absB = Math.abs(b);
+
+				return diff / (absA + absB) < epsilon;
+			}
+		}
+	}
 }

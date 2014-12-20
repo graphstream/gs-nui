@@ -29,33 +29,56 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.views.camera;
+package org.graphstream.nui.views.opengl;
 
-import org.graphstream.nui.views.UICamera;
-import org.graphstream.ui.geom.Point3;
+import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
+
+import org.graphstream.nui.views.camera.BaseCamera3D;
+import org.graphstream.nui.views.camera.CameraTransform;
+import org.graphstream.nui.views.camera.DefaultMatrixTransform;
+import org.graphstream.nui.views.camera.MatrixTransform;
 import org.graphstream.ui.geom.Vector3;
 
-public interface UICamera3D extends UICamera {
-	public static enum ProjectionType {
-		ORTHOGONAL, PERSPECTIVE
+public class DefaultOpenGLCamera extends BaseCamera3D<MatrixTransform>
+		implements OpenGLCamera {
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.graphstream.nui.views.opengl.OpenGLCamera#pushView(javax.media.opengl
+	 * .GL2)
+	 */
+	@Override
+	public void pushView(GL2 gl) {
+		gl.glPushMatrix();
+		gl.glMatrixMode(GL2.GL_PROJECTION);
+		gl.glLoadIdentity();
+		gl.glViewport(0, 0, getDisplayWidth(), getDisplayHeight());
+		gl.glLoadMatrixd(transform.getMVPMatrix().getRawData(), 0);
 	}
 
-	/**
-	 * This is used when the nodes space is three dimensional. It defines the
-	 * position of the observer in the 3d-space.
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @return
+	 * @see
+	 * org.graphstream.nui.views.opengl.OpenGLCamera#popView(javax.media.opengl
+	 * .GL2)
 	 */
-	Point3 getCameraPosition();
+	@Override
+	public void popView(GL2 gl) {
+		gl.glPopMatrix();
+	}
 
-	Vector3 getCameraUpVector();
-
-	/**
-	 * The depth of the viewport of this camera.
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @return viewport depth
+	 * @see org.graphstream.nui.views.camera.BaseCamera#createTransform()
 	 */
-	double getViewportDepth();
+	@Override
+	protected MatrixTransform createTransform() {
+		return new DefaultMatrixTransform();
+	}
 
-	ProjectionType getProjectionType();
 }

@@ -31,31 +31,8 @@
  */
 package org.graphstream.nui.views.camera;
 
-import org.graphstream.nui.views.UICamera;
-import org.graphstream.ui.geom.Point3;
-import org.graphstream.ui.geom.Vector3;
+import org.graphstream.nui.geom.Matrix4x4;
 
-public interface UICamera3D extends UICamera {
-	public static enum ProjectionType {
-		ORTHOGONAL, PERSPECTIVE
-	}
-
-	/**
-	 * This is used when the nodes space is three dimensional. It defines the
-	 * position of the observer in the 3d-space.
-	 * 
-	 * @return
-	 */
-	Point3 getCameraPosition();
-
-	Vector3 getCameraUpVector();
-
-	/**
-	 * The depth of the viewport of this camera.
-	 * 
-	 * @return viewport depth
-	 */
-	double getViewportDepth();
-
-	ProjectionType getProjectionType();
+public interface MatrixTransform extends CameraTransform {
+	Matrix4x4 getMVPMatrix();
 }

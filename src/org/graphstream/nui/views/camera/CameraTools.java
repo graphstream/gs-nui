@@ -31,12 +31,129 @@
  */
 package org.graphstream.nui.views.camera;
 
+import org.graphstream.nui.geom.Matrix4x4;
+import org.graphstream.nui.geom.Matrix4x4.Coefficients;
+import org.graphstream.nui.geom.Vector4;
+import org.graphstream.ui.geom.Point3;
 import org.graphstream.ui.geom.Vector3;
 
 public class CameraTools {
-	public static Vector3 computeUpVector(UICamera3D camera) {
-		Vector3 up = new Vector3();
-		// TODO
-		return up;
+	public static Matrix4x4 lookAt(Point3 eye, Point3 center, Vector3 up) {
+		Vector3 f = new Vector3(center.x - eye.x, center.y - eye.y, center.z
+				- eye.z);
+		f.normalize();
+
+		Vector3 s = new Vector3(f);
+		s.crossProduct(up);
+		s.normalize();
+
+		Vector3 u = new Vector3(s);
+		u.crossProduct(f);
+
+		Matrix4x4 r = new Matrix4x4(1.0);
+
+		r.set(Coefficients.R0_C0, s.x());
+		r.set(Coefficients.R1_C0, s.y());
+		r.set(Coefficients.R2_C0, s.z());
+		r.set(Coefficients.R0_C1, u.x());
+		r.set(Coefficients.R1_C1, u.y());
+		r.set(Coefficients.R2_C1, u.z());
+		r.set(Coefficients.R0_C2, -f.x());
+		r.set(Coefficients.R1_C2, -f.y());
+		r.set(Coefficients.R2_C2, -f.z());
+		r.set(Coefficients.R3_C0, -s.dotProduct(eye.x, eye.y, eye.z));
+		r.set(Coefficients.R3_C1, -u.dotProduct(eye.x, eye.y, eye.z));
+		r.set(Coefficients.R3_C2, f.dotProduct(eye.x, eye.y, eye.z));
+
+		return r;
+	}
+
+	public static Matrix4x4 ortho(double left, double right, double bottom,
+			double top, double zNear, double zFar) {
+		Matrix4x4 r = new Matrix4x4(1.0);
+
+		r.set(Coefficients.R0_C0, 2.0 / (right - left));
+		r.set(Coefficients.R1_C1, 2.0 / (top - bottom));
+		r.set(Coefficients.R2_C2, -2.0 / (zFar - zNear));
+		r.set(Coefficients.R3_C0, -(right + left) / (right - left));
+		r.set(Coefficients.R3_C1, -(top + bottom) / (top - bottom));
+		r.set(Coefficients.R3_C2, -(zFar + zNear) / (zFar - zNear));
+
+		return r;
+	}
+
+	public static Matrix4x4 ortho(double left, double right, double bottom,
+			double top) {
+		Matrix4x4 r = new Matrix4x4(1.0);
+
+		r.set(Coefficients.R0_C0, 2.0 / (right - left));
+		r.set(Coefficients.R1_C1, 2.0 / (top - bottom));
+		r.set(Coefficients.R2_C2, -1.0);
+		r.set(Coefficients.R3_C0, -(right + left) / (right - left));
+		r.set(Coefficients.R3_C1, -(top + bottom) / (top - bottom));
+
+		return r;
+	}
+
+	public static Matrix4x4 frustrum(double left, double right, double bottom,
+			double top, double near, double far) {
+		Matrix4x4 r = new Matrix4x4();
+
+		r.set(Coefficients.R0_C0, (2.0 * near) / (right - left));
+		r.set(Coefficients.R1_C1, (2.0 * near) / (top - bottom));
+		r.set(Coefficients.R2_C0, (right + left) / (right - left));
+		r.set(Coefficients.R2_C1, (top + bottom) / (top - bottom));
+		r.set(Coefficients.R2_C2, -(far + near) / (far - near));
+		r.set(Coefficients.R2_C3, -1.0);
+		r.set(Coefficients.R3_C2, -(2.0 * far * near) / (far - near));
+
+		return r;
+	}
+
+	public static Matrix4x4 perspective(double fovy, double aspect,
+			double zNear, double zFar) {
+		assert (zFar > zNear);
+
+		double tanHalfFovy = Math.tan(fovy / 2.0);
+		Matrix4x4 r = new Matrix4x4();
+
+		r.set(Coefficients.R0_C0, 1.0 / (aspect * tanHalfFovy));
+		r.set(Coefficients.R1_C1, 1.0 / (tanHalfFovy));
+		r.set(Coefficients.R2_C2, -(zFar + zNear) / (zFar - zNear));
+		r.set(Coefficients.R2_C3, -1.0);
+		r.set(Coefficients.R3_C2, -(2.0 * zFar * zNear) / (zFar - zNear));
+
+		return r;
+	}
+
+	public static void project(Point3 source, Point3 target,
+			Matrix4x4 modelView, Matrix4x4 projection, double[] viewport) {
+		Vector4 tmp = new Vector4(source, 1.0);
+		tmp = modelView.mult(tmp);
+		tmp = projection.mult(tmp);
+
+		tmp.scalarDiv(tmp.w());
+		tmp.scalarMult(0.5);
+		tmp.scalarAdd(0.5);
+
+		target.x = tmp.x() * viewport[2] + viewport[0];
+		target.y = tmp.y() * viewport[3] + viewport[1];
+	}
+
+	public static void unproject(Point3 source, Point3 target,
+			Matrix4x4 invMVP, double[] viewport) {
+		Vector4 tmp = new Vector4(source, 1.0);
+
+		tmp.set(0, (tmp.x() - viewport[0]) / viewport[2]);
+		tmp.set(1, (tmp.y() - viewport[1]) / viewport[3]);
+		tmp.scalarMult(2.0);
+		tmp.scalarSub(1.0);
+
+		Vector4 obj = invMVP.mult(tmp);
+		obj.scalarDiv(obj.w());
+
+		target.x = obj.x();
+		target.y = obj.y();
+		target.z = obj.z();
 	}
 }

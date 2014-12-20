@@ -29,63 +29,52 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.views.camera;
+package org.graphstream.nui.geom;
 
-import java.util.logging.Logger;
+import java.util.Arrays;
 
-import org.graphstream.nui.views.UICamera;
-import org.graphstream.nui.views.UICamera.ConvertType;
 import org.graphstream.ui.geom.Point3;
+import org.graphstream.ui.geom.Vector3;
 
-import static org.graphstream.nui.views.camera.Matrix4Tools.*;
-
-public class PerspectiveTransform implements CameraTransform {
-	private static final Logger LOGGER = Logger
-			.getLogger(PerspectiveTransform.class.getName());
-
-	protected UICamera3D camera;
-	protected Point3 theta = new Point3();
-	protected Matrix4x4 mvp;
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.graphstream.nui.views.camera.CameraTransform#init(org.graphstream
-	 * .nui.views.UICamera)
-	 */
-	@Override
-	public void init(UICamera camera) {
-		if (camera instanceof UICamera3D) {
-			this.camera = (UICamera3D) camera;
-		} else {
-			LOGGER.severe("This transform needs a 3D camera");
-			throw new RuntimeException();
-		}
-
-		UICamera3D camera3d = (UICamera3D) camera;
-
-		Point3 eye = this.camera.getEyePosition();
-		Point3 at = this.camera.getViewportOrigin();
-
-		Matrix4x4 model = new Matrix4x4(1.0);
-		Matrix4x4 view = lookAt(eye, at, CameraTools.computeUpVector(camera3d));
-		Matrix4x4 projection = perspective(0, 0, 0, 0);
-
-		mvp = projection.mult(view).mult(model);
+public class Vector4 extends Vector3 {
+	public Vector4() {
+		data = new double[4];
+		Arrays.fill(data, 0);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.graphstream.nui.views.camera.CameraTransform#convert(org.graphstream
-	 * .ui.geom.Point3, org.graphstream.ui.geom.Point3,
-	 * org.graphstream.nui.views.UICamera.ConvertType)
-	 */
-	@Override
-	public void convert(Point3 source, Point3 target, ConvertType type) {
-		// TODO Auto-generated method stub
+	public Vector4(Vector3 v, double w) {
+		data = Arrays.copyOf(v.data, 4);
+		data[3] = w;
+	}
 
+	public Vector4(Point3 p, double w) {
+		data = new double[] { p.x, p.y, p.z, w };
+	}
+
+	public Vector4(double x, double y, double z, double w) {
+		data = new double[] { x, y, z, w };
+	}
+
+	public double w() {
+		return data[3];
+	}
+
+	public Vector3 asVector3() {
+		return new Vector3(data[0], data[1], data[2]);
+	}
+
+	public Vector4 mult(Vector4 v) {
+		return new Vector4(data[0] * v.data[0], data[1] * v.data[1], data[2]
+				* v.data[2], data[3] * v.data[3]);
+	}
+
+	public Vector4 sub(Vector4 v) {
+		return new Vector4(data[0] - v.data[0], data[1] - v.data[1], data[2]
+				- v.data[2], data[3] - v.data[3]);
+	}
+
+	public Vector4 add(Vector4 v) {
+		return new Vector4(data[0] + v.data[0], data[1] + v.data[1], data[2]
+				+ v.data[2], data[3] + v.data[3]);
 	}
 }
