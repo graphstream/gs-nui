@@ -89,6 +89,15 @@ public class Vector4 extends Vector3 {
 		return new Vector4(r);
 	}
 
+	public Vector4 mult(double s) {
+		double[] r = new double[4];
+
+		for (int i = 0; i < 4; i++)
+			r[i] = data[i] * s;
+
+		return new Vector4(r);
+	}
+
 	public Vector4 sub(Vector4 v) {
 		return new Vector4(data[0] - v.data[0], data[1] - v.data[1], data[2]
 				- v.data[2], data[3] - v.data[3]);

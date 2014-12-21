@@ -36,7 +36,72 @@ import org.graphstream.nui.geom.Vector4;
 import org.graphstream.ui.geom.Point3;
 import org.graphstream.ui.geom.Vector3;
 
+/**
+ * We tried to make a happy bunny by using the code of the <a
+ * href="http://glm.g-truc.net/">GLM library</a>.
+ *
+ */
 public class CameraTools {
+	public static Matrix4x4 translate(Matrix4x4 mat, Vector3 delta) {
+		Matrix4x4 r = new Matrix4x4(mat);
+
+		for (int i = 0; i < 4; i++)
+			r.set(3, i, mat.get(0, i) * delta.x() + mat.get(1, i) * delta.y()
+					+ mat.get(2, i) * delta.z() + mat.get(3, i));
+
+		return r;
+	}
+
+	public static Matrix4x4 rotate(Matrix4x4 m, double angle, Vector3 v) {
+		final double a = angle;
+		final double c = Math.cos(a);
+		final double s = Math.sin(a);
+
+		Vector3 axis = new Vector3(v);
+		axis.normalize();
+		Vector3 temp = new Vector3(axis);
+		temp.scalarMult(1.0 - c);
+
+		Matrix4x4 Rotate = new Matrix4x4();
+		Rotate.set(0, 0, c + temp.x() * axis.x());
+		Rotate.set(0, 1, 0 + temp.x() * axis.y() + s * axis.z());
+		Rotate.set(0, 2, 0 + temp.x() * axis.z() - s * axis.y());
+
+		Rotate.set(1, 0, 0 + temp.y() * axis.x() - s * axis.z());
+		Rotate.set(1, 1, c + temp.y() * axis.y());
+		Rotate.set(1, 2, 0 + temp.y() * axis.z() + s * axis.x());
+
+		Rotate.set(2, 0, 0 + temp.z() * axis.x() + s * axis.y());
+		Rotate.set(2, 1, 0 + temp.z() * axis.y() - s * axis.x());
+		Rotate.set(2, 2, c + temp.z() * axis.z());
+
+		Vector4 col0 = m.getColumn(0);
+		Vector4 col1 = m.getColumn(1);
+		Vector4 col2 = m.getColumn(2);
+		Vector4 col3 = m.getColumn(3);
+
+		Vector4 rCol0 = col0.mult(Rotate.get(0, 0))
+				.add(col1.mult(Rotate.get(0, 1)))
+				.add(col2.mult(Rotate.get(0, 2)));
+		Vector4 rCol1 = col0.mult(Rotate.get(1, 0))
+				.add(col1.mult(Rotate.get(1, 1)))
+				.add(col2.mult(Rotate.get(1, 2)));
+		Vector4 rCol2 = col0.mult(Rotate.get(2, 0))
+				.add(col1.mult(Rotate.get(2, 1)))
+				.add(col2.mult(Rotate.get(2, 2)));
+
+		return new Matrix4x4(rCol0, rCol1, rCol2, col3);
+	}
+
+	public static Matrix4x4 scale(Matrix4x4 m, Vector3 s) {
+		Vector4 col0 = m.getColumn(0).mult(s.x());
+		Vector4 col1 = m.getColumn(1).mult(s.y());
+		Vector4 col2 = m.getColumn(2).mult(s.z());
+		Vector4 col3 = m.getColumn(3);
+
+		return new Matrix4x4(col0, col1, col2, col3);
+	}
+
 	public static Matrix4x4 lookAt(Point3 eye, Point3 center, Vector3 up) {
 		Vector3 f = new Vector3(center.x - eye.x, center.y - eye.y, center.z
 				- eye.z);

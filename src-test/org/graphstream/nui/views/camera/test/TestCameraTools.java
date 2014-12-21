@@ -44,6 +44,9 @@ public class TestCameraTools extends UseSamples {
 
 	@Before
 	public void prepare() {
+		samples.put("rotate", new Sample("glm-rotate.data", getClass()));
+		samples.put("translate", new Sample("glm-translate.data", getClass()));
+		samples.put("scale", new Sample("glm-scale.data", getClass()));
 		samples.put("lookAt", new Sample("glm-lookat.data", getClass()));
 		samples.put("ortho", new Sample("glm-ortho.data", getClass()));
 		samples.put("frustum", new Sample("glm-frustum.data", getClass()));
@@ -51,6 +54,61 @@ public class TestCameraTools extends UseSamples {
 		samples.put("unProject", new Sample("glm-unproject.data", getClass()));
 		samples.put("perspective", new Sample("glm-perspective.data",
 				getClass()));
+	}
+
+	@Test
+	public void testRotate() {
+		Sample s = samples.get("rotate");
+
+		while (s.hasNext()) {
+			s.startSample();
+
+			Matrix4x4 mat = s.nextMatrix();
+			double angle = s.nextDouble();
+			Vector3 axe = s.nextVector3();
+			Matrix4x4 rotateExpected = s.nextMatrix();
+			Matrix4x4 rotate = CameraTools.rotate(mat, angle, axe);
+
+			s.check(rotate, rotateExpected);
+		}
+
+		s.finalCheck(1, 1, 0.1, 0.1);
+	}
+
+	@Test
+	public void testTranslate() {
+		Sample s = samples.get("translate");
+
+		while (s.hasNext()) {
+			s.startSample();
+
+			Matrix4x4 mat = s.nextMatrix();
+			Vector3 delta = s.nextVector3();
+			Matrix4x4 translateExpected = s.nextMatrix();
+			Matrix4x4 translate = CameraTools.translate(mat, delta);
+
+			s.check(translate, translateExpected);
+		}
+
+		s.finalCheck(1, 1, 0.1, 0.1);
+	}
+
+	@Test
+	public void testScale() {
+		Sample s = samples.get("scale");
+
+		while (s.hasNext()) {
+			s.startSample();
+
+			Matrix4x4 mat = s.nextMatrix();
+			Vector3 delta = s.nextVector3();
+			Matrix4x4 scaleExpected = s.nextMatrix();
+			Matrix4x4 scale = CameraTools.scale(mat, delta);
+
+			s.check(scale, scaleExpected);
+		}
+
+		s.finalCheck(1, 1, 0.1, 0.1);
 	}
 
 	@Test
