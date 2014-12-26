@@ -42,9 +42,9 @@ import org.graphstream.nui.UILayout;
 import org.graphstream.nui.UISpace;
 import org.graphstream.nui.UISpacePartition;
 import org.graphstream.nui.dataset.DataProvider;
+import org.graphstream.nui.geom.Vector3;
 import org.graphstream.nui.space.Bounds;
 import org.graphstream.nui.spacePartition.SpaceCell;
-import org.graphstream.ui.geom.Point3;
 
 public abstract class LayoutAlgorithmBase implements LayoutAlgorithm {
 	private static final Logger LOGGER = Logger
@@ -62,7 +62,7 @@ public abstract class LayoutAlgorithmBase implements LayoutAlgorithm {
 
 	protected double viewZone = -1;
 
-	protected Point3 viewZoneRadius;
+	protected Vector3 viewZoneRadius;
 
 	protected UISpacePartition spacePartition;
 
@@ -90,7 +90,7 @@ public abstract class LayoutAlgorithmBase implements LayoutAlgorithm {
 		dataset = (UIDataset) ctx.getModule(UIDataset.MODULE_ID);
 		assert dataset != null;
 
-		viewZoneRadius = new Point3();
+		viewZoneRadius = new Vector3();
 
 		enableSpacePartition(true);
 	}
@@ -174,38 +174,38 @@ public abstract class LayoutAlgorithmBase implements LayoutAlgorithm {
 
 	protected void computeViewZoneRadius() {
 		Bounds bounds = spacePartition.getSpace().getBounds();
-		Point3 lo = bounds.getLowestPoint();
-		Point3 hi = bounds.getHighestPoint();
+		Vector3 lo = bounds.getLowestPoint();
+		Vector3 hi = bounds.getHighestPoint();
 
-		viewZoneRadius.set((hi.x - lo.x) * viewZone, (hi.y - lo.y) * viewZone,
-				(hi.z - lo.z) * viewZone);
+		viewZoneRadius.set((hi.x() - lo.x()) * viewZone, (hi.y() - lo.y())
+				* viewZone, (hi.z() - lo.z()) * viewZone);
 	}
 
-	protected boolean intersection(Point3 p, SpaceCell cell) {
-		Point3 lo = cell.getBoundary().getLowestPoint();
-		Point3 hi = cell.getBoundary().getLowestPoint();
+	protected boolean intersection(Vector3 p, SpaceCell cell) {
+		Vector3 lo = cell.getBoundary().getLowestPoint();
+		Vector3 hi = cell.getBoundary().getLowestPoint();
 
-		double x1 = lo.x;
-		double x2 = hi.x;
-		double X1 = p.x - viewZoneRadius.x;
-		double X2 = p.x + viewZoneRadius.x;
+		double x1 = lo.x();
+		double x2 = hi.x();
+		double X1 = p.x() - viewZoneRadius.x();
+		double X2 = p.x() + viewZoneRadius.x();
 
 		if (X2 < x1 || X1 > x2)
 			return false;
 
-		double y1 = lo.y;
-		double y2 = hi.y;
-		double Y1 = p.y - viewZoneRadius.y;
-		double Y2 = p.y + viewZoneRadius.y;
+		double y1 = lo.y();
+		double y2 = hi.y();
+		double Y1 = p.y() - viewZoneRadius.y();
+		double Y2 = p.y() + viewZoneRadius.y();
 
 		if (Y2 < y1 || Y1 > y2)
 			return false;
 
 		if (spacePartition.getSpace().is3D()) {
-			double z1 = lo.z;
-			double z2 = hi.z;
-			double Z1 = p.z - viewZoneRadius.z;
-			double Z2 = p.z + viewZoneRadius.z;
+			double z1 = lo.z();
+			double z2 = hi.z();
+			double Z1 = p.z() - viewZoneRadius.z();
+			double Z2 = p.z() + viewZoneRadius.z();
 
 			if (Z2 < z1 || Z1 > z2)
 				return false;

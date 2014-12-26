@@ -38,8 +38,7 @@ import org.graphstream.nui.layout.force.Particle;
 import org.graphstream.nui.layout.force.Spring;
 import org.graphstream.nui.spacePartition.SpaceCell;
 import org.graphstream.nui.spacePartition.data.BarycenterData;
-import org.graphstream.ui.geom.Point3;
-import org.graphstream.ui.geom.Vector3;
+import org.graphstream.nui.geom.Vector3;
 
 public class LinLogLayout extends ForceLayout {
 	public static final String LAYOUT_NAME = "linlog";
@@ -134,8 +133,8 @@ public class LinLogLayout extends ForceLayout {
 		 * .ui.geom.Point3, double)
 		 */
 		@Override
-		public void attraction(Point3 p1, Point3 p2, double weight) {
-			delta.set(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+		public void attraction(Vector3 p1, Vector3 p2, double weight) {
+			delta.set(p2.x() - p1.x(), p2.y() - p1.y(), p2.z() - p1.z());
 			double len = delta.length();
 
 			if (len > 0) {
@@ -144,8 +143,8 @@ public class LinLogLayout extends ForceLayout {
 				factor = (Math.pow(len, a - 2)) * weight * aFactor;
 				energies.accumulateEnergy(factor);
 
-				delta.scalarMult(factor);
-				displacement.add(delta);
+				delta.selfScalarMult(factor);
+				displacement.selfAdd(delta);
 			}
 		}
 
@@ -157,8 +156,8 @@ public class LinLogLayout extends ForceLayout {
 		 * .ui.geom.Point3, double)
 		 */
 		@Override
-		public void repulsion(Point3 p1, Point3 p2, double weight) {
-			delta.set(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+		public void repulsion(Vector3 p1, Vector3 p2, double weight) {
+			delta.set(p2.x() - p1.x(), p2.y() - p1.y(), p2.z() - p1.z());
 			double len = delta.length();
 
 			if (len > 0) {
@@ -168,8 +167,8 @@ public class LinLogLayout extends ForceLayout {
 					factor = -maxR;
 
 				energies.accumulateEnergy(factor); // TODO check this
-				delta.scalarMult(factor);
-				displacement.add(delta);
+				delta.selfScalarMult(factor);
+				displacement.selfAdd(delta);
 			}
 		}
 	}

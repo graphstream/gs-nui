@@ -85,6 +85,9 @@ public class DefaultLayout extends AbstractModule implements UILayout {
 		algorithm = LayoutAlgorithms.getDefaultLayoutAlgorithm();
 		algorithm.init(ctx, this);
 
+		enableSpacePartition = true;
+		algorithm.enableSpacePartition(enableSpacePartition);
+
 		LOGGER.info("using layout "
 				+ LayoutAlgorithms.getLayoutName(algorithm.getClass()));
 	}
@@ -156,7 +159,7 @@ public class DefaultLayout extends AbstractModule implements UILayout {
 		 */
 		@Override
 		public int getCycleLength() {
-			return 1;
+			return LAYOUT_CYCLE_LENGTH;
 		}
 
 		/*

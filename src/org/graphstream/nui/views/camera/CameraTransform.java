@@ -33,10 +33,10 @@ package org.graphstream.nui.views.camera;
 
 import org.graphstream.nui.views.UICamera;
 import org.graphstream.nui.views.UICamera.ConvertType;
-import org.graphstream.ui.geom.Point3;
+import org.graphstream.nui.geom.Vector3;
 
 public interface CameraTransform {
 	void init(UICamera camera);
 
-	void convert(Point3 source, Point3 target, ConvertType type);
+	void convert(Vector3 source, Vector3 target, ConvertType type);
 }

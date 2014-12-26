@@ -37,10 +37,12 @@ import java.awt.geom.Point2D;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.graphstream.nui.geom.Vector3;
+import org.graphstream.nui.geom.Vector4;
+import org.graphstream.nui.space.Bounds;
 import org.graphstream.nui.views.UICamera;
 import org.graphstream.nui.views.UICamera.ConvertType;
 import org.graphstream.nui.views.swing.AWTTransform;
-import org.graphstream.ui.geom.Point3;
 
 public class CameraTransform2D implements AWTTransform {
 	private static final Logger LOGGER = Logger
@@ -65,11 +67,14 @@ public class CameraTransform2D implements AWTTransform {
 	public void init(UICamera camera) {
 		this.camera = camera;
 
-		Point3 origin = camera.getViewportOrigin();
-		double wp = camera.getDisplayWidth();
-		double hp = camera.getDisplayHeight();
-		double wg = camera.getViewportWidth();
-		double hg = camera.getViewportHeight();
+		Bounds subspace = camera.getObservedSpace();
+
+		Vector3 origin = subspace.getCenter();
+		Vector4 viewport = camera.getViewport();
+		double wp = viewport.get(2);
+		double hp = viewport.get(3);
+		double wg = subspace.getWidth();
+		double hg = subspace.getHeight();
 
 		tx = new AffineTransform();
 
@@ -78,7 +83,7 @@ public class CameraTransform2D implements AWTTransform {
 
 		tx.translate(wp / 2, hp / 2);
 		tx.scale(sx, sy);
-		tx.translate(-origin.x, -origin.y);
+		tx.translate(-origin.x(), -origin.y());
 
 		xt = new AffineTransform(tx);
 
@@ -94,12 +99,12 @@ public class CameraTransform2D implements AWTTransform {
 	 * 
 	 * @see
 	 * org.graphstream.nui.views.camera.CameraTransform#convert(org.graphstream
-	 * .ui.geom.Point3, org.graphstream.ui.geom.Point3,
+	 * .nui.geom.Vector3, org.graphstream.nui.geom.Vector3,
 	 * org.graphstream.nui.views.UICamera.ConvertType)
 	 */
 	@Override
-	public void convert(Point3 source, Point3 target, ConvertType type) {
-		Point2D.Double p1 = new Point2D.Double(source.x, source.y);
+	public void convert(Vector3 source, Vector3 target, ConvertType type) {
+		Point2D.Double p1 = new Point2D.Double(source.x(), source.y());
 		Point2D.Double p2 = new Point2D.Double();
 
 		switch (type) {
@@ -113,8 +118,7 @@ public class CameraTransform2D implements AWTTransform {
 			break;
 		}
 
-		target.x = p2.x;
-		target.y = p2.y;
+		target.set(p2.x, p2.y, target.z());
 	}
 
 	/*

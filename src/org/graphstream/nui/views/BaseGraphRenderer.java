@@ -39,8 +39,9 @@ public abstract class BaseGraphRenderer<U extends UICamera, V extends UIControll
 	protected U camera;
 	protected V controller;
 
-	protected BaseGraphRenderer(String viewId, U camera, V controller) {
-		super(viewId);
+	protected BaseGraphRenderer(final String viewTypeId, final String viewId,
+			U camera, V controller) {
+		super(viewTypeId, viewId);
 
 		this.camera = camera;
 		this.controller = controller;
@@ -55,7 +56,7 @@ public abstract class BaseGraphRenderer<U extends UICamera, V extends UIControll
 	@Override
 	public void init(UIContext ctx) {
 		super.init(ctx);
-		camera.init(ctx);
+		camera.init(ctx, null);
 	}
 
 	/*

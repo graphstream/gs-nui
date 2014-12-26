@@ -33,10 +33,10 @@ package org.graphstream.nui.spacePartition.data;
 
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIDataset;
+import org.graphstream.nui.geom.Vector3;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.ElementIndex.NodeIndex;
 import org.graphstream.nui.spacePartition.SpaceCell;
-import org.graphstream.ui.geom.Point3;
 
 public class BarycenterData implements SpaceCellData {
 	public static final SpaceCellDataFactory FACTORY = new SpaceCellDataFactory() {
@@ -52,12 +52,12 @@ public class BarycenterData implements SpaceCellData {
 		}
 	};
 
-	protected Point3 barycenter;
+	protected Vector3 barycenter;
 	protected double weight;
 	protected double degree;
 
 	public BarycenterData() {
-		barycenter = new Point3();
+		barycenter = new Vector3();
 		weight = 0;
 		degree = 0;
 	}
@@ -98,7 +98,7 @@ public class BarycenterData implements SpaceCellData {
 		barycenter.set(x, y, z);
 	}
 
-	public Point3 getBarycenter() {
+	public Vector3 getBarycenter() {
 		return barycenter;
 	}
 

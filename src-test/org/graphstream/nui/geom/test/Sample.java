@@ -42,9 +42,8 @@ import java.util.logging.Logger;
 
 import org.graphstream.nui.geom.Matrix4x4;
 import org.graphstream.nui.geom.Vector4;
+import org.graphstream.nui.geom.Vector3;
 import org.graphstream.nui.util.Tools;
-import org.graphstream.ui.geom.Point3;
-import org.graphstream.ui.geom.Vector3;
 import org.junit.Assert;
 
 public class Sample {
@@ -143,11 +142,6 @@ public class Sample {
 		return new Matrix4x4(nextData(16));
 	}
 
-	public Point3 nextPoint3() {
-		double[] data = nextData(3);
-		return new Point3(data[0], data[1], data[2]);
-	}
-
 	public Vector3 nextVector3() {
 		double[] data = nextData(3);
 		return new Vector3(data[0], data[1], data[2]);
@@ -175,8 +169,8 @@ public class Sample {
 		}
 	}
 
-	public void check(Point3 a, Point3 b) {
-		check(new double[] { a.x, a.y, a.z }, new double[] { b.x, b.y, b.z });
+	public void check(Vector3 a, Vector3 b) {
+		check(a.getRawData(), b.getRawData());
 	}
 
 	public void check(Matrix4x4 a, Matrix4x4 b) {
@@ -201,8 +195,8 @@ public class Sample {
 	}
 
 	public void check(Vector4 a, Vector4 b) {
-		double[] aData = a.data;
-		double[] bData = b.data;
+		double[] aData = a.getRawData();
+		double[] bData = b.getRawData();
 
 		compare++;
 

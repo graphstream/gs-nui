@@ -29,23 +29,66 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.views.camera;
+package org.graphstream.nui.geom;
 
-import org.graphstream.nui.views.UICamera;
-import org.graphstream.nui.geom.Vector3;
-
-public interface UICamera3D extends UICamera {
-	public static enum ProjectionType {
-		ORTHOGONAL, PERSPECTIVE
+public class Vector3 extends AbstractVector<Vector3> {
+	public Vector3() {
+		super(3);
 	}
 
-	/**
-	 * This is used when the nodes space is three dimensional. It defines the
-	 * position of the observer in the 3d-space.
-	 * 
-	 * @return
-	 */
-	Vector3 getCameraPosition();
+	public Vector3(Vector3 copy) {
+		super(copy);
+	}
 
-	ProjectionType getProjectionType();
+	public Vector3(Vector2 other, double z) {
+		super(other.x(), other.y(), z);
+	}
+
+	public Vector3(double x, double y, double z) {
+		super(x, y, z);
+	}
+
+	public Vector3 selfCrossProduct(Vector3 other) {
+		double x, y;
+
+		x = (data[1] * other.data[2]) - (data[2] * other.data[1]);
+		y = (data[2] * other.data[0]) - (data[0] * other.data[2]);
+		data[2] = (data[0] * other.data[1]) - (data[1] * other.data[0]);
+		data[0] = x;
+		data[1] = y;
+
+		dataChanged();
+
+		return this;
+	}
+
+	public Vector3 crossProduct(Vector3 other) {
+		Vector3 clone = new Vector3(this);
+		return clone.selfCrossProduct(other);
+	}
+
+	// //////////////////////////
+	// Access shortcuts
+
+	public double x() {
+		return data[0];
+	}
+
+	public double y() {
+		return data[1];
+	}
+
+	public double z() {
+		return data[2];
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.geom.AbstractVector#createNewInstance()
+	 */
+	@Override
+	protected Vector3 createNewInstance() {
+		return new Vector3();
+	}
 }

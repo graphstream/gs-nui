@@ -35,9 +35,9 @@ import java.util.logging.Logger;
 
 import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.UISpacePartition;
+import org.graphstream.nui.geom.Vector3;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.space.Bounds;
-import org.graphstream.ui.geom.Point3;
 
 public class OctTreeSpaceCell extends NTreeSpaceCell {
 	private static final Logger LOGGER = Logger
@@ -64,12 +64,12 @@ public class OctTreeSpaceCell extends NTreeSpaceCell {
 			return;
 		}
 
-		Point3 se = boundary.getLowestPoint();
-		Point3 nw = boundary.getHighestPoint();
+		Vector3 se = boundary.getLowestPoint();
+		Vector3 nw = boundary.getHighestPoint();
 
-		double lx = se.x, hx = nw.x, cx = (lx + hx) / 2;
-		double ly = se.y, hy = nw.y, cy = (ly + hy) / 2;
-		double lz = se.z, hz = nw.z, cz = (lz + hz) / 2;
+		double lx = se.x(), hx = nw.x(), cx = (lx + hx) / 2;
+		double ly = se.y(), hy = nw.y(), cy = (ly + hy) / 2;
+		double lz = se.z(), hz = nw.z(), cz = (lz + hz) / 2;
 
 		double[][] points = { { lx, cy, lz, cx, hy, cz },
 				{ cx, cy, lz, hx, hy, cz }, { lx, ly, lz, cx, cy, cz },
@@ -80,8 +80,8 @@ public class OctTreeSpaceCell extends NTreeSpaceCell {
 		neighbourhood = new OctTreeSpaceCell[8];
 
 		for (int i = 0; i < points.length; i++) {
-			Point3 l = new Point3(points[i][0], points[i][1], points[i][2]);
-			Point3 h = new Point3(points[i][3], points[i][4], points[i][5]);
+			Vector3 l = new Vector3(points[i][0], points[i][1], points[i][2]);
+			Vector3 h = new Vector3(points[i][3], points[i][4], points[i][5]);
 			Bounds b = new Bounds(l, h);
 
 			neighbourhood[i] = new OctTreeSpaceCell(spacePartition, b, this);

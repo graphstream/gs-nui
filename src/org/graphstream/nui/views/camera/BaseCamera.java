@@ -31,28 +31,32 @@
  */
 package org.graphstream.nui.views.camera;
 
+import java.util.logging.Logger;
+
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UISpace;
+import org.graphstream.nui.UIView;
+import org.graphstream.nui.space.Bounds;
 import org.graphstream.nui.views.UICamera;
-import org.graphstream.ui.geom.Point3;
+import org.graphstream.nui.geom.Vector3;
+import org.graphstream.nui.geom.Vector4;
 
 public abstract class BaseCamera<T extends CameraTransform> implements UICamera {
+	private static final Logger LOGGER = Logger.getLogger(BaseCamera.class
+			.getName());
+
 	protected UIContext ctx;
 
-	protected int displayWidth;
-	protected int displayHeight;
+	protected Vector4 viewport;
 
-	protected Point3 viewportOrigin;
-	protected double viewportWidth;
-	protected double viewportHeight;
+	protected Bounds observedSpace;
+	protected RotationVector rotation;
 
 	protected T transform;
 
 	protected boolean changed;
 
 	protected BaseCamera() {
-		viewportOrigin = new Point3();
-		transform = createTransform();
 	}
 
 	/*
@@ -62,12 +66,20 @@ public abstract class BaseCamera<T extends CameraTransform> implements UICamera 
 	 * org.graphstream.nui.views.UICamera#init(org.graphstream.nui.UIContext)
 	 */
 	@Override
-	public void init(UIContext ctx) {
+	public void init(UIContext ctx, UIView view) {
 		this.ctx = ctx;
+		this.rotation = new RotationVector();
+		this.rotation.set(Math.PI / 3, Math.PI / 3, Math.PI / 3);
+		this.viewport = new ViewportVector();
+		this.changed = true;
 
+		this.observedSpace = new InternalBounds();
 		UISpace space = (UISpace) ctx.getModule(UISpace.MODULE_ID);
-		setViewport(space.getBounds().getLowestPoint(), space.getBounds()
+		observedSpace.set(space.getBounds().getLowestPoint(), space.getBounds()
 				.getHighestPoint());
+
+		this.transform = createTransform();
+		this.transform.init(this);
 	}
 
 	/*
@@ -83,51 +95,31 @@ public abstract class BaseCamera<T extends CameraTransform> implements UICamera 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.views.UICamera#getViewportOrigin()
+	 * @see org.graphstream.nui.views.UICamera#getObservedSpace()
 	 */
 	@Override
-	public Point3 getViewportOrigin() {
-		return viewportOrigin;
+	public Bounds getObservedSpace() {
+		return observedSpace;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.views.UICamera#getViewportWidth()
+	 * @see org.graphstream.nui.views.UICamera#getSpaceRotation()
 	 */
 	@Override
-	public double getViewportWidth() {
-		return viewportWidth;
+	public Vector3 getSpaceRotation() {
+		return rotation;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.views.UICamera#getViewportHeight()
+	 * @see org.graphstream.nui.views.UICamera#getViewport()
 	 */
 	@Override
-	public double getViewportHeight() {
-		return viewportHeight;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.views.UICamera#getDisplayWidth()
-	 */
-	@Override
-	public int getDisplayWidth() {
-		return displayWidth;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.views.UICamera#getDisplayHeight()
-	 */
-	@Override
-	public int getDisplayHeight() {
-		return displayHeight;
+	public Vector4 getViewport() {
+		return viewport;
 	}
 
 	/*
@@ -139,32 +131,46 @@ public abstract class BaseCamera<T extends CameraTransform> implements UICamera 
 	 * org.graphstream.nui.views.UICamera.ConvertType)
 	 */
 	@Override
-	public void convert(Point3 source, Point3 target, ConvertType type) {
+	public void convert(Vector3 source, Vector3 target, ConvertType type) {
 		checkChanged();
 		transform.convert(source, target, type);
 	}
 
 	protected abstract T createTransform();
 
-	protected void resizeDisplay(int width, int height) {
-		displayWidth = width;
-		displayHeight = height;
-
-		changed = true;
-	}
-
-	protected void setViewport(Point3 lo, Point3 hi) {
-		viewportOrigin.set((lo.x + hi.x) / 2, (lo.y + hi.y) / 2);
-		viewportWidth = hi.x - lo.x;
-		viewportHeight = hi.y - lo.y;
-
-		changed = true;
-	}
-
 	protected void checkChanged() {
 		if (changed) {
 			transform.init(this);
 			changed = false;
+		}
+	}
+
+	class InternalBounds extends Bounds {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.graphstream.nui.space.Bounds#fireBoundsUpdated()
+		 */
+		@Override
+		protected void fireBoundsUpdated() {
+			super.fireBoundsUpdated();
+			changed = true;
+		}
+	}
+
+	class RotationVector extends Vector3 {
+		@Override
+		protected void dataChanged() {
+			LOGGER.info(String.format("rotation set to %s", rotation));
+			changed = true;
+		}
+	}
+
+	class ViewportVector extends Vector4 {
+		@Override
+		protected void dataChanged() {
+			LOGGER.info(String.format("viewport set to %s", viewport));
+			changed = true;
 		}
 	}
 }

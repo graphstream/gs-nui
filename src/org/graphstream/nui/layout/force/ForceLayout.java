@@ -41,6 +41,7 @@ import org.graphstream.nui.UIAttributes.AttributeType;
 import org.graphstream.nui.UISwapper.ValueFactory;
 import org.graphstream.nui.attributes.AttributeHandler;
 import org.graphstream.nui.dataset.DataProvider;
+import org.graphstream.nui.geom.Vector3;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.ElementIndex.EdgeIndex;
 import org.graphstream.nui.indexer.ElementIndex.NodeIndex;
@@ -54,7 +55,6 @@ import org.graphstream.nui.spacePartition.data.BarycenterData;
 import org.graphstream.nui.spacePartition.data.SpaceCellDataIndex;
 import org.graphstream.nui.swapper.UIArrayReference;
 import org.graphstream.nui.util.Tools;
-import org.graphstream.ui.geom.Point3;
 
 public abstract class ForceLayout extends LayoutAlgorithmBase {
 	private static final Logger LOGGER = Logger.getLogger(ForceLayout.class
@@ -64,7 +64,7 @@ public abstract class ForceLayout extends LayoutAlgorithmBase {
 	 * Global force strength. This is a factor in [0..1] that is used to scale
 	 * all computed displacements.
 	 */
-	protected double force = 0.5;
+	protected double force = 0.85;
 
 	/**
 	 * The stabilization limit of this algorithm.
@@ -81,7 +81,7 @@ public abstract class ForceLayout extends LayoutAlgorithmBase {
 
 	protected double barnesHutTheta = .7f;
 
-	protected Point3[] boundaryPoints;
+	protected Vector3[] boundaryPoints;
 
 	protected double boundaryWeight = 0.5;
 
@@ -172,7 +172,7 @@ public abstract class ForceLayout extends LayoutAlgorithmBase {
 
 		energies = new Energies();
 		dataProvider = new ParticlesDataProvider();
-		computeBoundaryPoints();
+		// computeBoundaryPoints();
 	}
 
 	/*
@@ -236,8 +236,8 @@ public abstract class ForceLayout extends LayoutAlgorithmBase {
 	public void compute() {
 		preComputation();
 
-		Point3 p1 = new Point3();
-		Point3 p2 = new Point3();
+		Vector3 p1 = new Vector3();
+		Vector3 p2 = new Vector3();
 
 		//
 		// Repulsion
@@ -279,23 +279,26 @@ public abstract class ForceLayout extends LayoutAlgorithmBase {
 			if (p.isFrozen())
 				continue;
 
-			for (int j = 0; j < boundaryPoints.length; j++)
-				p.repulsion(p1, boundaryPoints[j], boundaryWeight);
+			//
+			// Border repulsion
+			//
+			// for (int j = 0; j < boundaryPoints.length; j++)
+			// p.repulsion(p1, boundaryPoints[j], boundaryWeight);
 
 			p.displacement.normalize();
-			p.displacement.scalarMult(force);
+			p.displacement.selfScalarMult(force);
 
-			//if (len > (space.getBounds().getDiagonal() / 2))
-			//	p.displacement.scalarMult((space.getBounds().getDiagonal() / 2)
-			//			/ len);
+			// if (len > (space.getBounds().getDiagonal() / 2))
+			// p.displacement.scalarMult((space.getBounds().getDiagonal() / 2)
+			// / len);
 		}
 
 		energies.storeEnergy();
 	}
 
 	protected void computeRepulsion() {
-		Point3 p1 = new Point3();
-		Point3 p2 = new Point3();
+		Vector3 p1 = new Vector3();
+		Vector3 p2 = new Vector3();
 		double w;
 
 		for (int i = 0; i < dataset.getNodeCount() - 1; i++) {
@@ -327,8 +330,8 @@ public abstract class ForceLayout extends LayoutAlgorithmBase {
 		if (spacePartition instanceof TreeSpacePartition) {
 			TreeSpacePartition tree = (TreeSpacePartition) spacePartition;
 
-			Point3 p1 = new Point3();
-			Point3 p2 = new Point3();
+			Vector3 p1 = new Vector3();
+			Vector3 p2 = new Vector3();
 
 			for (int i = 0; i < dataset.getNodeCount(); i++) {
 				NodeIndex n1 = indexer.getNodeIndex(i);
@@ -345,8 +348,8 @@ public abstract class ForceLayout extends LayoutAlgorithmBase {
 		}
 	}
 
-	protected void computeRepulsionRecursive(NodeIndex n1, Point3 p1,
-			Point3 p2, TreeSpaceCell cell) {
+	protected void computeRepulsionRecursive(NodeIndex n1, Vector3 p1,
+			Vector3 p2, TreeSpaceCell cell) {
 		//
 		// Cell is close enough
 		//
@@ -397,56 +400,56 @@ public abstract class ForceLayout extends LayoutAlgorithmBase {
 	}
 
 	protected void computeBoundaryPoints() {
-		Point3[] b = new Point3[space.is3D() ? 24 : 8];
-		Point3 l = space.getBounds().getLowestPoint();
-		Point3 h = space.getBounds().getHighestPoint();
+		Vector3[] b = new Vector3[space.is3D() ? 24 : 8];
+		Vector3 l = space.getBounds().getLowestPoint();
+		Vector3 h = space.getBounds().getHighestPoint();
 		double cx, cy;
 		int i = 0;
 
-		cx = (h.x + l.x) / 2;
-		cy = (h.y + l.y) / 2;
+		cx = (h.x() + l.x()) / 2;
+		cy = (h.y() + l.y()) / 2;
 
 		if (space.is3D()) {
-			double cz = (h.z + l.z) / 2;
+			double cz = (h.z() + l.z()) / 2;
 
-			b[i++] = new Point3(l.x, l.y, l.z);
-			b[i++] = new Point3(cx, l.y, l.z);
-			b[i++] = new Point3(h.x, l.y, l.z);
-			b[i++] = new Point3(l.x, cy, l.z);
-			b[i++] = new Point3(cx, cy, l.z);
-			b[i++] = new Point3(h.x, cy, l.z);
-			b[i++] = new Point3(l.x, h.y, l.z);
-			b[i++] = new Point3(cx, h.y, l.z);
-			b[i++] = new Point3(h.x, h.y, l.z);
+			b[i++] = new Vector3(l.x(), l.y(), l.z());
+			b[i++] = new Vector3(cx, l.y(), l.z());
+			b[i++] = new Vector3(h.x(), l.y(), l.z());
+			b[i++] = new Vector3(l.x(), cy, l.z());
+			b[i++] = new Vector3(cx, cy, l.z());
+			b[i++] = new Vector3(h.x(), cy, l.z());
+			b[i++] = new Vector3(l.x(), h.y(), l.z());
+			b[i++] = new Vector3(cx, h.y(), l.z());
+			b[i++] = new Vector3(h.x(), h.y(), l.z());
 
-			b[i++] = new Point3(l.x, l.y, cz);
-			b[i++] = new Point3(cx, l.y, cz);
-			b[i++] = new Point3(h.x, l.y, cz);
-			b[i++] = new Point3(l.x, cy, cz);
-			b[i++] = new Point3(h.x, cy, cz);
-			b[i++] = new Point3(l.x, h.y, cz);
-			b[i++] = new Point3(cx, h.y, cz);
-			b[i++] = new Point3(h.x, h.y, cz);
+			b[i++] = new Vector3(l.x(), l.y(), cz);
+			b[i++] = new Vector3(cx, l.y(), cz);
+			b[i++] = new Vector3(h.x(), l.y(), cz);
+			b[i++] = new Vector3(l.x(), cy, cz);
+			b[i++] = new Vector3(h.x(), cy, cz);
+			b[i++] = new Vector3(l.x(), h.y(), cz);
+			b[i++] = new Vector3(cx, h.y(), cz);
+			b[i++] = new Vector3(h.x(), h.y(), cz);
 
-			b[i++] = new Point3(l.x, l.y, h.z);
-			b[i++] = new Point3(cx, l.y, h.z);
-			b[i++] = new Point3(h.x, l.y, h.z);
-			b[i++] = new Point3(l.x, cy, h.z);
-			b[i++] = new Point3(cx, cy, h.z);
-			b[i++] = new Point3(h.x, cy, h.z);
-			b[i++] = new Point3(l.x, h.y, h.z);
-			b[i++] = new Point3(cx, h.y, h.z);
-			b[i++] = new Point3(h.x, h.y, h.z);
+			b[i++] = new Vector3(l.x(), l.y(), h.z());
+			b[i++] = new Vector3(cx, l.y(), h.z());
+			b[i++] = new Vector3(h.x(), l.y(), h.z());
+			b[i++] = new Vector3(l.x(), cy, h.z());
+			b[i++] = new Vector3(cx, cy, h.z());
+			b[i++] = new Vector3(h.x(), cy, h.z());
+			b[i++] = new Vector3(l.x(), h.y(), h.z());
+			b[i++] = new Vector3(cx, h.y(), h.z());
+			b[i++] = new Vector3(h.x(), h.y(), h.z());
 
 		} else {
-			b[i++] = new Point3(l.x, l.y);
-			b[i++] = new Point3(cx, l.y);
-			b[i++] = new Point3(h.x, l.y);
-			b[i++] = new Point3(l.x, cy);
-			b[i++] = new Point3(h.x, cy);
-			b[i++] = new Point3(l.x, h.y);
-			b[i++] = new Point3(cx, h.y);
-			b[i++] = new Point3(h.x, h.y);
+			b[i++] = new Vector3(l.x(), l.y(), 0.0);
+			b[i++] = new Vector3(cx, l.y(), 0.0);
+			b[i++] = new Vector3(h.x(), l.y(), 0.0);
+			b[i++] = new Vector3(l.x(), cy, 0.0);
+			b[i++] = new Vector3(h.x(), cy, 0.0);
+			b[i++] = new Vector3(l.x(), h.y(), 0.0);
+			b[i++] = new Vector3(cx, h.y(), 0.0);
+			b[i++] = new Vector3(h.x(), h.y(), 0.0);
 		}
 
 		boundaryPoints = b;
@@ -481,19 +484,22 @@ public abstract class ForceLayout extends LayoutAlgorithmBase {
 		public void getNodeXYZ(ElementIndex index, double[] xyz) {
 			Particle p = particles.get(index, 0);
 			Bounds b = space.getBounds();
-			Point3 h = b.getHighestPoint();
-			Point3 l = b.getLowestPoint();
+			Vector3 h = b.getHighestPoint();
+			Vector3 l = b.getLowestPoint();
 
 			dataset.getNodeXYZ(index, xyz);
 
 			if (!p.isFrozen()) {
 				// System.err.printf("pub %s %s%n", index, p.displacement);
 
-				xyz[0] = check(xyz[0] + p.displacement.x(), l.x, h.x);
-				xyz[1] = check(xyz[1] + p.displacement.y(), l.y, h.y);
+				xyz[0] = check(xyz[0] + p.displacement.x(), l.x(), h.x());
+				xyz[1] = check(xyz[1] + p.displacement.y(), l.y(), h.y());
 
 				if (space.is3D())
-					xyz[2] = check(xyz[2] + p.displacement.z(), l.z, h.z);
+					xyz[2] = check(xyz[2] + p.displacement.z(), l.z(), h.z());
+
+				// System.out.printf("%s [%f|%f|%f]%n", index, xyz[0], xyz[1],
+				// xyz[2]);
 			}
 		}
 

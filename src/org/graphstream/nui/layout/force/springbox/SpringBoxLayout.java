@@ -36,15 +36,15 @@ import org.graphstream.nui.indexer.ElementIndex.NodeIndex;
 import org.graphstream.nui.layout.force.ForceLayout;
 import org.graphstream.nui.layout.force.Particle;
 import org.graphstream.nui.layout.force.Spring;
-import org.graphstream.ui.geom.Point3;
-import org.graphstream.ui.geom.Vector3;
+import org.graphstream.nui.space.Bounds;
+import org.graphstream.nui.geom.Vector3;
 
 public class SpringBoxLayout extends ForceLayout {
 	public static final String LAYOUT_NAME = "springbox";
 
 	protected double k = 1;
 
-	protected double C = 1;
+	protected double C = 1.0;
 	/**
 	 * Default attraction.
 	 */
@@ -56,6 +56,8 @@ public class SpringBoxLayout extends ForceLayout {
 	protected double K2 = 0.024f; // 0.12 ??
 
 	protected Vector3 delta = new Vector3();
+
+	protected double lastArea = 0;
 
 	/*
 	 * (non-Javadoc)
@@ -83,9 +85,22 @@ public class SpringBoxLayout extends ForceLayout {
 
 	protected void preComputation() {
 		super.preComputation();
-		k = C
-				* Math.sqrt(space.getBounds().getDiagonal()
-						/ dataset.getNodeCount());
+
+		Bounds b = space.getBounds();
+		double area = b.getWidth() * b.getHeight()
+				* (space.is3D() ? b.getDepth() : 1.0);
+
+		if (area != lastArea) {
+			area /= dataset.getNodeCount();
+
+			if (space.is3D())
+				area = Math.cbrt(area);
+			else
+				area = Math.sqrt(area);
+
+			k = C * area;
+			lastArea = area;
+		}
 	}
 
 	class SpringBoxParticle extends Particle {
@@ -101,19 +116,19 @@ public class SpringBoxLayout extends ForceLayout {
 		 * .ui.geom.Point3, double)
 		 */
 		@Override
-		public void attraction(Point3 p1, Point3 p2, double weight) {
-			delta.set(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+		public void attraction(Vector3 p1, Vector3 p2, double weight) {
+			delta.set(p2.x() - p1.x(), p2.y() - p1.y(), p2.z() - p1.z());
 			double len = delta.normalize();
 
 			double k = SpringBoxLayout.this.k * weight;
 
-			double factor = len * len / k;// K1 * (len - k);
+			double factor = K1 * (len - k);
 			factor = factor * (1f / (index.getDegree() * 0.1f));
 
 			energies.accumulateEnergy(factor);
 
-			delta.scalarMult(factor);
-			displacement.add(delta);
+			delta.selfScalarMult(factor);
+			displacement.selfAdd(delta);
 
 			// System.err.printf("> [%.2f;%.2f] -- [%.2f;%.2f] : [%.2f;%.2f]%n",
 			// p1.x, p1.y, p2.x, p2.y, delta.x(), delta.y());
@@ -127,20 +142,20 @@ public class SpringBoxLayout extends ForceLayout {
 		 * .ui.geom.Point3, double)
 		 */
 		@Override
-		public void repulsion(Point3 p1, Point3 p2, double weight) {
-			delta.set(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+		public void repulsion(Vector3 p1, Vector3 p2, double weight) {
+			delta.set(p2.x() - p1.x(), p2.y() - p1.y(), p2.z() - p1.z());
 			double len = delta.normalize();
 
 			if (len > 0) {
 
-				// if (len < k)
-				// len = k;
-				double factor = weight * k * k / len;
-				// len != 0 ? ((K2 / (len * len)) * weight) : 0.00001;
+				if (len < k)
+					len = k;
+				double factor = len != 0 ? ((K2 / (len * len)) * weight)
+						: 0.00001;
 
 				energies.accumulateEnergy(factor); // TODO check this
-				delta.scalarMult(-factor);
-				displacement.add(delta);
+				delta.selfScalarMult(-factor);
+				displacement.selfAdd(delta);
 
 				// System.err.printf(
 				// "< [%.2f;%.2f] -- [%.2f;%.2f] : [%.2f;%.2f]%n", x(),

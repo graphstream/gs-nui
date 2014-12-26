@@ -35,9 +35,9 @@ import java.util.logging.Logger;
 
 import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.UISpacePartition;
+import org.graphstream.nui.geom.Vector3;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.space.Bounds;
-import org.graphstream.ui.geom.Point3;
 
 public class QuadTreeSpaceCell extends NTreeSpaceCell {
 	private static final Logger LOGGER = Logger
@@ -64,11 +64,11 @@ public class QuadTreeSpaceCell extends NTreeSpaceCell {
 			return;
 		}
 
-		Point3 se = boundary.getLowestPoint();
-		Point3 nw = boundary.getHighestPoint();
+		Vector3 se = boundary.getLowestPoint();
+		Vector3 nw = boundary.getHighestPoint();
 
-		double lx = se.x, hx = nw.x, cx = (lx + hx) / 2;
-		double ly = se.y, hy = nw.y, cy = (ly + hy) / 2;
+		double lx = se.x(), hx = nw.x(), cx = (lx + hx) / 2;
+		double ly = se.y(), hy = nw.y(), cy = (ly + hy) / 2;
 
 		double[][] points = { { lx, cy, cx, hy }, { cx, cy, hx, hy },
 				{ lx, ly, cx, cy }, { cx, ly, hx, cy } };
@@ -76,8 +76,8 @@ public class QuadTreeSpaceCell extends NTreeSpaceCell {
 		neighbourhood = new QuadTreeSpaceCell[4];
 
 		for (int i = 0; i < points.length; i++) {
-			Point3 l = new Point3(points[i][0], points[i][1]);
-			Point3 h = new Point3(points[i][2], points[i][3]);
+			Vector3 l = new Vector3(points[i][0], points[i][1], 0.0);
+			Vector3 h = new Vector3(points[i][2], points[i][3], 0.0);
 			Bounds b = new Bounds(l, h);
 
 			neighbourhood[i] = new QuadTreeSpaceCell(spacePartition, b, this);

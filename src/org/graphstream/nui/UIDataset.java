@@ -36,7 +36,7 @@ import java.nio.DoubleBuffer;
 import org.graphstream.nui.dataset.DataProvider;
 import org.graphstream.nui.dataset.DatasetListener;
 import org.graphstream.nui.indexer.ElementIndex;
-import org.graphstream.ui.geom.Point3;
+import org.graphstream.nui.geom.Vector3;
 
 /**
  * The dataset is one of the main objects involved in the ui since it allows to
@@ -97,6 +97,8 @@ public interface UIDataset extends UIModule {
 	 */
 	int getEdgeCount();
 
+	int getPointDimension();
+
 	/**
 	 * Return the first coordinate of a node.
 	 * 
@@ -140,7 +142,7 @@ public interface UIDataset extends UIModule {
 	 */
 	double[] getNodeXYZ(ElementIndex nodexIndex, double[] xyz);
 
-	Point3 getNodeXYZ(ElementIndex nodeIndex, Point3 xyz);
+	Vector3 getNodeXYZ(ElementIndex nodeIndex, Vector3 xyz);
 
 	/**
 	 * Get all the coordinates of all nodes in the buffer object. The main
@@ -245,7 +247,7 @@ public interface UIDataset extends UIModule {
 	 *            index of the edge
 	 * @return an array of points
 	 */
-	Point3[] getEdgePoints(ElementIndex edgeIndex);
+	Vector3[] getEdgePoints(ElementIndex edgeIndex);
 
 	/**
 	 * Get the type of the breaking points of an edge. These points can be
@@ -269,7 +271,7 @@ public interface UIDataset extends UIModule {
 	 *            the breaking points
 	 */
 	void setEdgePoints(ElementIndex edgeIndex, EdgePointsType type,
-			Point3[] points);
+			Vector3[] points);
 
 	/**
 	 * Get the weight of an element.

@@ -31,7 +31,7 @@
  */
 package org.graphstream.nui.geom;
 
-import org.graphstream.ui.geom.Vector3;
+import org.graphstream.nui.geom.Vector3;
 
 public class Quaternion {
 	protected double x, y, z, w;

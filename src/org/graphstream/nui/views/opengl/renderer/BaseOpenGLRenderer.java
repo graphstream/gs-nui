@@ -32,20 +32,29 @@
 package org.graphstream.nui.views.opengl.renderer;
 
 import java.awt.Component;
+import java.util.logging.Logger;
 
 import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLCanvas;
+import javax.swing.SwingUtilities;
 
 import org.graphstream.nui.UIContext;
+import org.graphstream.nui.UISpace;
+import org.graphstream.nui.UISpacePartition;
+import org.graphstream.nui.geom.Vector3;
+import org.graphstream.nui.space.Bounds;
+import org.graphstream.nui.spacePartition.SpaceCell;
 import org.graphstream.nui.views.BaseGraphRenderer;
 import org.graphstream.nui.views.UIController;
+import org.graphstream.nui.views.opengl.DefaultOpenGLCamera;
 import org.graphstream.nui.views.opengl.OpenGLCamera;
 import org.graphstream.nui.views.opengl.OpenGLRenderer;
 import org.graphstream.nui.views.swing.SwingView;
-import org.graphstream.ui.geom.Point3;
 
 public abstract class BaseOpenGLRenderer extends
 		BaseGraphRenderer<OpenGLCamera, UIController> implements
@@ -54,26 +63,22 @@ public abstract class BaseOpenGLRenderer extends
 		GLProfile.initSingleton();
 	}
 
+	private static final Logger LOGGER = Logger
+			.getLogger(BaseOpenGLRenderer.class.getName());
+
+	public static final String VIEW_TYPE_ID_SUFFIX = "-opengl-renderer";
+
 	protected GLProfile profile;
 	protected GLCapabilities capabilities;
 	protected GLCanvas canvas;
 
-	protected BaseOpenGLRenderer(String viewId, OpenGLCamera camera,
-			UIController controller) {
-		super(viewId, camera, controller);
+	protected BaseOpenGLRenderer(String viewTypePrefix, String viewId) {
+		this(viewTypePrefix, viewId, new DefaultOpenGLCamera(), null);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.graphstream.nui.views.UIGraphRenderer#setViewport(org.graphstream
-	 * .ui.geom.Point3, double[])
-	 */
-	@Override
-	public void setViewport(Point3 center, double... dims) {
-		// TODO Auto-generated method stub
-
+	protected BaseOpenGLRenderer(String viewTypePrefix, String viewId,
+			OpenGLCamera camera, UIController controller) {
+		super(viewTypePrefix + VIEW_TYPE_ID_SUFFIX, viewId, camera, controller);
 	}
 
 	/*
@@ -85,13 +90,30 @@ public abstract class BaseOpenGLRenderer extends
 	 */
 	@Override
 	public void init(UIContext ctx) {
+		assert SwingUtilities.isEventDispatchThread();
+
 		super.init(ctx);
 
 		profile = GLProfile.getDefault();
 		capabilities = new GLCapabilities(profile);
+		capabilities.setHardwareAccelerated(true);
+
 		canvas = new GLCanvas(capabilities);
 
 		canvas.addGLEventListener(this);
+
+		if (camera instanceof DefaultOpenGLCamera)
+			((DefaultOpenGLCamera) camera).setRenderingSurface(canvas);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIView#update()
+	 */
+	@Override
+	public void update() {
+		canvas.repaint();
 	}
 
 	/*
@@ -120,5 +142,102 @@ public abstract class BaseOpenGLRenderer extends
 		return canvas;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * javax.media.opengl.GLEventListener#init(javax.media.opengl.GLAutoDrawable
+	 * )
+	 */
+	@Override
+	public void init(GLAutoDrawable drawable) {
+		GL2 gl = drawable.getGL().getGL2();
+
+		boolean isCompatible = checkCompatibility(gl);
+
+		LOGGER.info("is compatible ? " + isCompatible);
+
+		//gl.glEnable(GL2.GL_LINE_SMOOTH);
+		//gl.glEnable(GL2.GL_POINT_SMOOTH);
+
+		//gl.glEnable(GL2.GL_POLYGON_SMOOTH);
+		//gl.glHint(GL2.GL_POLYGON_SMOOTH_HINT, GL2.GL_DONT_CARE);
+		//gl.glDisable(GL2.GL_DEPTH_TEST);
+
+		gl.glEnable(GL2.GL_BLEND);
+		gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+
+		//gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_DONT_CARE);
+		//gl.glHint(GL2.GL_POINT_SMOOTH_HINT, GL2.GL_DONT_CARE);
+
+		// gl.glShadeModel(GL2.GL_FLAT);
+		gl.glPointSize(10.0f);
+	}
+
 	protected abstract boolean checkCompatibility(GL gl);
+
+	protected void drawWireBounds(GL2 gl, Bounds boundary) {
+		Vector3 lo = boundary.getLowestPoint();
+		Vector3 hi = boundary.getHighestPoint();
+
+		double lx = lo.x(), ly = lo.y(), lz = lo.z();
+		double hx = hi.x(), hy = hi.y(), hz = hi.z();
+
+		gl.glBegin(GL2.GL_LINE_STRIP);
+		gl.glVertex3d(lx, ly, lz);
+		gl.glVertex3d(hx, ly, lz);
+		gl.glVertex3d(hx, hy, lz);
+		gl.glVertex3d(lx, hy, lz);
+		gl.glVertex3d(lx, ly, lz);
+		gl.glEnd();
+
+		gl.glBegin(GL2.GL_LINE_STRIP);
+		gl.glVertex3d(lx, ly, hz);
+		gl.glVertex3d(hx, ly, hz);
+		gl.glVertex3d(hx, hy, hz);
+		gl.glVertex3d(lx, hy, hz);
+		gl.glVertex3d(lx, ly, hz);
+		gl.glEnd();
+
+		gl.glBegin(GL2.GL_LINES);
+		gl.glVertex3d(lx, ly, lz);
+		gl.glVertex3d(lx, ly, hz);
+
+		gl.glVertex3d(hx, ly, lz);
+		gl.glVertex3d(hx, ly, hz);
+
+		gl.glVertex3d(lx, hy, lz);
+		gl.glVertex3d(lx, hy, hz);
+
+		gl.glVertex3d(hx, hy, lz);
+		gl.glVertex3d(hx, hy, hz);
+		gl.glEnd();
+	}
+
+	protected void drawSpaceBox(GL2 gl) {
+		UISpace space = (UISpace) ctx.getModule(UISpace.MODULE_ID);
+		drawWireBounds(gl, space.getBounds());
+	}
+
+	protected void drawSpacePartition(GL2 gl) {
+		UISpacePartition spacePartition = (UISpacePartition) ctx
+				.getModule(UISpacePartition.MODULE_ID);
+
+		if (spacePartition == null) {
+			System.out.printf("no space partition\n");
+			return;
+		}
+
+		for (SpaceCell cell : spacePartition)
+			drawWireBounds(gl, cell.getBoundary());
+	}
+
+	protected OpenGLCamera createCamera() {
+		return new DefaultOpenGLCamera();
+	}
+
+	protected UIController createController() {
+		// TODO
+		return null;
+	}
 }

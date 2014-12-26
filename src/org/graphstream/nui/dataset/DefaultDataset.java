@@ -47,6 +47,7 @@ import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.UISwapper.CreationTrigger;
 import org.graphstream.nui.attributes.AttributeHandler;
+import org.graphstream.nui.geom.Vector3;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.ElementIndex.EdgeIndex;
 import org.graphstream.nui.indexer.ElementIndex.Type;
@@ -54,7 +55,6 @@ import org.graphstream.nui.swapper.UIArrayReference;
 import org.graphstream.nui.swapper.UIBufferReference;
 import org.graphstream.nui.util.Tools;
 import org.graphstream.stream.SinkAdapter;
-import org.graphstream.ui.geom.Point3;
 
 /**
  * 
@@ -114,7 +114,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 
 		ctx.getContextProxy().addAttributeSink(coordinatesListener);
 
-		dim = 3;
+		dim = space.is3D() ? 3 : 2;
 
 		defaultDataProvider = new RandomDataProvider();
 
@@ -249,6 +249,16 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see org.graphstream.nui.UIDataset#getPointDimension()
+	 */
+	@Override
+	public int getPointDimension() {
+		return dim;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.graphstream.nui.UIDataset#getNodeX(int)
 	 */
 	@Override
@@ -300,15 +310,13 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * ElementIndex, org.graphstream.ui.geom.Point3)
 	 */
 	@Override
-	public Point3 getNodeXYZ(ElementIndex nodeIndex, Point3 xyz) {
+	public Vector3 getNodeXYZ(ElementIndex nodeIndex, Vector3 xyz) {
 		if (xyz == null)
-			xyz = new Point3();
+			xyz = new Vector3();
 
-		xyz.x = nodesPoints.getDouble(nodeIndex, 0);
-		xyz.y = nodesPoints.getDouble(nodeIndex, 1);
-
-		if (dim > 1)
-			xyz.z = nodesPoints.getDouble(nodeIndex, 2);
+		xyz.set(nodesPoints.getDouble(nodeIndex, 0),
+				nodesPoints.getDouble(nodeIndex, 1),
+				dim > 2 ? nodesPoints.getDouble(nodeIndex, 2) : 0);
 
 		return xyz;
 	}
@@ -320,6 +328,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 */
 	@Override
 	public DoubleBuffer getNodesXYZ() {
+		nodesPoints.buffer().rewind();
 		return nodesPoints.buffer().asDoubleBuffer();
 	}
 
@@ -427,7 +436,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 * @see org.graphstream.nui.UIDataset#getEdgePoints(int)
 	 */
 	@Override
-	public Point3[] getEdgePoints(ElementIndex edgeIndex) {
+	public Vector3[] getEdgePoints(ElementIndex edgeIndex) {
 		return edgesData.get(edgeIndex, 0).points;
 	}
 
@@ -448,7 +457,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	 */
 	@Override
 	public void setEdgePoints(ElementIndex edgeIndex, EdgePointsType type,
-			Point3[] points) {
+			Vector3[] points) {
 		edgesData.get(edgeIndex, 0).points = points;
 		edgesData.get(edgeIndex, 0).pointsType = type;
 
@@ -714,7 +723,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	}
 
 	class EdgeData {
-		Point3[] points;
+		Vector3[] points;
 		EdgePointsType pointsType;
 
 		EdgeData() {
@@ -724,22 +733,22 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 
 	class RandomDataProvider implements DataProvider {
 		protected double randomXInsideBounds() {
-			double lx = space.getBounds().getLowestPoint().x;
-			double hx = space.getBounds().getHighestPoint().x;
+			double lx = space.getBounds().getLowestPoint().x();
+			double hx = space.getBounds().getHighestPoint().x();
 
 			return lx + random.getRandom().nextDouble() * (hx - lx);
 		}
 
 		protected double randomYInsideBounds() {
-			double ly = space.getBounds().getLowestPoint().y;
-			double hy = space.getBounds().getHighestPoint().y;
+			double ly = space.getBounds().getLowestPoint().y();
+			double hy = space.getBounds().getHighestPoint().y();
 
 			return ly + random.getRandom().nextDouble() * (hy - ly);
 		}
 
 		protected double randomZInsideBounds() {
-			double lz = space.getBounds().getLowestPoint().z;
-			double hz = space.getBounds().getHighestPoint().z;
+			double lz = space.getBounds().getLowestPoint().z();
+			double hz = space.getBounds().getHighestPoint().z();
 
 			return lz + random.getRandom().nextDouble() * (hz - lz);
 		}

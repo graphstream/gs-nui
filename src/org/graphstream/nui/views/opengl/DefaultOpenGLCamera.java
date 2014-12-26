@@ -31,17 +31,34 @@
  */
 package org.graphstream.nui.views.opengl;
 
-import javax.media.opengl.GL;
+import java.awt.Component;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+
 import javax.media.opengl.GL2;
 
 import org.graphstream.nui.views.camera.BaseCamera3D;
-import org.graphstream.nui.views.camera.CameraTransform;
 import org.graphstream.nui.views.camera.DefaultMatrixTransform;
 import org.graphstream.nui.views.camera.MatrixTransform;
-import org.graphstream.ui.geom.Vector3;
 
 public class DefaultOpenGLCamera extends BaseCamera3D<MatrixTransform>
 		implements OpenGLCamera {
+	protected Component renderingSurface;
+	protected Listener listener;
+
+	public void setRenderingSurface(Component component) {
+		if (renderingSurface != null)
+			renderingSurface.removeComponentListener(listener);
+
+		if (listener == null)
+			listener = new Listener();
+
+		renderingSurface = component;
+		renderingSurface.addComponentListener(listener);
+
+		viewport.set(0.0, 0.0, renderingSurface.getWidth(),
+				renderingSurface.getHeight());
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -52,10 +69,14 @@ public class DefaultOpenGLCamera extends BaseCamera3D<MatrixTransform>
 	 */
 	@Override
 	public void pushView(GL2 gl) {
+		checkChanged();
+		assert transform != null;
 		gl.glPushMatrix();
+		gl.glMatrixMode(GL2.GL_MODELVIEW);
+		gl.glLoadIdentity();
 		gl.glMatrixMode(GL2.GL_PROJECTION);
 		gl.glLoadIdentity();
-		gl.glViewport(0, 0, getDisplayWidth(), getDisplayHeight());
+		// gl.glViewport(0, 0, getViewportWidth(), getViewportHeight());
 		gl.glLoadMatrixd(transform.getMVPMatrix().getRawData(), 0);
 	}
 
@@ -81,4 +102,48 @@ public class DefaultOpenGLCamera extends BaseCamera3D<MatrixTransform>
 		return new DefaultMatrixTransform();
 	}
 
+	class Listener implements ComponentListener {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.ComponentListener#componentResized(java.awt.event.
+		 * ComponentEvent)
+		 */
+		@Override
+		public void componentResized(ComponentEvent e) {
+			viewport.set(0.0, 0.0, renderingSurface.getWidth(),
+					renderingSurface.getHeight());
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.awt.event.ComponentListener#componentMoved(java.awt.event.
+		 * ComponentEvent)
+		 */
+		@Override
+		public void componentMoved(ComponentEvent e) {
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.awt.event.ComponentListener#componentShown(java.awt.event.
+		 * ComponentEvent)
+		 */
+		@Override
+		public void componentShown(ComponentEvent e) {
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.awt.event.ComponentListener#componentHidden(java.awt.event.
+		 * ComponentEvent)
+		 */
+		@Override
+		public void componentHidden(ComponentEvent e) {
+		}
+	}
 }

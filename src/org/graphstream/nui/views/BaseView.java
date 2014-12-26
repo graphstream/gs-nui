@@ -36,10 +36,12 @@ import org.graphstream.nui.UIView;
 
 public abstract class BaseView implements UIView {
 	protected final String viewId;
+	protected final String viewTypeId;
 	protected UIContext ctx;
 
-	protected BaseView(String id) {
+	protected BaseView(String viewTypeId, String id) {
 		this.viewId = id;
+		this.viewTypeId = viewTypeId;
 	}
 
 	/*
@@ -50,6 +52,16 @@ public abstract class BaseView implements UIView {
 	@Override
 	public String getViewId() {
 		return viewId;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIView#getViewTypeId()
+	 */
+	@Override
+	public String getViewTypeId() {
+		return viewTypeId;
 	}
 
 	/*

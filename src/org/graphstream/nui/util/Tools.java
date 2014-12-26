@@ -31,7 +31,7 @@
  */
 package org.graphstream.nui.util;
 
-import org.graphstream.ui.geom.Point3;
+import org.graphstream.nui.geom.Vector3;
 
 public class Tools {
 	public static double checkAndGetDouble(Object value)
@@ -58,9 +58,9 @@ public class Tools {
 
 			for (int i = 0; i < r.length; i++)
 				r[i] = rO[i];
-		} else if (value instanceof Point3) {
-			Point3 p3 = (Point3) value;
-			r = new double[] { p3.x, p3.y, p3.z };
+		} else if (value instanceof Vector3) {
+			Vector3 p3 = (Vector3) value;
+			r = new double[] { p3.x(), p3.y(), p3.z() };
 		} else if (value instanceof Object[]) {
 			Object[] rO = (Object[]) value;
 			r = new double[rO.length];

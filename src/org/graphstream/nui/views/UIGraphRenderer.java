@@ -32,12 +32,9 @@
 package org.graphstream.nui.views;
 
 import org.graphstream.nui.UIView;
-import org.graphstream.ui.geom.Point3;
 
 public interface UIGraphRenderer extends UIView {
 	UICamera getCamera();
 
 	UIController getController();
-
-	void setViewport(Point3 center, double... dims);
 }

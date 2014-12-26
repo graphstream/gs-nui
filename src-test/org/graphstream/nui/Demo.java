@@ -49,6 +49,7 @@ import org.graphstream.nui.indexer.ElementIndex.Type;
 import org.graphstream.nui.layout.force.springbox.LinLogLayout;
 import org.graphstream.nui.swapper.UIBufferReference;
 import org.graphstream.nui.swing.SwingContext;
+import org.graphstream.nui.views.opengl.renderer.VBORenderer;
 import org.graphstream.nui.views.swing.SwingGraphRenderer;
 
 @SuppressWarnings("unused")
@@ -58,7 +59,7 @@ public class Demo {
 		final Logger log = Logger.getAnonymousLogger();
 
 		final DefaultGraph g = new DefaultGraph("g");
-		final UIContext ctx = new DefaultContext();// UIFactory.getDefaultFactory().createContext();
+		final UIContext ctx = new SwingContext();// UIFactory.getDefaultFactory().createContext();
 
 		ctx.init(ThreadingModel.SOURCE_IN_ANOTHER_THREAD);
 
@@ -91,7 +92,7 @@ public class Demo {
 		gen.addSink(g);
 
 		gen.begin();
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 300; i++)
 			gen.nextEvents();
 		gen.end();
 		gen.removeSink(g);
@@ -105,7 +106,7 @@ public class Demo {
 		try {
 			ctx.invokeOnUIThread(new Runnable() {
 				public void run() {
-					ctx.addView(new SwingGraphRenderer());
+					ctx.addView(new VBORenderer());
 				}
 			});
 		} catch (InterruptedException e1) {

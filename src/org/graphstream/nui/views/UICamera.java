@@ -32,7 +32,10 @@
 package org.graphstream.nui.views;
 
 import org.graphstream.nui.UIContext;
-import org.graphstream.ui.geom.Point3;
+import org.graphstream.nui.UIView;
+import org.graphstream.nui.geom.Vector3;
+import org.graphstream.nui.geom.Vector4;
+import org.graphstream.nui.space.Bounds;
 
 /**
  * Each view rendering a graph has its own camera. It allows to define the
@@ -53,52 +56,15 @@ public interface UICamera {
 		PX_TO_GU, GU_TO_PX
 	}
 
-	void init(UIContext ctx);
+	void init(UIContext ctx, UIView view);
 
 	void release();
 
-	/**
-	 * The center of the viewport which is a point in the node space. So the
-	 * renderer will render the part of the graph which is contains in {origin.x
-	 * - viewportWidth / 2, origin.y - viewportHeight / 2} as a lowest point
-	 * (adding the z-coordinate if this is a 3d-space), and {origin.x +
-	 * viewportWidth / 2, origin.y + viewportHeight / 2} as the highest point.
-	 * 
-	 * @return
-	 */
-	Point3 getViewportOrigin();
+	Bounds getObservedSpace();
 
-	/**
-	 * The width of the viewport of this camera.
-	 * 
-	 * @return viewport width
-	 */
-	double getViewportWidth();
+	Vector3 getSpaceRotation();
 
-	/**
-	 * The height of the viewport of this camera.
-	 * 
-	 * @return viewport height
-	 */
-	double getViewportHeight();
-
-	/**
-	 * Get the width of the displaying surface. this can not be changed by user
-	 * since it reflects the actual size of the graphic surface. Views have to
-	 * manage this value.
-	 * 
-	 * @return width of the rendering surface
-	 */
-	int getDisplayWidth();
-
-	/**
-	 * Get the height of the displaying surface. this can not be changed by user
-	 * since it reflects the actual size of the graphic surface. Views have to
-	 * manage this value.
-	 * 
-	 * @return height of the rendering surface
-	 */
-	int getDisplayHeight();
-
-	void convert(Point3 source, Point3 target, ConvertType type);
+	Vector4 getViewport();
+	
+	void convert(Vector3 source, Vector3 target, ConvertType type);
 }

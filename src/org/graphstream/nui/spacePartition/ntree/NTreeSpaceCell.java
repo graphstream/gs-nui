@@ -32,6 +32,7 @@
 package org.graphstream.nui.spacePartition.ntree;
 
 import org.graphstream.nui.UISpacePartition;
+import org.graphstream.nui.geom.Vector3;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.space.Bounds;
 import org.graphstream.nui.spacePartition.BaseSpaceCell;
@@ -40,11 +41,17 @@ import org.graphstream.nui.spacePartition.TreeSpaceCell;
 
 public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 		TreeSpaceCell {
+	public static final double MIN_EPSILON = 1E-10;
+
+	public static final boolean ENABLE_STRICT_SUBDIVIDE_CHECKING = false;
+
 	protected final NTreeSpaceCell parent;
 
 	protected NTreeSpaceCell[] neighbourhood;
 
 	protected int elementsCount;
+
+	protected int depth;
 
 	protected NTreeSpaceCell(UISpacePartition spacePartition, Bounds boundary,
 			NTreeSpaceCell parent) {
@@ -52,6 +59,7 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 
 		this.parent = parent;
 		this.changed = true;
+		this.depth = parent == null ? 0 : parent.depth + 1;
 	}
 
 	public abstract void subdivide();
@@ -63,6 +71,21 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 			computeData();
 
 		return elementsCount;
+	}
+
+	protected boolean canSubdivide() {
+		if (ENABLE_STRICT_SUBDIVIDE_CHECKING) {
+			Vector3 hi = boundary.getHighestPoint();
+			Vector3 lo = boundary.getLowestPoint();
+
+			return depth < 100
+					&& Math.abs(hi.x() - lo.x()) > MIN_EPSILON
+					&& Math.abs(hi.y() - lo.y()) > MIN_EPSILON
+					&& (!spacePartition.getSpace().is3D() || Math.abs(hi.z()
+							- lo.z()) > MIN_EPSILON);
+		}
+
+		return depth < 100;
 	}
 
 	protected void insert(ElementIndex e) {
@@ -85,8 +108,8 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 		if (!contains(e))
 			return null;
 
-		if (elements.size() < spacePartition.getMaxElementsPerCell()
-				&& neighbourhood == null) {
+		if ((elements.size() < spacePartition.getMaxElementsPerCell() && neighbourhood == null)
+				|| !canSubdivide()) {
 			elements.add(e);
 			changed = true;
 			return this;

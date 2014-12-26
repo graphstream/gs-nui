@@ -326,13 +326,14 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 			// Check size of the swap buffer
 			//
 			if (cc > swapBuffer.capacity())
-				swapBuffer = ByteBuffer.allocateDirect(componentCount
-						* componentSize);
+				swapBuffer = ByteBuffer.allocateDirect(cc);
 
 			if (direct)
 				theBuffer = ByteBuffer.allocateDirect(s);
 			else
 				theBuffer = ByteBuffer.allocate(s);
+
+			assert theBuffer.capacity() == capacity * cc;
 
 			theBuffer.order(order);
 			theBuffer.limit(getElementCount() * cc);
@@ -348,7 +349,7 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 			int elementCount = getElementCount();
 
 			if (elementCount >= capacity) {
-				capacity += growingSize;
+				capacity = Math.max(capacity + growingSize, elementCount);
 				int s = capacity * cc;
 
 				assert s > theBuffer.capacity();
@@ -360,6 +361,10 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 				else
 					tmp = ByteBuffer.allocate(s);
 
+				System.err.printf(
+						"allocate %d bytes (%d*%d) for %d elements%n", s,
+						capacity, cc, elementCount);
+
 				theBuffer.rewind();
 				tmp.order(order);
 				tmp.rewind();
@@ -367,10 +372,11 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 
 				theBuffer = tmp;
 			} else if (elementCount < capacity / 2
-					&& elementCount + growingSize > initialSize) {
+					&& elementCount + growingSize > initialSize
+					&& elementCount + growingSize < capacity) {
 				capacity = elementCount + growingSize;
 
-				int s = elementCount * cc;
+				int s = capacity * cc;
 				ByteBuffer tmp;
 
 				if (direct)
@@ -378,12 +384,20 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 				else
 					tmp = ByteBuffer.allocate(s);
 
+				System.err.printf(
+						"reduce to %d bytes (%d*%d) for %d elements%n", s,
+						capacity, cc, elementCount);
+
 				theBuffer.rewind();
 				theBuffer.limit(s);
 				tmp.order(order);
 				tmp.rewind();
 				tmp.put(theBuffer);
+
+				theBuffer = tmp;
 			}
+
+			theBuffer.limit(elementCount * cc);
 		}
 
 		/*

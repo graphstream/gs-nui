@@ -39,10 +39,10 @@ import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.UISpace;
 import org.graphstream.nui.dataset.DatasetListener;
+import org.graphstream.nui.geom.Vector3;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.util.Tools;
 import org.graphstream.nui.views.UICamera;
-import org.graphstream.ui.geom.Point3;
 
 public class DefaultSpace extends AbstractModule implements UISpace {
 	public static final double DEFAULT_PADDING = 0.1;
@@ -85,8 +85,8 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 	public void init(UIContext ctx) {
 		super.init(ctx);
 
-		bounds.set(-100, -100, 0, 100, 100, 0);
-		is3D = false;
+		is3D = true;
+		bounds.set(-100, -100, is3D ? -100 : 0, 100, 100, is3D ? 100 : 0);
 		mode = Mode.FIXED;
 
 		indexer = (UIIndexer) ctx.getModule(UIIndexer.MODULE_ID);
@@ -341,30 +341,38 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 				double z) {
 			boolean changed = false;
 
+			double lx = bounds.lowestPoint.x();
+			double ly = bounds.lowestPoint.y();
+			double lz = bounds.lowestPoint.z();
+
+			double hx = bounds.getHighestPoint().x();
+			double hy = bounds.getHighestPoint().y();
+			double hz = bounds.getHighestPoint().z();
+
 			switch (mode) {
 			case GROWING:
-				if (x < bounds.lowestPoint.x) {
-					bounds.lowestPoint.x = x;
+				if (x < lx) {
+					lx = x;
 					changed = true;
-				} else if (x > bounds.highestPoint.x) {
-					bounds.highestPoint.x = x;
+				} else if (x > hx) {
+					hx = x;
 					changed = true;
 				}
 
-				if (y < bounds.lowestPoint.y) {
-					bounds.lowestPoint.y = y;
+				if (y < ly) {
+					ly = y;
 					changed = true;
-				} else if (y > bounds.highestPoint.y) {
-					bounds.highestPoint.y = y;
+				} else if (y > hy) {
+					hy = y;
 					changed = true;
 				}
 
 				if (is3D) {
-					if (z < bounds.lowestPoint.z) {
-						bounds.lowestPoint.z = z;
+					if (z < lz) {
+						lz = z;
 						changed = true;
-					} else if (z > bounds.highestPoint.z) {
-						bounds.highestPoint.z = z;
+					} else if (z > hz) {
+						hz = z;
 						changed = true;
 					}
 				}
@@ -377,33 +385,33 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 					computeSpace();
 					changed = true;
 				} else {
-					if (x < bounds.lowestPoint.x + padding) {
-						bounds.lowestPoint.x = x - padding;
+					if (x < lx + padding) {
+						lx = x - padding;
 						lxBounds = nodeIndex;
 						changed = true;
-					} else if (x > bounds.highestPoint.x - padding) {
-						bounds.highestPoint.x = x + padding;
+					} else if (x > hx - padding) {
+						hx = x + padding;
 						hxBounds = nodeIndex;
 						changed = true;
 					}
 
-					if (y < bounds.lowestPoint.y + padding) {
-						bounds.lowestPoint.y = y - padding;
+					if (y < ly + padding) {
+						ly = y - padding;
 						lyBounds = nodeIndex;
 						changed = true;
-					} else if (y > bounds.highestPoint.y - padding) {
-						bounds.highestPoint.y = y + padding;
+					} else if (y > hy - padding) {
+						hy = y + padding;
 						hyBounds = nodeIndex;
 						changed = true;
 					}
 
 					if (is3D) {
-						if (z < bounds.lowestPoint.z + padding) {
-							bounds.lowestPoint.z = z - padding;
+						if (z < lz + padding) {
+							lz = z - padding;
 							lzBounds = nodeIndex;
 							changed = true;
-						} else if (z > bounds.highestPoint.z - padding) {
-							bounds.highestPoint.z = z + padding;
+						} else if (z > hz - padding) {
+							hz = z + padding;
 							hzBounds = nodeIndex;
 							changed = true;
 						}
@@ -419,7 +427,7 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 			}
 
 			if (changed)
-				bounds.computeDiagonal();
+				bounds.set(lx, ly, lz, hx, hy, hz);
 
 			return changed;
 		}
@@ -439,7 +447,7 @@ public class DefaultSpace extends AbstractModule implements UISpace {
 
 	private class InternalBounds extends Bounds {
 		InternalBounds() {
-			super(new Point3(-1, -1, -1), new Point3(1, 1, 1));
+			super(new Vector3(-1, -1, -1), new Vector3(1, 1, 1));
 		}
 
 		/*

@@ -31,19 +31,19 @@
  */
 package org.graphstream.nui.space;
 
-import org.graphstream.ui.geom.Point3;
+import org.graphstream.nui.geom.Vector3;
 
 public class Bounds {
-	protected final Point3 lowestPoint;
-	protected final Point3 highestPoint;
+	protected final Vector3 lowestPoint;
+	protected final Vector3 highestPoint;
 	protected double diagonal;
 
 	public Bounds() {
-		lowestPoint = new Point3();
-		highestPoint = new Point3();
+		lowestPoint = new Vector3();
+		highestPoint = new Vector3();
 	}
 
-	public Bounds(Point3 lo, Point3 hi) {
+	public Bounds(Vector3 lo, Vector3 hi) {
 		this();
 
 		this.lowestPoint.copy(lo);
@@ -55,20 +55,20 @@ public class Bounds {
 		this(clone.lowestPoint, clone.highestPoint);
 	}
 
-	public Point3 getLowestPoint() {
+	public Vector3 getLowestPoint() {
 		return lowestPoint;
 	}
 
-	public void setLowestPoint(Point3 xyz) {
+	public void setLowestPoint(Vector3 xyz) {
 		lowestPoint.copy(xyz);
 		fireBoundsUpdated();
 	}
 
-	public Point3 getHighestPoint() {
+	public Vector3 getHighestPoint() {
 		return highestPoint;
 	}
 
-	public void setHighestPoint(Point3 xyz) {
+	public void setHighestPoint(Vector3 xyz) {
 		highestPoint.copy(xyz);
 		fireBoundsUpdated();
 	}
@@ -77,8 +77,14 @@ public class Bounds {
 		return diagonal;
 	}
 
+	public void set(Vector3 lo, Vector3 hi) {
+		set(lo.x(), lo.y(), lo.z(), hi.x(), hi.y(), hi.z());
+	}
+
 	public void set(double lx, double ly, double lz, double hx, double hy,
 			double hz) {
+		assert lx <= hx && ly <= hy && lz <= hz;
+
 		lowestPoint.set(lx, ly, lz);
 		highestPoint.set(hx, hy, hz);
 
@@ -86,16 +92,34 @@ public class Bounds {
 	}
 
 	public boolean contains(double x, double y) {
-		return x >= lowestPoint.x && x <= highestPoint.x && y >= lowestPoint.y
-				&& y <= highestPoint.y;
+		return x >= lowestPoint.x() && x <= highestPoint.x()
+				&& y >= lowestPoint.y() && y <= highestPoint.y();
 	}
 
 	public boolean contains(double x, double y, double z) {
-		return contains(x, y) && z >= lowestPoint.z && z <= highestPoint.z;
+		return contains(x, y) && z >= lowestPoint.z() && z <= highestPoint.z();
 	}
 
 	public void computeDiagonal() {
 		diagonal = highestPoint.distance(lowestPoint);
+	}
+
+	public double getWidth() {
+		return highestPoint.x() - lowestPoint.x();
+	}
+
+	public double getHeight() {
+		return highestPoint.y() - lowestPoint.y();
+	}
+
+	public double getDepth() {
+		return highestPoint.z() - lowestPoint.z();
+	}
+
+	public Vector3 getCenter() {
+		return new Vector3((highestPoint.x() + lowestPoint.x()) / 2.0,
+				(highestPoint.y() + lowestPoint.y()) / 2.0,
+				(highestPoint.z() + lowestPoint.z()) / 2.0);
 	}
 
 	protected void fireBoundsUpdated() {

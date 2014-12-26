@@ -29,23 +29,31 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.views.camera;
+package org.graphstream.nui.geom;
 
-import org.graphstream.nui.views.UICamera;
-import org.graphstream.nui.geom.Vector3;
-
-public interface UICamera3D extends UICamera {
-	public static enum ProjectionType {
-		ORTHOGONAL, PERSPECTIVE
+public class Vector2 extends AbstractVector<Vector2> {
+	public Vector2() {
+		super(2);
 	}
 
-	/**
-	 * This is used when the nodes space is three dimensional. It defines the
-	 * position of the observer in the 3d-space.
-	 * 
-	 * @return
-	 */
-	Vector3 getCameraPosition();
+	public Vector2(Vector2 copy) {
+		super(copy);
+	}
 
-	ProjectionType getProjectionType();
+	public Vector2(double x, double y) {
+		super(new double[] { x, y });
+	}
+
+	public double x() {
+		return data[0];
+	}
+
+	public double y() {
+		return data[0];
+	}
+
+	@Override
+	protected Vector2 createNewInstance() {
+		return new Vector2();
+	}
 }

@@ -32,11 +32,10 @@
 package org.graphstream.nui.views.camera.test;
 
 import org.graphstream.nui.geom.Matrix4x4;
+import org.graphstream.nui.geom.Vector3;
 import org.graphstream.nui.geom.test.Sample;
 import org.graphstream.nui.geom.test.UseSamples;
 import org.graphstream.nui.views.camera.CameraTools;
-import org.graphstream.ui.geom.Point3;
-import org.graphstream.ui.geom.Vector3;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -118,12 +117,12 @@ public class TestCameraTools extends UseSamples {
 		while (s.hasNext()) {
 			s.startSample();
 
-			Point3 eye = s.nextPoint3();
-			Point3 center = s.nextPoint3();
+			Vector3 eye = s.nextVector3();
+			Vector3 center = s.nextVector3();
 			Vector3 up = s.nextVector3();
 			Matrix4x4 lookAtExpected = s.nextMatrix();
 			Matrix4x4 lookAt = CameraTools.lookAt(eye, center, up);
-
+			
 			s.check(lookAt, lookAtExpected);
 		}
 
@@ -213,13 +212,13 @@ public class TestCameraTools extends UseSamples {
 		while (s.hasNext()) {
 			s.startSample();
 
-			Point3 point = s.nextPoint3();
+			Vector3 point = s.nextVector3();
 			Matrix4x4 view = s.nextMatrix();
 			Matrix4x4 proj = s.nextMatrix();
 			double[] viewport = s.nextDoubles(4);
-			Point3 projectedExpected = s.nextPoint3();
+			Vector3 projectedExpected = s.nextVector3();
 
-			Point3 projected = new Point3();
+			Vector3 projected = new Vector3();
 			CameraTools.project(point, projected, view, proj, viewport);
 
 			s.check(projected, projectedExpected);
@@ -235,13 +234,13 @@ public class TestCameraTools extends UseSamples {
 		while (s.hasNext()) {
 			s.startSample();
 
-			Point3 win = s.nextPoint3();
+			Vector3 win = s.nextVector3();
 			Matrix4x4 view = s.nextMatrix();
 			Matrix4x4 proj = s.nextMatrix();
 			double[] viewport = s.nextDoubles(4);
-			Point3 projectedExpected = s.nextPoint3();
+			Vector3 projectedExpected = s.nextVector3();
 
-			Point3 projected = new Point3();
+			Vector3 projected = new Vector3();
 			CameraTools.unProject(win, projected, proj.mult(view).inverse(),
 					viewport);
 

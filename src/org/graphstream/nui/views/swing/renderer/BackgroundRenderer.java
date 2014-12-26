@@ -35,6 +35,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 
 import org.graphstream.nui.UIDataset;
+import org.graphstream.nui.geom.Vector4;
 import org.graphstream.nui.style.ElementStyle;
 import org.graphstream.nui.style.GroupStyle;
 import org.graphstream.nui.views.UICamera;
@@ -52,8 +53,10 @@ public class BackgroundRenderer implements SwingElementRenderer {
 	@Override
 	public void render(Graphics2D g, UICamera camera, UIDataset dataset,
 			ElementStyle graphStyle) {
+		Vector4 viewport = camera.getViewport();
+
 		g.setColor(Color.LIGHT_GRAY);
-		g.fillRect(0, 0, camera.getDisplayWidth(), camera.getDisplayHeight());
+		g.fillRect(0, 0, (int) viewport.get(2), (int) viewport.get(3));
 	}
 
 	/*

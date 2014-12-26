@@ -31,49 +31,27 @@
  */
 package org.graphstream.nui.views.camera;
 
-import org.graphstream.ui.geom.Point3;
-import org.graphstream.ui.geom.Vector3;
+import org.graphstream.nui.geom.Vector3;
 
 public abstract class BaseCamera3D<T extends CameraTransform> extends
 		BaseCamera<T> implements UICamera3D {
 
-	protected Point3 eye;
-	protected double viewportDepth;
+	protected Vector3 eye;
 	protected ProjectionType projectionType;
 
 	protected BaseCamera3D() {
-		eye = new Point3();
+		eye = new Vector3(0, 0, -250);
+		projectionType = ProjectionType.PERSPECTIVE;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.graphstream.nui.views.UICamera#getEyePosition()
+	 * @see org.graphstream.nui.views.camera.UICamera3D#getCameraPosition()
 	 */
 	@Override
-	public Point3 getCameraPosition() {
+	public Vector3 getCameraPosition() {
 		return eye;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.views.camera.UICamera3D#getCameraUpVector()
-	 */
-	@Override
-	public Vector3 getCameraUpVector() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.views.camera.UICamera3D#getViewportDepth()
-	 */
-	@Override
-	public double getViewportDepth() {
-		return viewportDepth;
 	}
 
 	/*
@@ -84,24 +62,5 @@ public abstract class BaseCamera3D<T extends CameraTransform> extends
 	@Override
 	public ProjectionType getProjectionType() {
 		return projectionType;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.graphstream.nui.views.camera.BaseCamera#setViewport(org.graphstream
-	 * .ui.geom.Point3, org.graphstream.ui.geom.Point3)
-	 */
-	@Override
-	protected void setViewport(Point3 lo, Point3 hi) {
-		viewportOrigin.set((lo.x + hi.x) / 2, (lo.y + hi.y) / 2,
-				(lo.z + hi.z) / 2);
-
-		viewportWidth = hi.x - lo.x;
-		viewportHeight = hi.y - lo.y;
-		viewportDepth = hi.z - lo.z;
-
-		transform.init(this);
 	}
 }

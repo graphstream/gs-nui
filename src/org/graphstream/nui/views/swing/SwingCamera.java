@@ -55,7 +55,8 @@ public class SwingCamera extends BaseCamera<AWTTransform> implements AWTCamera {
 		renderingSurface = component;
 		renderingSurface.addComponentListener(listener);
 
-		resizeDisplay(renderingSurface.getWidth(), renderingSurface.getHeight());
+		viewport.set(0.0, 0.0, renderingSurface.getWidth(),
+				renderingSurface.getHeight());
 	}
 
 	/*
@@ -91,7 +92,7 @@ public class SwingCamera extends BaseCamera<AWTTransform> implements AWTCamera {
 		 */
 		@Override
 		public void componentResized(ComponentEvent e) {
-			resizeDisplay(renderingSurface.getWidth(),
+			viewport.set(0.0, 0.0, renderingSurface.getWidth(),
 					renderingSurface.getHeight());
 		}
 

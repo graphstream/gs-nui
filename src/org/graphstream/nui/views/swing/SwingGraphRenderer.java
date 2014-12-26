@@ -43,16 +43,15 @@ import org.graphstream.nui.UIStyle;
 import org.graphstream.nui.views.BaseGraphRenderer;
 import org.graphstream.nui.views.UIController;
 import org.graphstream.nui.views.UIGraphRenderer;
-import org.graphstream.ui.geom.Point3;
 
 public class SwingGraphRenderer extends
 		BaseGraphRenderer<SwingCamera, UIController> implements
 		UIGraphRenderer, SwingView {
-	public static final String VIEW_ID = "swing-graph-renderer";
+	public static final String VIEW_TYPE_ID = "swing-renderer";
 	private static int VIEW_COUNT = 0;
 
 	private static String newViewId() {
-		return String.format("%s-%d", VIEW_ID, VIEW_COUNT++);
+		return String.format("%s-%d", VIEW_TYPE_ID, VIEW_COUNT++);
 	}
 
 	protected UIDataset dataset;
@@ -62,8 +61,12 @@ public class SwingGraphRenderer extends
 	protected SwingGraphCanvas canvas;
 
 	public SwingGraphRenderer() {
+		this(newViewId());
+	}
+
+	public SwingGraphRenderer(String viewId) {
 		// TODO: set camera and controller
-		super(newViewId(), new SwingCamera(), null);
+		super(VIEW_TYPE_ID, viewId, new SwingCamera(), null);
 	}
 
 	/*
@@ -106,18 +109,6 @@ public class SwingGraphRenderer extends
 	@Override
 	public void close() {
 		// TODO Auto-generated method stub
-
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.graphstream.nui.views.UIGraphRenderer#setViewport(org.graphstream
-	 * .ui.geom.Point3, double[])
-	 */
-	@Override
-	public void setViewport(Point3 center, double... dims) {
 
 	}
 

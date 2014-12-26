@@ -31,49 +31,41 @@
  */
 package org.graphstream.nui.geom;
 
-import java.util.Arrays;
-
-import org.graphstream.nui.util.Tools;
-import org.graphstream.ui.geom.Point3;
-import org.graphstream.ui.geom.Vector3;
-
-public class Vector4 extends Vector3 {
-	private static final long serialVersionUID = -297541924337145047L;
-
+public class Vector4 extends AbstractVector<Vector4> {
 	public Vector4() {
-		data = new double[4];
-		Arrays.fill(data, 0);
+		super(4);
 	}
 
 	public Vector4(Vector3 v, double w) {
-		data = Arrays.copyOf(v.data, 4);
-		data[3] = w;
-	}
-
-	public Vector4(Point3 p, double w) {
-		data = new double[] { p.x, p.y, p.z, w };
+		super(v.x(), v.y(), v.z(), w);
 	}
 
 	public Vector4(double x, double y, double z, double w) {
-		data = new double[] { x, y, z, w };
+		super(x, y, z, w);
 	}
 
 	public Vector4(double[] data) {
+		super(data);
 		assert data.length == 4;
-		this.data = data;
+	}
+
+	// //////////////////////////
+	// Access shortcuts
+
+	public double x() {
+		return data[0];
+	}
+
+	public double y() {
+		return data[1];
+	}
+
+	public double z() {
+		return data[2];
 	}
 
 	public double w() {
 		return data[3];
-	}
-
-	public Vector3 asVector3() {
-		return new Vector3(data[0], data[1], data[2]);
-	}
-
-	public Vector4 mult(Vector4 v) {
-		return new Vector4(data[0] * v.data[0], data[1] * v.data[1], data[2]
-				* v.data[2], data[3] * v.data[3]);
 	}
 
 	public Vector4 mult(Matrix4x4 right) {
@@ -89,40 +81,13 @@ public class Vector4 extends Vector3 {
 		return new Vector4(r);
 	}
 
-	public Vector4 mult(double s) {
-		double[] r = new double[4];
-
-		for (int i = 0; i < 4; i++)
-			r[i] = data[i] * s;
-
-		return new Vector4(r);
-	}
-
-	public Vector4 sub(Vector4 v) {
-		return new Vector4(data[0] - v.data[0], data[1] - v.data[1], data[2]
-				- v.data[2], data[3] - v.data[3]);
-	}
-
-	public Vector4 add(Vector4 v) {
-		return new Vector4(data[0] + v.data[0], data[1] + v.data[1], data[2]
-				+ v.data[2], data[3] + v.data[3]);
-	}
-
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.geom.AbstractVector#createNewInstance()
+	 */
 	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof Vector4) {
-			Vector4 mat = (Vector4) obj;
-			return Arrays.equals(data, mat.data);
-		}
-
-		return false;
-	}
-
-	public boolean fuzzyEquals(Vector4 mat, double epsilon) {
-		for (int i = 0; i < 4; i++)
-			if (!Tools.fuzzyEquals(data[i], mat.data[i], epsilon))
-				return false;
-
-		return true;
+	protected Vector4 createNewInstance() {
+		return new Vector4();
 	}
 }

@@ -33,8 +33,7 @@ package org.graphstream.nui.views.camera;
 
 import org.graphstream.nui.geom.Matrix4x4;
 import org.graphstream.nui.geom.Vector4;
-import org.graphstream.ui.geom.Point3;
-import org.graphstream.ui.geom.Vector3;
+import org.graphstream.nui.geom.Vector3;
 
 /**
  * We tried to make a happy bunny by using the code of the <a
@@ -60,59 +59,58 @@ public class CameraTools {
 		Vector3 axis = new Vector3(v);
 		axis.normalize();
 		Vector3 temp = new Vector3(axis);
-		temp.scalarMult(1.0 - c);
+		temp.selfScalarMult(1.0 - c);
 
-		Matrix4x4 Rotate = new Matrix4x4();
-		Rotate.set(0, 0, c + temp.x() * axis.x());
-		Rotate.set(0, 1, 0 + temp.x() * axis.y() + s * axis.z());
-		Rotate.set(0, 2, 0 + temp.x() * axis.z() - s * axis.y());
+		Matrix4x4 rotate = new Matrix4x4();
+		rotate.set(0, 0, c + temp.x() * axis.x());
+		rotate.set(0, 1, 0 + temp.x() * axis.y() + s * axis.z());
+		rotate.set(0, 2, 0 + temp.x() * axis.z() - s * axis.y());
 
-		Rotate.set(1, 0, 0 + temp.y() * axis.x() - s * axis.z());
-		Rotate.set(1, 1, c + temp.y() * axis.y());
-		Rotate.set(1, 2, 0 + temp.y() * axis.z() + s * axis.x());
+		rotate.set(1, 0, 0 + temp.y() * axis.x() - s * axis.z());
+		rotate.set(1, 1, c + temp.y() * axis.y());
+		rotate.set(1, 2, 0 + temp.y() * axis.z() + s * axis.x());
 
-		Rotate.set(2, 0, 0 + temp.z() * axis.x() + s * axis.y());
-		Rotate.set(2, 1, 0 + temp.z() * axis.y() - s * axis.x());
-		Rotate.set(2, 2, c + temp.z() * axis.z());
+		rotate.set(2, 0, 0 + temp.z() * axis.x() + s * axis.y());
+		rotate.set(2, 1, 0 + temp.z() * axis.y() - s * axis.x());
+		rotate.set(2, 2, c + temp.z() * axis.z());
 
 		Vector4 col0 = m.getColumn(0);
 		Vector4 col1 = m.getColumn(1);
 		Vector4 col2 = m.getColumn(2);
 		Vector4 col3 = m.getColumn(3);
 
-		Vector4 rCol0 = col0.mult(Rotate.get(0, 0))
-				.add(col1.mult(Rotate.get(0, 1)))
-				.add(col2.mult(Rotate.get(0, 2)));
-		Vector4 rCol1 = col0.mult(Rotate.get(1, 0))
-				.add(col1.mult(Rotate.get(1, 1)))
-				.add(col2.mult(Rotate.get(1, 2)));
-		Vector4 rCol2 = col0.mult(Rotate.get(2, 0))
-				.add(col1.mult(Rotate.get(2, 1)))
-				.add(col2.mult(Rotate.get(2, 2)));
+		Vector4 rCol0 = col0.scalarMult(rotate.get(0, 0))
+				.add(col1.scalarMult(rotate.get(0, 1)))
+				.add(col2.scalarMult(rotate.get(0, 2)));
+		Vector4 rCol1 = col0.scalarMult(rotate.get(1, 0))
+				.add(col1.scalarMult(rotate.get(1, 1)))
+				.add(col2.scalarMult(rotate.get(1, 2)));
+		Vector4 rCol2 = col0.scalarMult(rotate.get(2, 0))
+				.add(col1.scalarMult(rotate.get(2, 1)))
+				.add(col2.scalarMult(rotate.get(2, 2)));
 
 		return new Matrix4x4(rCol0, rCol1, rCol2, col3);
 	}
 
 	public static Matrix4x4 scale(Matrix4x4 m, Vector3 s) {
-		Vector4 col0 = m.getColumn(0).mult(s.x());
-		Vector4 col1 = m.getColumn(1).mult(s.y());
-		Vector4 col2 = m.getColumn(2).mult(s.z());
+		Vector4 col0 = m.getColumn(0).scalarMult(s.x());
+		Vector4 col1 = m.getColumn(1).scalarMult(s.y());
+		Vector4 col2 = m.getColumn(2).scalarMult(s.z());
 		Vector4 col3 = m.getColumn(3);
 
 		return new Matrix4x4(col0, col1, col2, col3);
 	}
 
-	public static Matrix4x4 lookAt(Point3 eye, Point3 center, Vector3 up) {
-		Vector3 f = new Vector3(center.x - eye.x, center.y - eye.y, center.z
-				- eye.z);
-		f.normalize();
+	public static Matrix4x4 lookAt(Vector3 eye, Vector3 center, Vector3 up) {
+		Vector3 f = new Vector3(center);
+		f.selfSub(eye).normalize();
 
 		Vector3 s = new Vector3(f);
-		s.crossProduct(up);
+		s.selfCrossProduct(up);
 		s.normalize();
 
 		Vector3 u = new Vector3(s);
-		u.crossProduct(f);
+		u.selfCrossProduct(f);
 
 		Matrix4x4 r = new Matrix4x4(1.0);
 
@@ -125,9 +123,9 @@ public class CameraTools {
 		r.set(0, 2, -f.x());
 		r.set(1, 2, -f.y());
 		r.set(2, 2, -f.z());
-		r.set(3, 0, -s.dotProduct(eye.x, eye.y, eye.z));
-		r.set(3, 1, -u.dotProduct(eye.x, eye.y, eye.z));
-		r.set(3, 2, f.dotProduct(eye.x, eye.y, eye.z));
+		r.set(3, 0, -s.dotProduct(eye));
+		r.set(3, 1, -u.dotProduct(eye));
+		r.set(3, 2, f.dotProduct(eye));
 
 		return r;
 	}
@@ -135,6 +133,8 @@ public class CameraTools {
 	public static Matrix4x4 ortho(double left, double right, double bottom,
 			double top, double zNear, double zFar) {
 		Matrix4x4 r = new Matrix4x4(1.0);
+
+		// System.out.printf("right %f, left %f%n", right, left);
 
 		r.set(0, 0, 2.0 / (right - left));
 		r.set(1, 1, 2.0 / (top - bottom));
@@ -181,6 +181,9 @@ public class CameraTools {
 		double tanHalfFovy = Math.tan(fovy / 2.0);
 		Matrix4x4 r = new Matrix4x4();
 
+		// System.out.printf("aspect %f, tanHalfFovy %f%n", aspect,
+		// tanHalfFovy);
+
 		r.set(0, 0, 1.0 / (aspect * tanHalfFovy));
 		r.set(1, 1, 1.0 / (tanHalfFovy));
 		r.set(2, 2, -(zFar + zNear) / (zFar - zNear));
@@ -190,35 +193,51 @@ public class CameraTools {
 		return r;
 	}
 
-	public static void project(Point3 source, Point3 target,
+	public static Matrix4x4 infinitePerspective(double fovy, double aspect,
+			double zNear) {
+		final double range = Math.tan(fovy / 2.0) * zNear;
+		final double left = -range * aspect;
+		final double right = range * aspect;
+		final double bottom = -range;
+		final double top = range;
+
+		Matrix4x4 result = new Matrix4x4(0.0);
+		result.set(0, 0, (2.0 * zNear) / (right - left));
+		result.set(1, 1, (2.0 * zNear) / (top - bottom));
+		result.set(2, 2, -1.0);
+		result.set(2, 3, -1.0);
+		result.set(3, 2, -2.0 * zNear);
+
+		return result;
+	}
+
+	public static void project(Vector3 source, Vector3 target,
 			Matrix4x4 modelView, Matrix4x4 projection, double[] viewport) {
 		Vector4 tmp = new Vector4(source, 1.0);
+
 		tmp = modelView.mult(tmp);
 		tmp = projection.mult(tmp);
 
-		tmp.scalarDiv(tmp.w());
-		tmp.scalarMult(0.5);
-		tmp.scalarAdd(0.5);
+		tmp.selfScalarDiv(tmp.w());
+		tmp.selfScalarMult(0.5);
+		tmp.selfScalarAdd(0.5);
 
-		target.x = tmp.x() * viewport[2] + viewport[0];
-		target.y = tmp.y() * viewport[3] + viewport[1];
-		target.z = tmp.z();
+		target.set(tmp.x() * viewport[2] + viewport[0], tmp.y() * viewport[3]
+				+ viewport[1], tmp.z());
 	}
 
-	public static void unProject(Point3 source, Point3 target,
+	public static void unProject(Vector3 source, Vector3 target,
 			Matrix4x4 invMVP, double[] viewport) {
 		Vector4 tmp = new Vector4(source, 1.0);
 
 		tmp.set(0, (tmp.x() - viewport[0]) / viewport[2]);
 		tmp.set(1, (tmp.y() - viewport[1]) / viewport[3]);
-		tmp.scalarMult(2.0);
-		tmp.scalarSub(1.0);
+		tmp.selfScalarMult(2.0);
+		tmp.selfScalarSub(1.0);
 
 		Vector4 obj = invMVP.mult(tmp);
-		obj.scalarDiv(obj.w());
+		obj.selfScalarDiv(obj.w());
 
-		target.x = obj.x();
-		target.y = obj.y();
-		target.z = obj.z();
+		target.set(obj.x(), obj.y(), obj.z());
 	}
 }

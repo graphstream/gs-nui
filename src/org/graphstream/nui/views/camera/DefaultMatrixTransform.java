@@ -34,9 +34,10 @@ package org.graphstream.nui.views.camera;
 import java.util.logging.Logger;
 
 import org.graphstream.nui.geom.Matrix4x4;
+import org.graphstream.nui.geom.Vector3;
+import org.graphstream.nui.geom.Vector4;
 import org.graphstream.nui.views.UICamera;
 import org.graphstream.nui.views.UICamera.ConvertType;
-import org.graphstream.ui.geom.Point3;
 
 import static org.graphstream.nui.views.camera.CameraTools.*;
 
@@ -49,7 +50,6 @@ public class DefaultMatrixTransform implements MatrixTransform {
 	protected Matrix4x4 model, view, projection;
 	protected Matrix4x4 mvp;
 	protected Matrix4x4 invMVP;
-	protected double[] viewport;
 
 	/*
 	 * (non-Javadoc)
@@ -69,27 +69,43 @@ public class DefaultMatrixTransform implements MatrixTransform {
 
 		UICamera3D camera3d = (UICamera3D) camera;
 
-		Point3 eye = this.camera.getCameraPosition();
-		Point3 at = this.camera.getViewportOrigin();
+		Vector3 at = this.camera.getObservedSpace().getCenter();
+		Vector3 eye = this.camera.getCameraPosition();
+
+		System.out.printf("at = %s%n", at);
 
 		model = new Matrix4x4(1.0);
-		view = lookAt(eye, at, camera3d.getCameraUpVector());
+
+		Vector3 delta = new Vector3(at);
+		delta.scalarMult(-1.0);
+		model = translate(model, delta);
+
+		Vector3 rotation = this.camera.getSpaceRotation();
+		model = rotate(model, rotation.z(), new Vector3(0, 0, 1));
+		model = rotate(model, rotation.x(), new Vector3(1, 0, 0));
+		model = rotate(model, rotation.y(), new Vector3(0, 1, 0));
+
+		view = lookAt(eye, new Vector3(0, 0, 0), new Vector3(0.0, 1.0, 0.0));
+
+		Vector4 viewport = camera.getViewport();
+		double aspect = viewport.get(2) / viewport.get(3);
+
+		System.out.printf("aspect %f (%.0fx%.0f)%n", aspect, viewport.get(2),
+				viewport.get(3));
 
 		switch (camera3d.getProjectionType()) {
 		case ORTHOGONAL:
-			projection = ortho(0, 0, 0, 0, 0, 0);
+			projection = ortho(-1.5 * aspect, 1.5 * aspect, -1.5, 1.5, -100,
+					100);
 			break;
 		case PERSPECTIVE:
-			projection = perspective(0, 0, 0, 0);
+			projection = infinitePerspective(Math.PI / 2.0, aspect, 0.1);
 			break;
 		}
 
 		modelView = view.mult(model);
-		mvp = projection.mult(modelView);
+		mvp = projection.mult(view).mult(model);
 		invMVP = mvp.inverse();
-
-		viewport = new double[] { 0, 0, camera.getDisplayWidth(),
-				camera.getDisplayHeight() };
 	}
 
 	/*
@@ -97,17 +113,18 @@ public class DefaultMatrixTransform implements MatrixTransform {
 	 * 
 	 * @see
 	 * org.graphstream.nui.views.camera.CameraTransform#convert(org.graphstream
-	 * .ui.geom.Point3, org.graphstream.ui.geom.Point3,
+	 * .nui.geom.Vector3, org.graphstream.nui.geom.Vector3,
 	 * org.graphstream.nui.views.UICamera.ConvertType)
 	 */
 	@Override
-	public void convert(Point3 source, Point3 target, ConvertType type) {
+	public void convert(Vector3 source, Vector3 target, ConvertType type) {
 		switch (type) {
 		case GU_TO_PX:
-			project(source, target, modelView, projection, viewport);
+			project(source, target, modelView, projection, camera.getViewport()
+					.getRawData());
 			break;
 		case PX_TO_GU:
-			unproject(source, target, invMVP, viewport);
+			unProject(source, target, invMVP, camera.getViewport().getRawData());
 			break;
 		}
 	}
