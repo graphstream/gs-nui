@@ -54,6 +54,10 @@ public interface UISwapper extends UIModule {
 	public static final String MODULE_ID = "swapper";
 	public static final int MODULE_PRIORITY = HIGH_PRIORITY;
 
+	public static enum BufferType {
+		INT, LONG, FLOAT, DOUBLE
+	}
+
 	/**
 	 * Create and registered a new buffer.
 	 * 
@@ -66,18 +70,13 @@ public interface UISwapper extends UIModule {
 	 *            buffer will be increased
 	 * @param components
 	 *            how many components per data element
-	 * @param componentSize
-	 *            defines the size of a components (in bytes)
-	 * @param direct
-	 *            set if the buffer should be direct or not
 	 * @param order
 	 *            byte order of the buffer
 	 * @param onNewElement
 	 * @return a reference to the new registered buffer
 	 */
 	UIBufferReference createBuffer(ElementIndex.Type type, int components,
-			int componentSize, boolean direct, ByteOrder order,
-			CreationTrigger onNewElement);
+			BufferType bufferType, ByteOrder order, CreationTrigger onNewElement);
 
 	<T> UIArrayReference<T> createArray(ElementIndex.Type type, int components,
 			Class<T> valueType, ValueFactory<T> valueFactory);

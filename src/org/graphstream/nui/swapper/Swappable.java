@@ -31,7 +31,11 @@
  */
 package org.graphstream.nui.swapper;
 
+import org.graphstream.nui.indexer.ElementIndex.Type;
+
 public interface Swappable {
+	Type getType();
+	
 	void checkSize();
 
 	void initDefaultValues();

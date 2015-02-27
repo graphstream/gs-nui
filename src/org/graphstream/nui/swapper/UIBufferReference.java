@@ -31,44 +31,40 @@
  */
 package org.graphstream.nui.swapper;
 
-import java.nio.ByteBuffer;
+import java.nio.Buffer;
 
 import org.graphstream.nui.indexer.ElementIndex;
 
 public interface UIBufferReference {
-	public static final int SIZE_INT = Integer.SIZE / 8;
-	public static final int SIZE_SHORT = Short.SIZE / 8;
-	public static final int SIZE_LONG = Long.SIZE / 8;
-	public static final int SIZE_FLOAT = Float.SIZE / 8;
-	public static final int SIZE_DOUBLE = Double.SIZE / 8;
-
-	ByteBuffer buffer();
+	Buffer buffer();
 
 	void release();
 
 	int getComponentsCount();
 
-	byte getByte(ElementIndex index, int component);
+	public static interface FloatBufferReference extends UIBufferReference {
+		float getFloat(ElementIndex index, int component);
 
-	void setByte(ElementIndex index, int component, byte b);
+		void setFloat(ElementIndex index, int component, float f);
+	}
 
-	float getFloat(ElementIndex index, int component);
+	public static interface DoubleBufferReference extends UIBufferReference {
+		double getDouble(ElementIndex index, int component);
 
-	void setFloat(ElementIndex index, int component, float f);
+		void setDouble(ElementIndex index, int component, double d);
+		
+		void getTuple(ElementIndex index, double[] tuple);
+	}
 
-	double getDouble(ElementIndex index, int component);
+	public static interface IntBufferReference extends UIBufferReference {
+		int getInt(ElementIndex index, int component);
 
-	void setDouble(ElementIndex index, int component, double d);
+		void setInt(ElementIndex index, int component, int i);
+	}
 
-	short getShort(ElementIndex index, int component);
+	public static interface LongBufferReference extends UIBufferReference {
+		long getLong(ElementIndex index, int component);
 
-	void setShort(ElementIndex index, int component, short s);
-
-	int getInt(ElementIndex index, int component);
-
-	void setInt(ElementIndex index, int component, int i);
-
-	long getLong(ElementIndex index, int component);
-
-	void setLong(ElementIndex index, int component, long l);
+		void setLong(ElementIndex index, int component, long l);
+	}
 }

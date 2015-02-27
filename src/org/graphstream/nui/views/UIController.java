@@ -31,6 +31,47 @@
  */
 package org.graphstream.nui.views;
 
-public interface UIController {
+import org.graphstream.nui.views.controller.UIViewAction;
 
+public interface UIController {
+	public static enum ControllerType {
+		KEYBOARD, MOUSE, TOUCH
+	}
+
+	public static enum ModifierType {
+		NONE, CONTROL_LEFT, CONTROL_RIGHT, ALT_LEFT, ALT_RIGHT, SHIFT_LEFT, SHIFT_RIGHT
+	}
+
+	public static interface ControllerInput {
+	}
+
+	public static enum KeyboardInput implements ControllerInput {
+		// /////////////////////////////////////////
+		// Letters
+		KEY_A, KEY_B, KEY_C, KEY_D, KEY_E, KEY_F, //
+		KEY_G, KEY_H, KEY_I, KEY_J, KEY_K, KEY_L, //
+		KEY_M, KEY_N, KEY_O, KEY_P, KEY_Q, KEY_R, //
+		KEY_S, KEY_T, KEY_U, KEY_V, KEY_W, KEY_X, //
+		KEY_Y, KEY_Z, //
+		// //////////////////////////////////
+		// Digits
+		KEY_0, KEY_1, KEY_2, KEY_3, KEY_4, //
+		KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, //
+		// ///////////////////////////////////////////////
+		// Functions
+		KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, //
+		KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_F11, KEY_F12, //
+		KEY_SPACE, KEY_BACKSPACE, KEY_ENTER, KEY_TAB, KEY_HOME, KEY_DEL, KEY_INS, KEY_PRINT, //
+		KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_PG_UP, KEY_PG_DOWN
+	}
+
+	public static enum MouseInput implements ControllerInput {
+		MOVE, DRAG, CLICK
+	}
+
+	void bindAction(ControllerType controllerType, int modifier, int target,
+			UIViewAction action);
+
+	void unbindAction(ControllerType controllerType, int modifier, int target,
+			UIViewAction action);
 }

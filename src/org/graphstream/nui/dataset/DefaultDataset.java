@@ -45,6 +45,7 @@ import org.graphstream.nui.UISwapper;
 import org.graphstream.nui.UIContext;
 import org.graphstream.nui.UIDataset;
 import org.graphstream.nui.UIIndexer;
+import org.graphstream.nui.UISwapper.BufferType;
 import org.graphstream.nui.UISwapper.CreationTrigger;
 import org.graphstream.nui.attributes.AttributeHandler;
 import org.graphstream.nui.geom.Vector3;
@@ -53,6 +54,7 @@ import org.graphstream.nui.indexer.ElementIndex.EdgeIndex;
 import org.graphstream.nui.indexer.ElementIndex.Type;
 import org.graphstream.nui.swapper.UIArrayReference;
 import org.graphstream.nui.swapper.UIBufferReference;
+import org.graphstream.nui.swapper.UIBufferReference.DoubleBufferReference;
 import org.graphstream.nui.util.Tools;
 import org.graphstream.stream.SinkAdapter;
 
@@ -67,15 +69,15 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	public static final double DEFAULT_EDGE_WEIGHT = 1.0;
 
 	protected int dim;
-	protected UIBufferReference nodesPoints;
+	protected DoubleBufferReference nodesPoints;
 	protected UIArrayReference<EdgeData> edgesData;
 	protected UIIndexer indexer;
 	protected List<DatasetListener> listeners;
 	protected CoordinatesListener coordinatesListener;
 	protected double defaultNodeWeight = DEFAULT_NODE_WEIGHT;
 	protected double defaultEdgeWeight = DEFAULT_EDGE_WEIGHT;
-	protected UIBufferReference nodesWeight;
-	protected UIBufferReference edgesWeight;
+	protected DoubleBufferReference nodesWeight;
+	protected DoubleBufferReference edgesWeight;
 	protected CreationTrigger onNewNode;
 	protected AttributeHandler weightHandler;
 	protected DataProvider defaultDataProvider;
@@ -131,16 +133,17 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 					ElementIndex index) {
 				if (defaultDataProvider != null) {
 					double[] xyz = new double[3];
+					DoubleBufferReference dbuffer = (DoubleBufferReference) buffer;
 					defaultDataProvider.getNodeXYZ(index, xyz);
 
 					for (int i = 0; i < buffer.getComponentsCount(); i++)
-						buffer.setDouble(index, i, xyz[i]);
+						dbuffer.setDouble(index, i, xyz[i]);
 				}
 			}
 		};
 
-		nodesPoints = swapper.createBuffer(Type.NODE, dim,
-				UIBufferReference.SIZE_DOUBLE, true, null, onNewNode);
+		nodesPoints = (DoubleBufferReference) swapper.createBuffer(Type.NODE,
+				dim, BufferType.DOUBLE, null, onNewNode);
 
 		edgesData = swapper.createArray(Type.EDGE, 1, EdgeData.class,
 				new UISwapper.ValueFactory<EdgeData>() {
@@ -314,9 +317,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 		if (xyz == null)
 			xyz = new Vector3();
 
-		xyz.set(nodesPoints.getDouble(nodeIndex, 0),
-				nodesPoints.getDouble(nodeIndex, 1),
-				dim > 2 ? nodesPoints.getDouble(nodeIndex, 2) : 0);
+		nodesPoints.getTuple(nodeIndex, xyz.getRawData());
 
 		return xyz;
 	}
@@ -329,7 +330,7 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 	@Override
 	public DoubleBuffer getNodesXYZ() {
 		nodesPoints.buffer().rewind();
-		return nodesPoints.buffer().asDoubleBuffer();
+		return (DoubleBuffer) nodesPoints.buffer();
 	}
 
 	/*
@@ -516,8 +517,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 				UISwapper swapper = (UISwapper) ctx
 						.getModule(UISwapper.MODULE_ID);
 
-				edgesWeight = swapper.createBuffer(Type.EDGE, 1,
-						UIBufferReference.SIZE_DOUBLE, false, null,
+				edgesWeight = (DoubleBufferReference) swapper.createBuffer(
+						Type.EDGE, 1, BufferType.DOUBLE, null,
 						new CreationTrigger() {
 							/*
 							 * (non-Javadoc)
@@ -531,7 +532,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 							@Override
 							public void newBufferElement(
 									UIBufferReference buffer, ElementIndex index) {
-								buffer.setDouble(index, 0, defaultEdgeWeight);
+								((DoubleBufferReference) buffer).setDouble(
+										index, 0, defaultEdgeWeight);
 							}
 						});
 			}
@@ -544,8 +546,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 				UISwapper swapper = (UISwapper) ctx
 						.getModule(UISwapper.MODULE_ID);
 
-				nodesWeight = swapper.createBuffer(Type.NODE, 1,
-						UIBufferReference.SIZE_DOUBLE, false, null,
+				nodesWeight = (DoubleBufferReference) swapper.createBuffer(
+						Type.NODE, 1, BufferType.DOUBLE, null,
 						new CreationTrigger() {
 							/*
 							 * (non-Javadoc)
@@ -559,7 +561,8 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 							@Override
 							public void newBufferElement(
 									UIBufferReference buffer, ElementIndex index) {
-								buffer.setDouble(index, 0, defaultNodeWeight);
+								((DoubleBufferReference) buffer).setDouble(
+										index, 0, defaultNodeWeight);
 							}
 						});
 			}
@@ -597,8 +600,9 @@ public class DefaultDataset extends AbstractModule implements UIDataset {
 		}
 
 		UISwapper swapper = (UISwapper) ctx.getModule(UISwapper.MODULE_ID);
-		UIBufferReference tmp = swapper.createBuffer(Type.NODE, dim,
-				Double.SIZE / 8, true, null, onNewNode);
+		DoubleBufferReference tmp = (DoubleBufferReference) swapper
+				.createBuffer(Type.NODE, dim, BufferType.DOUBLE, null,
+						onNewNode);
 
 		for (int i = 0; i < indexer.getNodeCount(); i++) {
 			ElementIndex index = indexer.getNodeIndex(i);

@@ -205,7 +205,7 @@ public class VBORenderer extends BaseOpenGLRenderer implements OpenGLRenderer,
 		drawSpaceBox(gl);
 		drawSpacePartition(gl);
 
-		gl.glColor4f(0.1f, 0.1f, 0.1f, 0.75f);
+		gl.glColor4f(0.1f, 0.1f, 0.1f, 0.5f);
 
 		gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
 
@@ -214,6 +214,8 @@ public class VBORenderer extends BaseOpenGLRenderer implements OpenGLRenderer,
 
 		gl.glVertexPointer(dataset.getPointDimension(), GL2.GL_DOUBLE, 0, 0);
 		gl.glDrawArrays(GL2.GL_POINTS, 0, dataset.getNodeCount());
+
+		gl.glColor4f(0.1f, 0.1f, 0.1f, 0.3f);
 
 		gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, edgeBuffer());
 		gl.glDrawArrays(GL2.GL_LINES, 0, dataset.getEdgeCount());
@@ -297,7 +299,7 @@ public class VBORenderer extends BaseOpenGLRenderer implements OpenGLRenderer,
 			gl.glBufferData(GL2.GL_ARRAY_BUFFER,
 					nodeCount * dataset.getPointDimension() * Double.SIZE / 8,
 					dataset.getNodesXYZ(), GL2.GL_DYNAMIC_DRAW);
-
+			
 			if (nodeCount != nodeIndices.capacity()) {
 				nodeIndices = ByteBuffer
 						.allocateDirect(nodeCount * Integer.SIZE / 8)

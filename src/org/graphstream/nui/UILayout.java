@@ -34,5 +34,5 @@ package org.graphstream.nui;
 public interface UILayout extends UIModule {
 	public static final String MODULE_ID = "layout";
 
-	public static final int LAYOUT_CYCLE_LENGTH = 5;
+	public static final int LAYOUT_CYCLE_LENGTH = 1;
 }

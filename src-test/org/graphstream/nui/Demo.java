@@ -42,6 +42,7 @@ import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.DefaultGraph;
 import org.graphstream.nui.UIContext.ThreadingModel;
+import org.graphstream.nui.UISwapper.BufferType;
 import org.graphstream.nui.context.DefaultContext;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.IndexerListener;
@@ -119,7 +120,7 @@ public class Demo {
 			e.printStackTrace();
 		}
 
-		//ctx.disconnect(g);
+		// ctx.disconnect(g);
 		// g.display(false);
 		//
 		// while (true) {
@@ -166,11 +167,11 @@ public class Demo {
 
 		UISwapper buffers = (UISwapper) ctx.getModule(UISwapper.MODULE_ID);
 		UIBufferReference ref = buffers.createBuffer(Type.NODE, 3,
-				Double.SIZE / 8, true, null, null);
+				BufferType.DOUBLE, null, null);
 
 		UIDataset dataset = (UIDataset) ctx.getModule(UIDataset.MODULE_ID);
 
-		print(ref.buffer().asDoubleBuffer());
+		// print(ref.buffer().asDoubleBuffer());
 
 		// y.setAttribute("xyz", 10, 15, 20);
 
@@ -183,10 +184,10 @@ public class Demo {
 		// .getFillColor());
 
 		ElementIndex w = indexer.getNodeIndex("W");
-		ref.setDouble(w, 0, 23.0);
-		ref.setDouble(w, 1, 32.0);
+		// ref.setDouble(w, 0, 23.0);
+		// ref.setDouble(w, 1, 32.0);
 
-		print(ref.buffer().asDoubleBuffer());
+		// print(ref.buffer().asDoubleBuffer());
 
 		Iterator<ElementIndex> it = style.getRenderingOrder();
 

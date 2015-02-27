@@ -69,7 +69,8 @@ public abstract class BaseCamera<T extends CameraTransform> implements UICamera 
 	public void init(UIContext ctx, UIView view) {
 		this.ctx = ctx;
 		this.rotation = new RotationVector();
-		this.rotation.set(Math.PI / 3, Math.PI / 3, Math.PI / 3);
+		this.rotation.set(Math.PI / 3, Math.PI / 2, Math.PI / 3);
+		//this.rotation.set(0.0, 0.0, 0.0);
 		this.viewport = new ViewportVector();
 		this.changed = true;
 

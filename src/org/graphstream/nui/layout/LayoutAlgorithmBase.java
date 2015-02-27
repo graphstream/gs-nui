@@ -60,7 +60,7 @@ public abstract class LayoutAlgorithmBase implements LayoutAlgorithm {
 
 	protected boolean enableSpacePartition;
 
-	protected double viewZone = -1;
+	protected double viewZone = 0.25;
 
 	protected Vector3 viewZoneRadius;
 

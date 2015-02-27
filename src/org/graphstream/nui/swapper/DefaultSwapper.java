@@ -31,10 +31,8 @@
  */
 package org.graphstream.nui.swapper;
 
-import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -47,12 +45,17 @@ import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.indexer.ElementIndex;
 import org.graphstream.nui.indexer.ElementIndex.Type;
 import org.graphstream.nui.indexer.IndexerListener;
+import org.graphstream.nui.swapper.DefaultBufferReference.DefaultDoubleBufferReference;
+import org.graphstream.nui.swapper.DefaultBufferReference.DefaultIntBufferReference;
+import org.graphstream.nui.swapper.DefaultBufferReference.DefaultFloatBufferReference;
+import org.graphstream.nui.swapper.DefaultBufferReference.DefaultLongBufferReference;
 
 public class DefaultSwapper extends AbstractModule implements UISwapper {
 	protected final Map<Type, List<Swappable>> buffers;
 	protected UIIndexer indexer;
 	protected ByteBuffer swapBuffer;
 	protected ChangeListener listener;
+	protected SwappableHandler handler;
 	protected int nodeInitialSize;
 	protected int nodeGrowingSize;
 	protected int edgeInitialSize;
@@ -67,6 +70,7 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 
 		swapBuffer = ByteBuffer.allocateDirect(1024);
 		listener = new ChangeListener();
+		handler = new InternalSwappableHandler();
 
 		nodeInitialSize = 1000;
 		edgeInitialSize = 2000;
@@ -123,12 +127,13 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 	 * 
 	 * @see
 	 * org.graphstream.nui.UISwapper#createBuffer(org.graphstream.nui.indexer
-	 * .ElementIndex.Type, int, int, boolean, java.nio.ByteOrder,
+	 * .ElementIndex.Type, int, org.graphstream.nui.UISwapper.BufferType,
+	 *  java.nio.ByteOrder,
 	 * org.graphstream.nui.UISwapper.CreationTrigger)
 	 */
 	@Override
-	public UIBufferReference createBuffer(Type type, int components,
-			int componentSize, boolean direct, ByteOrder order,
+	public UIBufferReference createBuffer(ElementIndex.Type type,
+			int components, BufferType bufferType, ByteOrder order,
 			CreationTrigger onNewElement) {
 		int initialSize, growingSize;
 
@@ -143,9 +148,28 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 			growingSize = nodeGrowingSize;
 		}
 
-		DefaultBufferReference ref = new DefaultBufferReference(type,
-				initialSize, growingSize, components, componentSize, direct,
-				order, onNewElement);
+		DefaultBufferReference ref = null;
+
+		switch (bufferType) {
+		case DOUBLE:
+			ref = new DefaultDoubleBufferReference(handler, type, components,
+					initialSize, growingSize, onNewElement);
+			break;
+		case FLOAT:
+			ref = new DefaultFloatBufferReference(handler, type, components,
+					initialSize, growingSize, onNewElement);
+			break;
+		case INT:
+			ref = new DefaultIntBufferReference(handler, type, components,
+					initialSize, growingSize, onNewElement);
+			break;
+		case LONG:
+			ref = new DefaultLongBufferReference(handler, type, components,
+					initialSize, growingSize, onNewElement);
+			break;
+		}
+
+		assert ref != null;
 
 		if (!buffers.containsKey(type))
 			buffers.put(type, new LinkedList<Swappable>());
@@ -179,7 +203,8 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 		}
 
 		DefaultArrayReference<T> ref = new DefaultArrayReference<T>(type,
-				initialSize, growingSize, components, valueType, valueFactory);
+				initialSize, growingSize, components, valueType, valueFactory,
+				handler);
 
 		if (!buffers.containsKey(type))
 			buffers.put(type, new LinkedList<Swappable>());
@@ -216,530 +241,27 @@ public class DefaultSwapper extends AbstractModule implements UISwapper {
 		}
 	}
 
-	abstract class BaseReference implements Swappable {
-		protected final Type type;
-		protected int growingSize;
-		protected int initialSize;
-		protected final int componentCount;
-
-		BaseReference(final Type type, int initialSize, int growingSize,
-				int componentCount) {
-			this.type = type;
-			this.initialSize = initialSize;
-			this.growingSize = growingSize;
-			this.componentCount = componentCount;
-		}
-
-		public int getComponentsCount() {
-			return componentCount;
-		}
-
-		@Override
-		public void release() {
-			buffers.get(type).remove(this);
-		}
-
-		protected int getElementCount() {
-			int elementCount;
-
-			switch (type) {
-			case NODE:
-				elementCount = indexer.getNodeCount();
-				break;
-			case EDGE:
-				elementCount = indexer.getEdgeCount();
-				break;
-			case SPRITE:
-				elementCount = indexer.getSpriteCount();
-				break;
-			default:
-				//
-				// What's the hell ?!?
-				//
-				elementCount = 1;
-				break;
-			}
-
-			return elementCount;
-		}
-	}
-
-	//
-	// Internal implementation of buffer reference.
-	//
-	class DefaultBufferReference extends BaseReference implements
-			UIBufferReference, Swappable {
-		ByteBuffer theBuffer;
-		int capacity;
-		final boolean direct;
-		final int componentSize;
-		final ByteOrder order;
-		final int cc;
-		final CreationTrigger onNewElement;
-		int size;
-
-		DefaultBufferReference(final Type type, final int initialSize,
-				final int growingSize, final int componentCount,
-				final int componentSize, final boolean direct,
-				final ByteOrder order, final CreationTrigger onNewElement) {
-			super(type, initialSize, growingSize, componentCount);
-
-			this.componentSize = componentSize;
-			this.direct = direct;
-			this.order = order == null ? ByteOrder.nativeOrder() : order;
-			this.cc = componentCount * componentSize;
-			this.onNewElement = onNewElement;
-			this.size = 0;
-
-			init();
-		}
-
+	class InternalSwappableHandler implements SwappableHandler {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see org.graphstream.nui.buffers.UIBufferReference#buffer()
+		 * @see org.graphstream.nui.swapper.SwappableHandler#indexer()
 		 */
 		@Override
-		public ByteBuffer buffer() {
-			theBuffer.rewind();
-			theBuffer.limit(getElementCount() * cc);
-
-			return theBuffer;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.graphstream.nui.buffers.UIBufferReference#release()
-		 */
-		@Override
-		public void release() {
-			super.release();
-			theBuffer = null;
-		}
-
-		void init() {
-			capacity = Math.max(initialSize, getElementCount() + growingSize);
-			int s = capacity * cc;
-
-			//
-			// Check size of the swap buffer
-			//
-			if (cc > swapBuffer.capacity())
-				swapBuffer = ByteBuffer.allocateDirect(cc);
-
-			if (direct)
-				theBuffer = ByteBuffer.allocateDirect(s);
-			else
-				theBuffer = ByteBuffer.allocate(s);
-
-			assert theBuffer.capacity() == capacity * cc;
-
-			theBuffer.order(order);
-			theBuffer.limit(getElementCount() * cc);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.graphstream.nui.swapper.Swappable#checkSize()
-		 */
-		@Override
-		public void checkSize() {
-			int elementCount = getElementCount();
-
-			if (elementCount >= capacity) {
-				capacity = Math.max(capacity + growingSize, elementCount);
-				int s = capacity * cc;
-
-				assert s > theBuffer.capacity();
-
-				ByteBuffer tmp;
-
-				if (direct)
-					tmp = ByteBuffer.allocateDirect(s);
-				else
-					tmp = ByteBuffer.allocate(s);
-
-				System.err.printf(
-						"allocate %d bytes (%d*%d) for %d elements%n", s,
-						capacity, cc, elementCount);
-
-				theBuffer.rewind();
-				tmp.order(order);
-				tmp.rewind();
-				tmp.put(theBuffer);
-
-				theBuffer = tmp;
-			} else if (elementCount < capacity / 2
-					&& elementCount + growingSize > initialSize
-					&& elementCount + growingSize < capacity) {
-				capacity = elementCount + growingSize;
-
-				int s = capacity * cc;
-				ByteBuffer tmp;
-
-				if (direct)
-					tmp = ByteBuffer.allocateDirect(s);
-				else
-					tmp = ByteBuffer.allocate(s);
-
-				System.err.printf(
-						"reduce to %d bytes (%d*%d) for %d elements%n", s,
-						capacity, cc, elementCount);
-
-				theBuffer.rewind();
-				theBuffer.limit(s);
-				tmp.order(order);
-				tmp.rewind();
-				tmp.put(theBuffer);
-
-				theBuffer = tmp;
-			}
-
-			theBuffer.limit(elementCount * cc);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.graphstream.nui.swapper.Swappable#initDefaultValues()
-		 */
-		@Override
-		public void initDefaultValues() {
-			int elementCount = getElementCount();
-
-			if (onNewElement != null)
-				for (int i = size; i < elementCount; i++) {
-					ElementIndex index;
-
-					switch (type) {
-					case NODE:
-						index = indexer.getNodeIndex(i);
-						break;
-					case EDGE:
-						index = indexer.getEdgeIndex(i);
-						break;
-					case SPRITE:
-						index = indexer.getSpriteIndex(i);
-						break;
-					default:
-						index = indexer.getGraphIndex();
-						break;
-					}
-
-					onNewElement.newBufferElement(this, index);
-				}
-
-			size = elementCount;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.graphstream.nui.swapper.Swappable#swap(int, int)
-		 */
-		@Override
-		public void swap(int idx1, int idx2) {
-			idx1 = idx1 * cc;
-			idx2 = idx2 * cc;
-
-			if (swapBuffer.order() != order)
-				swapBuffer.order(order);
-
-			swapBuffer.rewind();
-			swapBuffer.limit(2 * cc);
-			theBuffer.limit(idx1 + cc);
-			theBuffer.position(idx1);
-			swapBuffer.put(theBuffer);
-			theBuffer.limit(idx2 + cc);
-			theBuffer.position(idx2);
-			swapBuffer.put(theBuffer);
-
-			swapBuffer.rewind();
-			swapBuffer.limit(cc);
-			theBuffer.position(idx2);
-			theBuffer.put(swapBuffer);
-			swapBuffer.limit(2 * cc);
-			theBuffer.position(idx1);
-			theBuffer.put(swapBuffer);
-		}
-
-		int bindex(ElementIndex index, int component) {
-			assert component < componentSize;
-			return index.index() * cc + component * componentSize;
+		public UIIndexer indexer() {
+			return indexer;
 		}
 
 		/*
 		 * (non-Javadoc)
 		 * 
 		 * @see
-		 * org.graphstream.nui.buffers.UIBufferReference#getByte(org.graphstream
-		 * .nui.indexer.ElementIndex, int)
+		 * org.graphstream.nui.swapper.SwappableHandler#release(org.graphstream
+		 * .nui.swapper.Swappable)
 		 */
 		@Override
-		public byte getByte(ElementIndex index, int component) {
-			return theBuffer.get(bindex(index, component));
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.buffers.UIBufferReference#getFloat(org.graphstream
-		 * .nui.indexer.ElementIndex, int)
-		 */
-		@Override
-		public float getFloat(ElementIndex index, int component) {
-			return theBuffer.getFloat(bindex(index, component));
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.buffers.UIBufferReference#getDouble(org.graphstream
-		 * .nui.indexer.ElementIndex, int)
-		 */
-		@Override
-		public double getDouble(ElementIndex index, int component) {
-			return theBuffer.getDouble(bindex(index, component));
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.buffers.UIBufferReference#getShort(org.graphstream
-		 * .nui.indexer.ElementIndex, int)
-		 */
-		@Override
-		public short getShort(ElementIndex index, int component) {
-			return theBuffer.getShort(bindex(index, component));
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.buffers.UIBufferReference#getInt(org.graphstream
-		 * .nui.indexer.ElementIndex, int)
-		 */
-		@Override
-		public int getInt(ElementIndex index, int component) {
-			return theBuffer.getInt(bindex(index, component));
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.buffers.UIBufferReference#getLong(org.graphstream
-		 * .nui.indexer.ElementIndex, int)
-		 */
-		@Override
-		public long getLong(ElementIndex index, int component) {
-			return theBuffer.getLong(bindex(index, component));
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.buffers.UIBufferReference#setByte(org.graphstream
-		 * .nui.indexer.ElementIndex, int, byte)
-		 */
-		@Override
-		public void setByte(ElementIndex index, int component, byte b) {
-			theBuffer.put(bindex(index, component), b);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.buffers.UIBufferReference#setFloat(org.graphstream
-		 * .nui.indexer.ElementIndex, int, float)
-		 */
-		@Override
-		public void setFloat(ElementIndex index, int component, float f) {
-			theBuffer.putFloat(bindex(index, component), f);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.swapper.UIBufferReference#setDouble(org.graphstream
-		 * .nui.indexer.ElementIndex, int, double)
-		 */
-		@Override
-		public void setDouble(ElementIndex index, int component, double d) {
-			theBuffer.putDouble(bindex(index, component), d);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.swapper.UIBufferReference#setShort(org.graphstream
-		 * .nui.indexer.ElementIndex, int, short)
-		 */
-		@Override
-		public void setShort(ElementIndex index, int component, short s) {
-			theBuffer.putShort(bindex(index, component), s);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.swapper.UIBufferReference#setInt(org.graphstream
-		 * .nui.indexer.ElementIndex, int, int)
-		 */
-		@Override
-		public void setInt(ElementIndex index, int component, int i) {
-			theBuffer.putInt(bindex(index, component), i);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.swapper.UIBufferReference#setLong(org.graphstream
-		 * .nui.indexer.ElementIndex, int, long)
-		 */
-		@Override
-		public void setLong(ElementIndex index, int component, long l) {
-			theBuffer.putLong(bindex(index, component), l);
-		}
-	}
-
-	class DefaultArrayReference<T> extends BaseReference implements
-			UIArrayReference<T>, Swappable {
-		T[] data;
-		ValueFactory<T> valueFactory;
-		int size;
-
-		@SuppressWarnings("unchecked")
-		DefaultArrayReference(Type type, int initialSize, int growingSize,
-				int componentCount, Class<T> componentType,
-				ValueFactory<T> valueFactory) {
-			super(type, initialSize, growingSize, componentCount);
-
-			initialSize = Math
-					.max(initialSize, getElementCount() + growingSize);
-
-			this.valueFactory = valueFactory;
-			this.size = 0;
-			this.data = (T[]) Array.newInstance(componentType, componentCount
-					* initialSize);
-
-			checkSize();
-			initDefaultValues();
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.graphstream.nui.swapper.Swappable#checkSize()
-		 */
-		@Override
-		public void checkSize() {
-			int elementCount = getElementCount();
-
-			if (elementCount >= data.length)
-				data = Arrays.copyOf(data, data.length + growingSize);
-			else if (elementCount < data.length / 2
-					&& elementCount + growingSize > initialSize)
-				data = Arrays.copyOf(data, elementCount + growingSize);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.graphstream.nui.swapper.Swappable#initDefaultValues()
-		 */
-		@Override
-		public void initDefaultValues() {
-			int elementCount = getElementCount();
-
-			if (valueFactory != null)
-				for (int i = size; i < elementCount; i++) {
-					ElementIndex index;
-
-					switch (type) {
-					case NODE:
-						index = indexer.getNodeIndex(i);
-						break;
-					case EDGE:
-						index = indexer.getEdgeIndex(i);
-						break;
-					case SPRITE:
-						index = indexer.getSpriteIndex(i);
-						break;
-					default:
-						index = indexer.getGraphIndex();
-						break;
-					}
-
-					for (int j = 0; j < componentCount; j++)
-						set(index, j, valueFactory.createValue(index, j));
-				}
-
-			size = elementCount;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.graphstream.nui.swapper.Swappable#swap(int, int)
-		 */
-		@Override
-		public void swap(int index1, int index2) {
-			for (int i = 0; i < componentCount; i++) {
-				T tmp = data[index1 * componentCount + i];
-
-				data[index1 * componentCount + i] = data[index2
-						* componentCount + i];
-				data[index2 * componentCount + i] = tmp;
-			}
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.swapper.UIArrayReference#get(org.graphstream.
-		 * nui.indexer.ElementIndex, int)
-		 */
-		@Override
-		public T get(ElementIndex index, int component) {
-			assert component >= 0 && component < componentCount;
-			return data[index.index() * componentCount + component];
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.graphstream.nui.swapper.UIArrayReference#set(org.graphstream.
-		 * nui.indexer.ElementIndex, int, java.lang.Object)
-		 */
-		@Override
-		public void set(ElementIndex index, int component, T value) {
-			assert component >= 0 && component < componentCount;
-			data[index.index() * componentCount + component] = value;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.graphstream.nui.swapper.UIArrayReference#array()
-		 */
-		@Override
-		public T[] array() {
-			return data;
+		public void release(Swappable swappable) {
+			buffers.get(swappable.getType()).remove(this);
 		}
 	}
 

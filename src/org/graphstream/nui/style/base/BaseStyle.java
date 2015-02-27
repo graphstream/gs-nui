@@ -56,6 +56,7 @@ import org.graphstream.nui.UIIndexer;
 import org.graphstream.nui.UIStyle;
 import org.graphstream.nui.UIAttributes.AttributeType;
 import org.graphstream.nui.UISwapper;
+import org.graphstream.nui.UISwapper.BufferType;
 import org.graphstream.nui.UISwapper.ValueFactory;
 import org.graphstream.nui.attributes.AttributeHandler;
 import org.graphstream.nui.indexer.ElementIndex;
@@ -88,7 +89,7 @@ import org.graphstream.nui.style.util.Colors;
 import org.graphstream.nui.style.util.Value;
 import org.graphstream.nui.style.util.Values;
 import org.graphstream.nui.swapper.UIArrayReference;
-import org.graphstream.nui.swapper.UIBufferReference;
+import org.graphstream.nui.swapper.UIBufferReference.IntBufferReference;
 import org.graphstream.nui.util.Tools;
 import org.graphstream.stream.SinkAdapter;
 import org.graphstream.util.parser.ParseException;
@@ -104,8 +105,8 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 	protected UIArrayReference<BaseElementStyle> edgeDatas;
 	protected UIArrayReference<BaseElementStyle> spritesData;
 
-	protected UIBufferReference nodeColors;
-	protected UIBufferReference edgeColors;
+	protected IntBufferReference nodeColors;
+	protected IntBufferReference edgeColors;
 
 	protected UIIndexer indexer;
 
@@ -160,8 +161,8 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 
 				});
 
-		nodeColors = swapper.createBuffer(Type.NODE, 1, Integer.SIZE / 8, true,
-				null, null);
+		nodeColors = (IntBufferReference) swapper.createBuffer(Type.NODE, 1,
+				BufferType.INT, null, null);
 
 		edgeDatas = swapper.createArray(Type.EDGE, 1, BaseElementStyle.class,
 				new ValueFactory<BaseElementStyle>() {
@@ -180,8 +181,8 @@ public class BaseStyle extends AbstractModule implements UIStyle,
 
 				});
 
-		edgeColors = swapper.createBuffer(Type.EDGE, 1, Integer.SIZE / 8, true,
-				null, null);
+		edgeColors = (IntBufferReference) swapper.createBuffer(Type.EDGE, 1,
+				BufferType.INT, null, null);
 
 		UIAttributes attributes = (UIAttributes) ctx
 				.getModule(UIAttributes.MODULE_ID);

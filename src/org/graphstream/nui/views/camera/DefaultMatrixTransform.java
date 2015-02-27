@@ -99,7 +99,7 @@ public class DefaultMatrixTransform implements MatrixTransform {
 					100);
 			break;
 		case PERSPECTIVE:
-			projection = infinitePerspective(Math.PI / 2.0, aspect, 0.1);
+			projection = infinitePerspective(Math.PI / 4.0, aspect, 0.1);
 			break;
 		}
 

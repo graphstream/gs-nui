@@ -67,9 +67,6 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 	public abstract boolean contains(ElementIndex e);
 
 	public int getElementCount() {
-		if (changed)
-			computeData();
-
 		return elementsCount;
 	}
 
@@ -111,6 +108,8 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 		if ((elements.size() < spacePartition.getMaxElementsPerCell() && neighbourhood == null)
 				|| !canSubdivide()) {
 			elements.add(e);
+			elementAdded();
+
 			changed = true;
 			return this;
 		}
@@ -139,21 +138,23 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 	 */
 	@Override
 	public boolean remove(ElementIndex e) {
-		if (!contains(e))
-			return false;
-
-		if (elements.contains(e)) {
-			elements.remove(e);
+		if (neighbourhood != null) {
+			for (int i = 0; i < neighbourhood.length; i++) {
+				if (neighbourhood[i].remove(e)) {
+					changed = true;
+					return true;
+				}
+			}
+		} else if (elements.contains(e)) {
+			if (elements.remove(e)) {
+				elementRemoved();
+				changed = true;
+			}
 
 			if (parent != null)
 				parent.checkMergeNeeded();
 
 			return true;
-		} else if (neighbourhood != null) {
-			for (int i = 0; i < neighbourhood.length; i++) {
-				if (neighbourhood[i].remove(e))
-					return true;
-			}
 		}
 
 		return false;
@@ -202,27 +203,27 @@ public abstract class NTreeSpaceCell extends BaseSpaceCell implements
 				neighbourhood[i].unregister();
 			}
 
+			System.err.printf("merge\n");
+
 			neighbourhood = null;
 			register();
+
+			if (parent != null)
+				parent.checkMergeNeeded();
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.graphstream.nui.spacePartition.BaseSpaceCell#computeData()
-	 */
-	@Override
-	protected void computeData() {
-		if (neighbourhood == null)
-			elementsCount = elements.size();
-		else {
-			elementsCount = 0;
+	protected void elementAdded() {
+		elementsCount++;
 
-			for (int i = 0; i < neighbourhood.length; i++)
-				elementsCount += neighbourhood[i].getElementCount();
-		}
+		if (parent != null)
+			parent.elementAdded();
+	}
 
-		super.computeData();
+	protected void elementRemoved() {
+		elementsCount--;
+
+		if (parent != null)
+			parent.elementRemoved();
 	}
 }
