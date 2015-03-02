@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 - 2014
+ * Copyright 2006 - 2015
  *     Stefan Balev     <stefan.balev@graphstream-project.org>
  *     Julien Baudry    <julien.baudry@graphstream-project.org>
  *     Antoine Dutot    <antoine.dutot@graphstream-project.org>
@@ -29,10 +29,23 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL-C and LGPL licenses and that you accept their terms.
  */
-package org.graphstream.nui.context;
+package org.graphstream.nui.context.worker;
 
-public interface ContextWorker extends Runnable {
-	public static enum WorkerPhase {
-		PRE_TICK, TICK, POST_TICK
-	}
+import org.graphstream.nui.UIContext;
+import org.graphstream.nui.context.UIWorker;
+
+public interface WorkerTask {
+	void init(UIContext ctx, UIWorker worker);
+
+	void preProcess();
+	
+	void run();
+	
+	void postProcess();
+	
+	/**
+	 * Called when the worker is terminated. This allows to release data
+	 * associated to this task that will not be used anymore.
+	 */
+	void release();
 }

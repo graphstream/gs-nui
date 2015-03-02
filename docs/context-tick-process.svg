@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="297mm"
+   height="210mm"
+   viewBox="0 0 1052.3622 744.09448"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="context-tick-process.svg">
+  <defs
+     id="defs4">
+    <marker
+       inkscape:stockid="Arrow2Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="marker4825"
+       style="overflow:visible;"
+       inkscape:isstock="true">
+      <path
+         id="path4827"
+         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round;stroke:#000000;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "
+         transform="scale(1.1) rotate(180) translate(1,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="marker4698"
+       style="overflow:visible;"
+       inkscape:isstock="true">
+      <path
+         id="path4700"
+         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round;stroke:#000000;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "
+         transform="scale(1.1) rotate(180) translate(1,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="marker4664"
+       style="overflow:visible;"
+       inkscape:isstock="true">
+      <path
+         id="path4666"
+         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round;stroke:#000000;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "
+         transform="scale(1.1) rotate(180) translate(1,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow2Lend"
+       style="overflow:visible;"
+       inkscape:isstock="true">
+      <path
+         id="path4201"
+         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round;stroke:#000000;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "
+         transform="scale(1.1) rotate(180) translate(1,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lend"
+       style="overflow:visible;"
+       inkscape:isstock="true">
+      <path
+         id="path4183"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         transform="scale(0.8) rotate(180) translate(12.5,0)" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.8"
+     inkscape:cx="570.87982"
+     inkscape:cy="355.04979"
+     inkscape:document-units="px"
+     inkscape:current-layer="g4609"
+     showgrid="false"
+     inkscape:window-width="3840"
+     inkscape:window-height="2047"
+     inkscape:window-x="0"
+     inkscape:window-y="55"
+     inkscape:window-maximized="1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid4136" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-308.26772)">
+    <rect
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:10;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4200"
+       width="814.18292"
+       height="476.79199"
+       x="120.71323"
+       y="447.78592" />
+    <g
+       id="g4156"
+       transform="translate(170.98476,-129.39852)">
+      <circle
+         r="55.053314"
+         cy="583.65143"
+         cx="67.175156"
+         id="path4140"
+         style="fill:#7ec881;fill-opacity:1;stroke:#000000;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4142"
+         y="578.60065"
+         x="66.577011"
+         style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:17.5px;line-height:125%;font-family:'Exo 2.0';-inkscape-font-specification:'Exo 2.0, Heavy';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           id="tspan4146"
+           y="578.60065"
+           x="66.577011"
+           sodipodi:role="line">TICK</tspan><tspan
+           y="600.47565"
+           x="66.577011"
+           sodipodi:role="line"
+           id="tspan4778">START</tspan></text>
+    </g>
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot4148"
+       style="fill:black;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;font-family:'Exo 2.0';font-style:normal;font-weight:normal;font-size:40px;line-height:125%;letter-spacing:0px;word-spacing:0px;-inkscape-font-specification:'Exo 2.0, ';font-stretch:normal;font-variant:normal;"><flowRegion
+         id="flowRegion4150"><rect
+           id="rect4152"
+           width="187.88837"
+           height="230.31477"
+           x="-22.223356"
+           y="156.1857"
+           style="-inkscape-font-specification:'Exo 2.0, ';font-family:'Exo 2.0';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;" /></flowRegion><flowPara
+         id="flowPara4154" /></flowRoot>    <g
+       id="g4168"
+       transform="translate(-60.609149,86.381897)">
+      <rect
+         y="555.6142"
+         x="221.33835"
+         height="67.158379"
+         width="154.86143"
+         id="rect4138"
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4162"
+         y="584.66162"
+         x="237.88651"
+         style="font-style:normal;font-weight:normal;font-size:17.5px;line-height:125%;font-family:'Exo 2.0';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;-inkscape-font-specification:'Exo 2.0, ';font-stretch:normal;font-variant:normal;"
+         xml:space="preserve"><tspan
+           y="584.66162"
+           x="237.88651"
+           id="tspan4164"
+           sodipodi:role="line">WORKERS</tspan><tspan
+           id="tspan4166"
+           y="606.53662"
+           x="237.88651"
+           sodipodi:role="line">PRE-PROCESS</tspan></text>
+    </g>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:5;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow2Lend)"
+       d="m 238.15992,509.30622 0,132.68987"
+       id="path4174"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:connection-start="#g4156"
+       inkscape:connection-end="#g4168" />
+    <g
+       id="g4609"
+       transform="translate(-17.677669,86.873119)">
+      <rect
+         y="391.21735"
+         x="442.44681"
+         height="394.96964"
+         width="194.45436"
+         id="rect4588-5"
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <g
+         transform="translate(0,6.6922377)"
+         id="g4592">
+        <g
+           id="g4523"
+           transform="translate(10.859138,-21.71828)">
+          <rect
+             y="426.06763"
+             x="451.53818"
+             height="67.175148"
+             width="154.55334"
+             id="rect4494"
+             style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+          <text
+             sodipodi:linespacing="125%"
+             id="text4517"
+             y="455.08795"
+             x="476.24649"
+             style="font-style:normal;font-weight:normal;font-size:17.5px;line-height:125%;font-family:'Exo 2.0';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;-inkscape-font-specification:'Exo 2.0, ';font-stretch:normal;font-variant:normal;"
+             xml:space="preserve"><tspan
+               id="tspan4521"
+               y="455.08795"
+               x="476.24649"
+               sodipodi:role="line">RENDERING</tspan><tspan
+               y="476.96295"
+               x="476.24649"
+               sodipodi:role="line"
+               id="tspan4776">DONE</tspan></text>
+        </g>
+        <g
+           transform="translate(10.859138,73.488594)"
+           id="g4523-1">
+          <rect
+             y="426.06763"
+             x="451.53818"
+             height="67.175148"
+             width="154.55334"
+             id="rect4494-4"
+             style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+          <text
+             sodipodi:linespacing="125%"
+             id="text4517-6"
+             y="455.08795"
+             x="489.79874"
+             style="font-style:normal;font-weight:normal;font-size:17.5px;line-height:125%;font-family:'Exo 2.0';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;-inkscape-font-specification:'Exo 2.0, ';font-stretch:normal;font-variant:normal;"
+             xml:space="preserve"><tspan
+               y="455.08795"
+               x="489.79874"
+               id="tspan4519-0"
+               sodipodi:role="line">WORKER</tspan><tspan
+               id="tspan4521-7"
+               y="476.96295"
+               x="489.79874"
+               sodipodi:role="line">RUN</tspan></text>
+        </g>
+        <g
+           transform="translate(10.859138,266.42773)"
+           id="g4523-9">
+          <rect
+             y="426.06763"
+             x="451.53818"
+             height="67.175148"
+             width="154.55334"
+             id="rect4494-46"
+             style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+          <text
+             sodipodi:linespacing="125%"
+             id="text4517-8"
+             y="455.08795"
+             x="489.79874"
+             style="font-style:normal;font-weight:normal;font-size:17.5px;line-height:125%;font-family:'Exo 2.0';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;-inkscape-font-specification:'Exo 2.0, ';font-stretch:normal;font-variant:normal;"
+             xml:space="preserve"><tspan
+               y="455.08795"
+               x="489.79874"
+               id="tspan4519-8"
+               sodipodi:role="line">WORKER</tspan><tspan
+               id="tspan4521-73"
+               y="476.96295"
+               x="489.79874"
+               sodipodi:role="line">RUN</tspan></text>
+        </g>
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;font-family:'Exo 2.0';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;-inkscape-font-specification:'Exo 2.0, ';font-stretch:normal;font-variant:normal;"
+           x="520.60175"
+           y="636.00818"
+           id="text4628"
+           sodipodi:linespacing="125%"><tspan
+             sodipodi:role="line"
+             id="tspan4630"
+             x="520.60175"
+             y="636.00818">...</tspan></text>
+      </g>
+    </g>
+    <g
+       transform="translate(294.96455,218.44548)"
+       id="g4523-0">
+      <rect
+         y="426.06763"
+         x="458.10004"
+         height="67.175148"
+         width="154.55334"
+         id="rect4494-5"
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4517-7"
+         y="455.08795"
+         x="469.12793"
+         style="font-style:normal;font-weight:normal;font-size:17.5px;line-height:125%;font-family:'Exo 2.0';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;-inkscape-font-specification:'Exo 2.0, ';font-stretch:normal;font-variant:normal;"
+         xml:space="preserve"><tspan
+           id="tspan4521-4"
+           y="455.08795"
+           x="469.12793"
+           sodipodi:role="line">WORKERS</tspan><tspan
+           y="476.96295"
+           x="469.12793"
+           sodipodi:role="line"
+           id="tspan4586">POST-PROCESS</tspan></text>
+    </g>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker4664)"
+       d="m 315.59063,675.57528 109.17851,0"
+       id="path4654"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:connection-start="#g4168"
+       inkscape:connection-end="#g4609" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker4698)"
+       d="m 619.2235,676.37159 133.84109,1.09618"
+       id="path4656"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:connection-start="#g4609"
+       inkscape:connection-end="#g4523-0" />
+    <g
+       transform="translate(-264.15923,319.81224)"
+       id="g4790">
+      <circle
+         r="54.717503"
+         cy="588.70203"
+         cx="1094.5005"
+         id="path4782"
+         style="fill:#d34c4c;fill-opacity:1;stroke:#000000;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4784"
+         y="584.25867"
+         x="1094.3467"
+         style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:17.5px;line-height:125%;font-family:'Exo 2.0';-inkscape-font-specification:'Exo 2.0, Heavy';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           y="584.25867"
+           x="1094.3467"
+           id="tspan4786"
+           sodipodi:role="line">TICK</tspan><tspan
+           id="tspan4788"
+           y="606.13367"
+           x="1094.3467"
+           sodipodi:role="line">END</tspan></text>
+    </g>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker4825)"
+       d="m 830.34126,711.68825 0,142.10851"
+       id="path4823"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:connection-start="#g4523-0"
+       inkscape:connection-end="#g4790" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:15px;line-height:125%;font-family:'Exo 2.0';-inkscape-font-specification:'Exo 2.0, Light';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="625.91132"
+       y="489.82907"
+       id="text4202"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="625.91132"
+         y="489.82907"
+         id="tspan4206">Here is the multithreaded part where all </tspan><tspan
+         sodipodi:role="line"
+         x="625.91132"
+         y="508.57907"
+         id="tspan4208">workers run their main feature all together. </tspan><tspan
+         sodipodi:role="line"
+         x="625.91132"
+         y="527.3291"
+         id="tspan4226">Rendering is done in the same time.</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:15px;line-height:125%;font-family:'Exo 2.0';-inkscape-font-specification:'Exo 2.0, Light';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="158.63457"
+       y="730.10321"
+       id="text4210"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4212"
+         x="158.63457"
+         y="730.10321">Pull some data inside each worker</tspan><tspan
+         sodipodi:role="line"
+         x="158.63457"
+         y="748.85321"
+         id="tspan4214">that will be used by the worker</tspan><tspan
+         sodipodi:role="line"
+         x="158.63457"
+         y="767.60321"
+         id="tspan4216">itself. This is used to avoid</tspan><tspan
+         sodipodi:role="line"
+         x="158.63457"
+         y="786.35321"
+         id="tspan4218">concurrency problems.</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:15px;line-height:125%;font-family:'Exo 2.0';-inkscape-font-specification:'Exo 2.0, Light';text-align:end;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="908.19891"
+       y="616.42047"
+       id="text4228"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4230"
+         x="908.19891"
+         y="616.42047">If workers have computed new</tspan><tspan
+         sodipodi:role="line"
+         x="908.19891"
+         y="635.17047"
+         id="tspan4232">data, it will be flushed at this point.</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:40px;line-height:125%;font-family:'Exo 2.0';-inkscape-font-specification:'Exo 2.0, Heavy';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="638.19556"
+       y="435.159"
+       id="text4238"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4240"
+         x="638.19556"
+         y="435.159">&gt; TICK PROCESS </tspan></text>
+  </g>
+</svg>

@@ -99,6 +99,8 @@ public abstract class AbstractContext implements UIContext {
 
 	protected TimeUnit tickLengthUnits = DEFAULT_TICK_LENGTH_UNIT;
 
+	protected Map<String, UIWorker> workers;
+
 	//
 	// Lock used to manage the waitForInitialization method.
 	//
@@ -122,6 +124,7 @@ public abstract class AbstractContext implements UIContext {
 		views = new HashMap<String, UIView>();
 		invocationLock = new ReentrantLock();
 		isInitialized = new AtomicBoolean(false);
+		workers = new HashMap<String, UIWorker>();
 	}
 
 	/*
@@ -194,7 +197,20 @@ public abstract class AbstractContext implements UIContext {
 	protected void tick() {
 		assert Thread.currentThread() == thread;
 
+		//
+		// The TICK process
+		// ----------------------------
+		//
+		// 1. Synchronization and dispatching of events
+		// 2. Run the "pre-process" phase of workers
+		// 3. Let the workers run and the rendering be done
+		// 4. Run the "post-process" phase of workers
+		//
+
 		sync();
+
+		for (UIWorker w : workers.values())
+			w.getWorkerTask().preProcess();
 
 		TickTaskWrapper ttw;
 
@@ -208,6 +224,16 @@ public abstract class AbstractContext implements UIContext {
 
 		for (UIView view : views.values())
 			view.update();
+
+		//
+		// Now wait for all workers to finish their current process.
+		// And then publish their data.
+		//
+
+		
+		
+		for (UIWorker w : workers.values())
+			w.getWorkerTask().postProcess();
 	}
 
 	/*
@@ -498,6 +524,50 @@ public abstract class AbstractContext implements UIContext {
 
 		if (view != null)
 			view.close();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIContext#createWorker(java.lang.String,
+	 * org.graphstream.nui.context.WorkerTaskMap)
+	 */
+	@Override
+	public void createWorker(String id, WorkerTaskMap tasks) {
+		if (workers.containsKey(id))
+			LOGGER.warning(String.format("Worker \"%s\" already created", id));
+		else {
+			ContextWorker cw = createContextWorker(id);
+			cw.setTaskMap(tasks);
+			cw.init();
+
+			workers.put(id, cw);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.graphstream.nui.UIContext#terminateWorker(java.lang.String)
+	 */
+	@Override
+	public void terminateWorker(String id) {
+		UIWorker w = workers.remove(id);
+
+		if (w != null) {
+			try {
+				w.terminate();
+			} catch (InterruptedException e) {
+				LOGGER.log(Level.SEVERE,
+						String.format("Failed to terminate worker \"%s\"", id),
+						e);
+			}
+		} else
+			LOGGER.warning(String.format("Worker \"%s\" does not exist", id));
+	}
+
+	protected ContextWorker createContextWorker(String id) {
+		return null;
 	}
 
 	protected void checkThread() {

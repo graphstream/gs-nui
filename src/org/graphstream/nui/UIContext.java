@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 - 2014
+ * Copyright 2006 - 2015
  *     Stefan Balev     <stefan.balev@graphstream-project.org>
  *     Julien Baudry    <julien.baudry@graphstream-project.org>
  *     Antoine Dutot    <antoine.dutot@graphstream-project.org>
@@ -32,6 +32,7 @@
 package org.graphstream.nui;
 
 import org.graphstream.nui.context.TickTask;
+import org.graphstream.nui.context.worker.WorkerTask;
 import org.graphstream.stream.Pipe;
 import org.graphstream.stream.Source;
 
